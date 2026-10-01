@@ -71,26 +71,64 @@ const tkey=r=>{const d=pd(r['Dátum']);const [h,m]=(r['Čas']||'23:59').split(':
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
 
+let _ifc=0;
+function submitViaIframe_(url){
+  // Safari má dlhodobý bug: fetch()/XHR cez cross-origin 302 redirect (čo Apps Script
+  // vždy robí — presmeruje na script.googleusercontent.com) občas zahodí request a
+  // vráti "TypeError: Load failed", aj na GET. Natívna navigácia prehliadača (iframe)
+  // tento redirect zvládne bez problémov, preto zápis posielame takto namiesto fetch().
+  return new Promise((resolve)=>{
+    const id='ifc'+(++_ifc);
+    const f=document.createElement('iframe');
+    f.name=id;f.style.display='none';
+    const done=()=>{clearTimeout(t);f.remove();resolve()};
+    const t=setTimeout(done,8000);
+    f.onload=done;
+    document.body.appendChild(f);
+    const form=document.createElement('form');
+    form.method='GET';form.action=url;form.target=id;
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
+  });
+}
+async function fetchRows_(){
+  const res=await fetch(URL_);
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  return (await res.json()).rows||[];
+}
 async function api(body){
   if(!URL_){return{ok:true,_row:body._row||Math.max(0,...rows.map(r=>r._row))+1}}
-  let r;
+  const sep=URL_.includes('?')?'&':'?';
+  const url=URL_+sep+'payload='+encodeURIComponent(JSON.stringify(body));
   try{
-    // GET s ?payload=: vyhýba sa problému, že Apps Script robí 302 redirect na
-    // googleusercontent.com a pri POST-e prehliadač pri tomto redirecte často
-    // zahodí telo aj hlavičky ("Load failed"). GET týmto netrpí.
-    const sep=URL_.includes('?')?'&':'?';
-    r=await fetch(URL_+sep+'payload='+encodeURIComponent(JSON.stringify(body)));
+    await submitViaIframe_(url);
   }catch(e){
     throw new Error('Spojenie so serverom zlyhalo. Skontroluj, či je Apps Script nasadený ako webová appka s prístupom "Ktokoľvek", a či URL v nastaveniach je presná (bez medzier na konci).');
   }
-  let j;
-  try{j=await r.json()}catch(e){throw new Error('Server vrátil neočakávanú odpoveď (pravdepodobne prihlasovaciu stránku Google namiesto JSON) — skontroluj nastavenie prístupu k web app nasadeniu.')}
-  return j;
+  // Keďže request ide cez iframe, nevidíme priamu odpoveď servera — overíme zápis
+  // tak, že dáta znova načítame a skontrolujeme, či sa zmena prejavila.
+  let fresh;
+  try{fresh=await fetchRows_()}catch(e){throw new Error('Zápis odišiel, ale overenie zlyhalo (nepodarilo sa znova načítať dáta): '+e.message)}
+  if(body.action==='add'){
+    const want=body.data||{};
+    const match=[...fresh].reverse().find(r=>Object.keys(want).every(k=>k==='Dátum'||k==='Čas'?true:(r[k]||'')===(want[k]||'')));
+    if(!match)throw new Error('Zápis sa po uložení nenašiel v hárku — skontroluj pripojenie alebo to skús znova.');
+    rows=fresh;
+    return{ok:true,_row:match._row};
+  }else{
+    const row=fresh.find(r=>r._row===body._row);
+    if(!row)throw new Error('Riadok ' + body._row + ' sa po uložení nenašiel v hárku.');
+    const changed=Object.keys(body.data||{}).filter(k=>k!=='Poznámka').every(k=>String(row[k]||'')===String(body.data[k]||''));
+    if(!changed)throw new Error('Zápis sa neprejavil v hárku — skontroluj pripojenie alebo to skús znova.');
+    rows=fresh;
+    return{ok:true,_row:body._row};
+  }
 }
 async function load(){
   $('#mode').textContent=(URL_?'🟢 pripojené na Sheet':'🟡 demo režim')+' · v2';
   if(!URL_){rows=JSON.parse(JSON.stringify(DEMO))}
-  else{try{const res=await fetch(URL_);if(!res.ok)throw new Error('HTTP '+res.status);rows=(await res.json()).rows||[]}catch(e){toast('Chyba načítania: '+e.message);rows=[]}}
+  else{try{rows=await fetchRows_()}catch(e){toast('Chyba načítania: '+e.message);rows=[]}}
   const ss=[...new Set([...STAV,...rows.map(r=>r.Stav).filter(Boolean)])];
   $('#fs').innerHTML='<option value="">Všetky stavy</option>'+ss.map(s=>`<option>${esc(s)}</option>`).join('');
   render();
@@ -137,8 +175,16 @@ async function save(next){
   document.querySelectorAll('[data-k]').forEach(i=>{if(i.value!==(r[i.dataset.k]||''))data[i.dataset.k]=i.value});
   if(txt)data['Poznámka']=`📅 ${String(new Date().getDate()).padStart(2,'0')}.${String(new Date().getMonth()+1).padStart(2,'0')}.${new Date().getFullYear()}   ${txt}`+(r['Poznámka']?SEP+r['Poznámka']:'');
   const list=filtered(),i=list.indexOf(r);
-  try{const sd={...data};delete sd['Poznámka'];const res=await api({action:'update',_row:r._row,data:sd,note:txt});if(!res.ok)throw (res.error||'neznáma chyba');Object.assign(r,data);toast('Uložené ✓');
-    const nl=filtered(),nx=next?(nl[i]&&nl[i]!==r?nl[i]:nl[i+1]||nl[0]):r;
+  try{
+    const sd={...data};delete sd['Poznámka'];
+    const res=await api({action:'update',_row:r._row,data:sd,note:txt});
+    if(!res.ok)throw (res.error||'neznáma chyba');
+    toast('Uložené ✓');
+    // api() nahradil globálne rows čerstvými dátami zo servera — nájdeme si v ňom
+    // ten istý riadok podľa _row namiesto staleho objektu r.
+    const rr=rows.find(x=>x._row===r._row)||r;
+    const nl=filtered(),ni=nl.indexOf(rr);
+    const nx=next?(nl[ni]&&nl[ni]!==rr?nl[ni]:nl[ni+1]||nl[0]):rr;
     sel=nx||null;render();sel?detail():$('#det').innerHTML='<div class="card">Hotovo 🎉</div>'}
   catch(e){toast('Chyba: '+e)}
 }
@@ -146,7 +192,7 @@ $('#add').onclick=()=>{$('#nf').innerHTML=['Názov firmy','Meno','Telefón','Tel
 $('#ns').onclick=async()=>{
   const data={Stav:'Oslovený','Dátum':fd(today()),'Čas':'9:00'};document.querySelectorAll('[data-n]').forEach(i=>{if(i.value)data[i.dataset.n]=i.value});
   if(!data['Názov firmy']&&!data['Telefón'])return toast('Zadaj aspoň názov alebo telefón');
-  try{const res=await api({action:'add',data});if(!res.ok)throw res.error;rows.push({_row:res._row,...data});dn.close();sel=rows.at(-1);render();detail();toast('Kontakt pridaný')}catch(e){toast('Chyba: '+e)}};
+  try{const res=await api({action:'add',data});if(!res.ok)throw res.error;dn.close();sel=rows.find(r=>r._row===res._row)||rows.at(-1);render();detail();toast('Kontakt pridaný')}catch(e){toast('Chyba: '+e)}};
 $('#cfg').onclick=()=>{$('#url').value=URL_;dc.showModal()};
 $('#cs').onclick=()=>{URL_=$('#url').value.trim();if(URL_&&!/[?&]app=crm/.test(URL_))URL_+=(URL_.includes('?')?'&':'?')+'app=crm';localStorage.crmUrl=URL_;dc.close();load()};
 $('#q').oninput=$('#fs').onchange=render;
