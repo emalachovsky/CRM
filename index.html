@@ -82,26 +82,65 @@ async function fetchRows_(){
   if(!res.ok)throw new Error('HTTP '+res.status);
   return (await res.json()).rows||[];
 }
+// Apps Script /exec odpoveď neobsahuje Access-Control-Allow-Origin, takže
+// priamy fetch(...,{method:'POST'}) z inej domény (GitHub Pages) prehliadač
+// zablokuje hneď po tom, čo request už doletel a server ho spracoval — teda
+// zápis sa reálne vykoná, len appka sa o tom nedozvie cez fetch. Preto zápis
+// posielame cez skrytý <form> v <iframe>: to je plnohodnotná navigácia (nie
+// XHR/fetch), na ktorú sa CORS politika vôbec nevzťahuje, a keďže cieľ je
+// skrytý iframe (nie _blank ani hlavné okno), nič sa navigáciou neotvorí ani
+// nezamrzne. Odpoveď servera takto nevidíme vôbec — zápis preto vždy overíme
+// následným GET-om (fetchRows_), ktorý CORS problém nemá.
+let apiFrame_;
+function apiFrame(){
+  if(apiFrame_)return apiFrame_;
+  apiFrame_=document.createElement('iframe');
+  apiFrame_.name='apiFrame';
+  apiFrame_.style.display='none';
+  document.body.appendChild(apiFrame_);
+  return apiFrame_;
+}
+function submitViaForm_(url,payload){
+  return new Promise((resolve)=>{
+    const frame=apiFrame();
+    const done=()=>{frame.removeEventListener('load',done);clearTimeout(t);resolve()};
+    const t=setTimeout(done,8000);
+    frame.addEventListener('load',done);
+    const form=document.createElement('form');
+    form.method='POST';form.action=url;form.target='apiFrame';form.style.display='none';
+    const inp=document.createElement('input');
+    inp.name='payload';inp.value=payload;
+    form.appendChild(inp);
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
+  });
+}
 async function api(body){
   if(!URL_){return{ok:true,_row:body._row||Math.max(0,...rows.map(r=>r._row))+1}}
-  let res;
   try{
-    res=await fetch(URL_,{
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'}, // zámerne text/plain, nech prehliadač nepošle CORS preflight (OPTIONS), ktorý Apps Script nevie obslúžiť
-      body:JSON.stringify(body)
-    });
+    await submitViaForm_(URL_,JSON.stringify(body));
   }catch(e){
     throw new Error('Spojenie so serverom zlyhalo. Skontroluj, či je Apps Script nasadený ako webová appka s prístupom "Ktokoľvek", a či URL v nastaveniach je presná (bez medzier na konci).');
   }
-  if(!res.ok)throw new Error('Server odpovedal chybou HTTP '+res.status);
-  let out;
-  try{out=await res.json()}catch(e){throw new Error('Server vrátil nečakanú odpoveď (nie JSON) — skontroluj nasadenie Apps Scriptu.')}
-  if(!out.ok)throw new Error(out.error||'neznáma chyba servera');
-  // Server pri zápise vracia len riadok, nie všetky dáta — pre istotu si čerstvé
-  // dáta znova načítame, nech appka presne odráža stav v hárku.
-  try{rows=await fetchRows_()}catch(e){/* zápis prebehol, len sa nepodarilo obnoviť zoznam — nevadí, dáta v hárku sú v poriadku */}
-  return{ok:true,_row:out._row};
+  // Keďže odpoveď servera nevidíme (iframe navigácia), overíme zápis tak, že
+  // dáta znova načítame a skontrolujeme, či sa zmena prejavila.
+  let fresh;
+  try{fresh=await fetchRows_()}catch(e){throw new Error('Zápis odišiel, ale overenie zlyhalo (nepodarilo sa znova načítať dáta): '+e.message)}
+  if(body.action==='add'){
+    const want=body.data||{};
+    const match=[...fresh].reverse().find(r=>Object.keys(want).every(k=>k==='Dátum'||k==='Čas'?true:(r[k]||'')===(want[k]||'')));
+    if(!match)throw new Error('Zápis sa po uložení nenašiel v hárku — skontroluj pripojenie alebo to skús znova.');
+    rows=fresh;
+    return{ok:true,_row:match._row};
+  }else{
+    const row=fresh.find(r=>r._row===body._row);
+    if(!row)throw new Error('Riadok ' + body._row + ' sa po uložení nenašiel v hárku.');
+    const changed=Object.keys(body.data||{}).filter(k=>k!=='Poznámka').every(k=>String(row[k]||'')===String(body.data[k]||''));
+    if(!changed)throw new Error('Zápis sa neprejavil v hárku — skontroluj pripojenie alebo to skús znova.');
+    rows=fresh;
+    return{ok:true,_row:body._row};
+  }
 }
 async function load(){
   $('#mode').textContent=(URL_?'🟢 pripojené na Sheet':'🟡 demo režim')+' · v2';
