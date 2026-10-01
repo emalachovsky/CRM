@@ -4,7 +4,6 @@
 <style>
 :root{--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mu:#6b7385;--ln:#e2e5eb;--ac:#2f6fed;--ok:#1a9d5b;--wa:#d9822b;--rd:#d64545;--fs:14px}
 @media(prefers-color-scheme:dark){:root{--bg:#0a0d14;--card:#141b29;--tx:#e8ebf2;--mu:#8e97ab;--ln:#2a3344;--ac:#5b8cff}}
-/* Veľkosť písma reaguje na šírku okna/rozlíšenie: menšie na malom MacBook okne (~1280px), väčšie na Full HD monitore (1920px) a viac. */
 @media(min-width:0px){:root{--fs:13px}}
 @media(min-width:1280px){:root{--fs:14px}}
 @media(min-width:1600px){:root{--fs:15px}}
@@ -36,8 +35,9 @@ textarea{width:100%;min-height:80px;resize:vertical}
 .hist{white-space:pre-wrap;color:var(--mu);font-size:.9em;max-height:260px;overflow:auto}
 .hist div{padding:5px 0;border-bottom:1px dashed var(--ln)}
 .g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:20px;opacity:0;transition:.25s;pointer-events:none}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:20px;opacity:0;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
 #toast.on{opacity:1}
+#syncbadge{position:fixed;bottom:16px;right:16px;background:var(--wa);color:#fff;padding:6px 12px;border-radius:16px;font-size:12px;display:none;cursor:pointer}
 dialog{border:1px solid var(--ln);border-radius:12px;background:var(--card);color:var(--tx);max-width:520px;width:92%}
 @media(max-width:760px){main{grid-template-columns:1fr}#list{max-height:38vh;border-right:0;border-bottom:1px solid var(--ln)}}
 </style></head><body>
@@ -49,10 +49,12 @@ dialog{border:1px solid var(--ln);border-radius:12px;background:var(--card);colo
 <span id="mode" style="font-size:12px;color:var(--mu)"></span></header>
 <main><div id="list"></div><div id="det"><div class="card">Vyber kontakt zo zoznamu.</div></div></main>
 <div id="toast"></div>
+<div id="syncbadge" title="Klikni pre detail"></div>
 
 <dialog id="dc"><h3>Nastavenia</h3><label>URL Apps Script web aplikácie (prázdne = demo dáta)</label>
 <input id="url" style="width:100%" placeholder="https://script.google.com/macros/s/…/exec">
-<div class="row n" style="margin-top:12px"><button class="p" id="cs">Uložiť</button><button onclick="dc.close()">Zavrieť</button></div></dialog>
+<div style="margin-top:10px;font-size:.85em;color:var(--mu)">Dáta sa ukladajú najprv lokálne (IndexedDB) a súbežne sa synchronizujú do Google Sheetu.</div>
+<div class="row n" style="margin-top:12px"><button class="p" id="cs">Uložiť</button><button onclick="dc.close()">Zavrieť</button><button id="exportBtn" style="margin-left:auto">⬇ Export JSON</button></div></dialog>
 <dialog id="dn"><h3>Nový kontakt</h3><div id="nf"></div>
 <div class="row n" style="margin-top:12px"><button class="p" id="ns">Pridať</button><button onclick="dn.close()">Zrušiť</button></div></dialog>
 
@@ -62,12 +64,15 @@ const STAV=['Oslovený','Pošle PDF','Analýza','Rozhoduje','Klient','Nezáujem'
 const SMALL=['EE Spotreba','EE Cena','EE Viazanosť','PL Spotreba','PL Cena','PL Viazanosť','Mail','WEB','Ulica','PSČ','Mesto','Firma','IČO','Koniec služby','Odvetvie'];
 const CHIPS=['Nedvíhal','Zavolať neskôr','Pošle PDF','Poslal som SMS','Poslal som mail','Dohodnuté stretnutie','Nemá záujem'];
 const SEP='   ────────────────────   ';
+const DB_NAME='crmdb',DB_STORE='rows',DB_META='meta',DB_QUEUE='queue';
 const DEMO=[
 {_row:2,'Názov firmy':'Pizza Club "U Šeba"','Meno':'Bagirov','Telefón':'0908 095 939','Stav':'Pošle PDF','Poznámka':'📅 14.09.2026   nestiha'+SEP+'📅 10.08.2026   má PL SPP aj EE Met, pošle fa','Dátum':'1.10.2026','Čas':'9:00','Nasleduje':'čakám fa','Mesto':'Košice'},
 {_row:4,'Názov firmy':'Dargov','Meno':'Kaňuk','Telefón':'0948 425 351','Telefón 2':'0910 926 864','Stav':'Analýza','Poznámka':'📅 14.07.2026   bude mať poradu vo štvrtok','Dátum':'1.10.2026','Čas':'10:00','Nasleduje':'zavolá'},
 {_row:16,'Názov firmy':'CROWN HOUSE (Nábytok Prešov)','Meno':'Ferenc','Telefón':'0911 727 220','Stav':'Rozhoduje','Poznámka':'📅 28.09.2026   poslal som mailom ponuku Spot 6,9','Dátum':'5.10.2026','Čas':'9:00','Nasleduje':'spot 6,9, podpísať splnomocnenie!','EE Spotreba':'407','EE Cena':'9,86','EE Viazanosť':'31.12.2026','Mail':'marko.ferenc34@gmail.com'}];
 let rows=[],sel=null,tab='dnes',URL_=localStorage.crmUrl||'';
+let db_=null,pendingQueue=[];
 
+// ── Dátumové pomocníky ──────────────────────────────────────────────────────
 const pd=s=>{const m=/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec((s||'').trim());return m?new Date(+m[3],m[2]-1,+m[1]):null};
 const fd=d=>d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();
 const iso=s=>{const d=pd(s);return d?d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'):''};
@@ -75,37 +80,205 @@ const fromIso=s=>{if(!s)return'';const[y,m,d]=s.split('-');return +d+'.'+ +m+'.'
 const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
 const tkey=r=>{const d=pd(r['Dátum']);const [h,m]=(r['Čas']||'23:59').split(':');return d?d.getTime()+(+h*60+ +m)*6e4:9e15};
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
+function toast(t,dur=2200){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>e.classList.remove('on'),dur)}
 
-async function fetchRows_(){
+// ── IndexedDB ───────────────────────────────────────────────────────────────
+function openDB(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open(DB_NAME,2);
+    r.onupgradeneeded=e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains(DB_STORE))d.createObjectStore(DB_STORE,{keyPath:'_row'});
+      if(!d.objectStoreNames.contains(DB_META))d.createObjectStore(DB_META);
+      if(!d.objectStoreNames.contains(DB_QUEUE))d.createObjectStore(DB_QUEUE,{autoIncrement:true});
+    };
+    r.onsuccess=e=>{db_=e.target.result;res(db_)};
+    r.onerror=e=>rej(e.target.error);
+  });
+}
+function dbTx(stores,mode='readonly'){
+  const tx=db_.transaction(stores,mode);
+  const get=store=>tx.objectStore(store);
+  const req=r=>new Promise((res,rej)=>{r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error)});
+  return{get,req,tx};
+}
+async function dbGetAll(store){
+  const{get,req}=dbTx(store);
+  return req(get(store).getAll());
+}
+async function dbPut(store,val,key){
+  const{get,req}=dbTx(store,'readwrite');
+  return key!==undefined?req(get(store).put(val,key)):req(get(store).put(val));
+}
+async function dbDelete(store,key){
+  const{get,req}=dbTx(store,'readwrite');
+  return req(get(store).delete(key));
+}
+async function dbClear(store){
+  const{get,req}=dbTx(store,'readwrite');
+  return req(get(store).clear());
+}
+async function dbGetMeta(key){
+  const{get,req}=dbTx(DB_META);
+  return req(get(DB_META).get(key));
+}
+async function dbPutMeta(key,val){
+  return dbPut(DB_META,val,key);
+}
+
+// Uloží pole rows do IDB (prepíše celé)
+async function dbSaveRows(r){
+  await dbClear(DB_STORE);
+  const{get,req,tx}=dbTx(DB_STORE,'readwrite');
+  const s=get(DB_STORE);
+  return new Promise((res,rej)=>{
+    r.forEach(row=>s.put(row));
+    tx.oncomplete=res;tx.onerror=e=>rej(e.target.error);
+  });
+}
+async function dbLoadRows(){
+  const r=await dbGetAll(DB_STORE);
+  return r.sort((a,b)=>a._row-b._row);
+}
+
+// ── Fronta zápisu do Sheetu ──────────────────────────────────────────────────
+// Každý zápis sa uloží do IDB fronty; flushQueue_ posiela po jednom.
+async function enqueue(body){
+  const{get,req}=dbTx(DB_QUEUE,'readwrite');
+  const key=await req(get(DB_QUEUE).add(body));
+  pendingQueue.push({key,body});
+  updateBadge();
+  flushQueue_();
+}
+let flushing_=false;
+async function flushQueue_(){
+  if(flushing_||!URL_)return;
+  const{get,req}=dbTx(DB_QUEUE);
+  const keys=await new Promise((res,rej)=>{
+    const r=get(DB_QUEUE).getAllKeys();
+    r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error);
+  });
+  if(!keys.length){pendingQueue=[];updateBadge();return}
+  flushing_=true;
+  for(const k of keys){
+    const{get:g,req:rq}=dbTx(DB_QUEUE);
+    const body=await rq(g(DB_QUEUE).get(k));
+    const ok=await sheetWrite_(body);
+    if(ok){
+      await dbDelete(DB_QUEUE,k);
+    }else{
+      break; // zastaví sa, skúsi znova neskôr
+    }
+  }
+  flushing_=false;
+  const remaining=await new Promise((res,rej)=>{
+    const{get,req}=dbTx(DB_QUEUE);
+    const r=get(DB_QUEUE).count();
+    r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error);
+  });
+  pendingQueue=remaining?[...Array(remaining)]:[];
+  updateBadge();
+}
+function updateBadge(){
+  const b=$('#syncbadge');
+  const{get,req}=dbTx(DB_QUEUE);
+  const r=get(DB_QUEUE).count();
+  r.onsuccess=e=>{
+    const n=e.target.result;
+    if(n>0){b.textContent='⏳ '+n+' čaká na Sheet';b.style.display='block'}
+    else{b.style.display='none'}
+  };
+}
+
+// Pokus o jeden zápis do Sheetu. Vráti true/false (neháže exception).
+async function sheetWrite_(body){
+  if(!URL_)return true; // demo: predstierame úspech
+  try{
+    const url=URL_+(URL_.includes('?')?'&':'?')+'payload='+encodeURIComponent(JSON.stringify(body));
+    const res=await fetch(url);
+    if(!res.ok)return false;
+    const json=await res.json();
+    return json.ok===true;
+  }catch{return false}
+}
+
+// ── Načítanie zo Sheetu ──────────────────────────────────────────────────────
+async function fetchSheetRows_(){
   const res=await fetch(URL_);
   if(!res.ok)throw new Error('HTTP '+res.status);
   return (await res.json()).rows||[];
 }
-// Zápis posielame ako GET (?payload=...) cez fetch. Apps Script POST končí v
-// prehliadačoch (hlavne Safari) chybou 404 na script.googleusercontent.com/echo,
-// kým GET prechádza v poriadku a vrátia sa z neho skutočné dáta {ok,_row}.
-async function api(body){
-  if(!URL_){return{ok:true,_row:body._row||Math.max(0,...rows.map(r=>r._row))+1}}
-  let res;
-  try{
-    const r=await fetch(URL_+(URL_.includes('?')?'&':'?')+'payload='+encodeURIComponent(JSON.stringify(body)));
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    res=await r.json();
-  }catch(e){
-    throw new Error('Spojenie so serverom zlyhalo: '+e.message);
+
+// ── Hlavná logika load/save ──────────────────────────────────────────────────
+// Generátor _row pre nové záznamy (lokálny max +1)
+function nextRow(){return Math.max(1,...rows.map(r=>r._row))+1}
+
+// Okamžitý lokálny zápis + enqueue do Sheetu
+async function apiLocal(body){
+  const data=body.data||{};
+  if(body.action==='add'){
+    const _row=nextRow();
+    const newRow={_row,...data};
+    rows.push(newRow);
+    rows.sort((a,b)=>a._row-b._row);
+    await dbPut(DB_STORE,newRow);
+    await enqueue({...body,_row});
+    return{ok:true,_row};
+  }else{
+    // update
+    const idx=rows.findIndex(r=>r._row===body._row);
+    if(idx<0)throw new Error('Riadok nenájdený lokálne');
+    // Ak je v body poznámka, prepočítaj ju (rovnako ako GAS)
+    const merged={...rows[idx],...data};
+    if(body.note){
+      const d=new Date();
+      const ds=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
+      const old=rows[idx]['Poznámka']||'';
+      merged['Poznámka']='📅 '+ds+'   '+body.note+(old?SEP+old:'');
+    }
+    rows[idx]=merged;
+    await dbPut(DB_STORE,merged);
+    await enqueue(body);
+    return{ok:true,_row:body._row};
   }
-  if(!res.ok)throw new Error(res.error||'neznáma chyba servera');
-  try{rows=await fetchRows_()}catch(e){}
-  return res;
 }
+
 async function load(){
-  $('#mode').textContent=(URL_?'🟢 pripojené na Sheet':'🟡 demo režim')+' · v2';
-  if(!URL_){rows=JSON.parse(JSON.stringify(DEMO))}
-  else{try{rows=await fetchRows_()}catch(e){toast('Chyba načítania: '+e.message);rows=[]}}
+  await openDB();
+  if(!URL_){
+    // Demo režim: načítaj z IDB ak existuje, inak DEMO dáta
+    const local=await dbLoadRows();
+    rows=local.length?local:JSON.parse(JSON.stringify(DEMO));
+    if(!local.length)await dbSaveRows(rows);
+    $('#mode').textContent='🟡 demo režim · v3';
+    buildFilters();render();return;
+  }
+  // Najprv zobraz lokálne dáta okamžite
+  const local=await dbLoadRows();
+  if(local.length){rows=local;buildFilters();render();}
+  $('#mode').textContent='🔄 sync…';
+  // Potom načítaj Sheet na pozadí
+  try{
+    const fresh=await fetchSheetRows_();
+    await dbSaveRows(fresh);
+    rows=fresh;
+    $('#mode').textContent='🟢 Sheet · v3';
+    buildFilters();render();
+    // Odošli prípadné čakajúce zápisy
+    flushQueue_();
+  }catch(e){
+    $('#mode').textContent='🟠 offline · v3';
+    if(!local.length){rows=[];buildFilters();render();}
+    toast('Sheet nedostupný, pracujem lokálne',3000);
+    flushQueue_();
+  }
+  updateBadge();
+}
+
+// ── UI helpers ───────────────────────────────────────────────────────────────
+function buildFilters(){
   const ss=[...new Set([...STAV,...rows.map(r=>r.Stav).filter(Boolean)])];
   $('#fs').innerHTML='<option value="">Všetky stavy</option>'+ss.map(s=>`<option>${esc(s)}</option>`).join('');
-  render();
 }
 function filtered(){
   const q=$('#q').value.toLowerCase().trim(),fs=$('#fs').value,t=today().getTime();
@@ -147,18 +320,15 @@ function plus(n){const d=today();d.setDate(d.getDate()+n);$('#dt').value=iso(fd(
 async function save(next){
   const r=sel,txt=$('#nt').value.trim(),data={Stav:$('#sv').value,Nasleduje:$('#nx').value,'Dátum':fromIso($('#dt').value),'Čas':$('#tm').value.replace(/^0/,'')};
   document.querySelectorAll('[data-k]').forEach(i=>{if(i.value!==(r[i.dataset.k]||''))data[i.dataset.k]=i.value});
-  if(txt)data['Poznámka']=`📅 ${String(new Date().getDate()).padStart(2,'0')}.${String(new Date().getMonth()+1).padStart(2,'0')}.${new Date().getFullYear()}   ${txt}`+(r['Poznámka']?SEP+r['Poznámka']:'');
   const list=filtered(),i=list.indexOf(r);
   try{
-    const sd={...data};delete sd['Poznámka'];
-    const res=await api({action:'update',_row:r._row,data:sd,note:txt});
-    if(!res.ok)throw (res.error||'neznáma chyba');
+    const sd={...data};
+    const res=await apiLocal({action:'update',_row:r._row,data:sd,note:txt});
+    if(!res.ok)throw(res.error||'neznáma chyba');
     toast('Uložené ✓');
-    // api() nahradil globálne rows čerstvými dátami zo servera — nájdeme si v ňom
-    // ten istý riadok podľa _row namiesto staleho objektu r.
     const rr=rows.find(x=>x._row===r._row)||r;
-    const nl=filtered(),ni=nl.indexOf(rr);
-    const nx=next?(nl[ni]&&nl[ni]!==rr?nl[ni]:nl[ni+1]||nl[0]):rr;
+    const nl=filtered(),ni=nl.findIndex(x=>x._row===rr._row);
+    const nx=next?(nl[ni+1]||nl[0]):rr;
     sel=nx||null;render();sel?detail():$('#det').innerHTML='<div class="card">Hotovo 🎉</div>'}
   catch(e){toast('Chyba: '+e)}
 }
@@ -166,10 +336,27 @@ $('#add').onclick=()=>{$('#nf').innerHTML=['Názov firmy','Meno','Telefón','Tel
 $('#ns').onclick=async()=>{
   const data={Stav:'Oslovený','Dátum':fd(today()),'Čas':'9:00'};document.querySelectorAll('[data-n]').forEach(i=>{if(i.value)data[i.dataset.n]=i.value});
   if(!data['Názov firmy']&&!data['Telefón'])return toast('Zadaj aspoň názov alebo telefón');
-  try{const res=await api({action:'add',data});if(!res.ok)throw res.error;dn.close();sel=rows.find(r=>r._row===res._row)||rows.at(-1);render();detail();toast('Kontakt pridaný')}catch(e){toast('Chyba: '+e)}};
+  try{
+    const res=await apiLocal({action:'add',data});
+    if(!res.ok)throw res.error;
+    dn.close();sel=rows.find(r=>r._row===res._row)||rows.at(-1);
+    buildFilters();render();detail();toast('Kontakt pridaný')
+  }catch(e){toast('Chyba: '+e)}};
 $('#cfg').onclick=()=>{$('#url').value=URL_;dc.showModal()};
-$('#cs').onclick=()=>{URL_=$('#url').value.trim();if(URL_&&!/[?&]app=crm/.test(URL_))URL_+=(URL_.includes('?')?'&':'?')+'app=crm';localStorage.crmUrl=URL_;dc.close();load()};
+$('#cs').onclick=()=>{
+  URL_=$('#url').value.trim();
+  if(URL_&&!/[?&]app=crm/.test(URL_))URL_+=(URL_.includes('?')?'&':'?')+'app=crm';
+  localStorage.crmUrl=URL_;dc.close();load()
+};
+$('#exportBtn').onclick=()=>{
+  const blob=new Blob([JSON.stringify(rows,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='crm_export_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+};
+$('#syncbadge').onclick=()=>flushQueue_();
 $('#q').oninput=$('#fs').onchange=render;
 document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter'&&sel)save(true)});
+// Pokus o flush fronty každé 2 minúty (keby predtým zlyhalo)
+setInterval(flushQueue_,120000);
 load();
 </script></body></html>
