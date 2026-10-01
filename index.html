@@ -150,33 +150,25 @@ async function enqueue(body){
   updateBadge();
   flushQueue_();
 }
-let flushing_=false;
+let flushing_=false,lastErr_='';
 async function flushQueue_(){
   if(flushing_||!URL_)return;
-  const{get,req}=dbTx(DB_QUEUE);
-  const keys=await new Promise((res,rej)=>{
-    const r=get(DB_QUEUE).getAllKeys();
-    r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error);
-  });
-  if(!keys.length){pendingQueue=[];updateBadge();return}
   flushing_=true;
-  for(const k of keys){
-    const{get:g,req:rq}=dbTx(DB_QUEUE);
-    const body=await rq(g(DB_QUEUE).get(k));
-    const ok=await sheetWrite_(body);
-    if(ok){
-      await dbDelete(DB_QUEUE,k);
-    }else{
-      break; // zastaví sa, skúsi znova neskôr
+  try{
+    const keys=await new Promise((res,rej)=>{
+      const{get}=dbTx(DB_QUEUE);
+      const r=get(DB_QUEUE).getAllKeys();
+      r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error);
+    });
+    for(const k of keys){
+      const{get:g,req:rq}=dbTx(DB_QUEUE);
+      const body=await rq(g(DB_QUEUE).get(k));
+      const ok=await sheetWrite_(body);
+      if(ok){await dbDelete(DB_QUEUE,k);lastErr_=''}
+      else break; // zastaví sa, skúsi znova neskôr
     }
-  }
-  flushing_=false;
-  const remaining=await new Promise((res,rej)=>{
-    const{get,req}=dbTx(DB_QUEUE);
-    const r=get(DB_QUEUE).count();
-    r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error);
-  });
-  pendingQueue=remaining?[...Array(remaining)]:[];
+  }catch(e){lastErr_='Fronta: '+e}
+  finally{flushing_=false}
   updateBadge();
 }
 function updateBadge(){
@@ -185,7 +177,7 @@ function updateBadge(){
   const r=get(DB_QUEUE).count();
   r.onsuccess=e=>{
     const n=e.target.result;
-    if(n>0){b.textContent='⏳ '+n+' čaká na Sheet';b.style.display='block'}
+    if(n>0){b.textContent='⏳ '+n+' čaká na Sheet'+(lastErr_?' · '+lastErr_.slice(0,60):'');b.style.display='block'}
     else{b.style.display='none'}
   };
 }
@@ -196,10 +188,13 @@ async function sheetWrite_(body){
   try{
     const url=URL_+(URL_.includes('?')?'&':'?')+'payload='+encodeURIComponent(JSON.stringify(body));
     const res=await fetch(url);
-    if(!res.ok)return false;
-    const json=await res.json();
-    return json.ok===true;
-  }catch{return false}
+    if(!res.ok){lastErr_='HTTP '+res.status;return false}
+    const txt=await res.text();
+    let json;
+    try{json=JSON.parse(txt)}catch{lastErr_='Odpoveď nie je JSON (skontroluj prístup „Kdokoľvek“ a nasadenie /exec): '+txt.slice(0,80).replace(/\s+/g,' ');return false}
+    if(json.ok!==true){lastErr_='Script: '+(json.error||JSON.stringify(json).slice(0,120));return false}
+    return true;
+  }catch(e){lastErr_='Sieť/CORS: '+e.message;return false}
 }
 
 // ── Načítanie zo Sheetu ──────────────────────────────────────────────────────
@@ -259,6 +254,7 @@ async function load(){
   $('#mode').textContent='🔄 sync…';
   // Potom načítaj Sheet na pozadí
   try{
+    await flushQueue_();
     const fresh=await fetchSheetRows_();
     await dbSaveRows(fresh);
     rows=fresh;
@@ -325,7 +321,7 @@ async function save(next){
     const sd={...data};
     const res=await apiLocal({action:'update',_row:r._row,data:sd,note:txt});
     if(!res.ok)throw(res.error||'neznáma chyba');
-    toast('Uložené ✓');
+    toast(URL_?'Uložené ✓':'Uložené len lokálne – nie je nastavená URL Sheetu',URL_?2200:4000);
     const rr=rows.find(x=>x._row===r._row)||r;
     const nl=filtered(),ni=nl.findIndex(x=>x._row===rr._row);
     const nx=next?(nl[ni+1]||nl[0]):rr;
@@ -342,6 +338,7 @@ $('#ns').onclick=async()=>{
     dn.close();sel=rows.find(r=>r._row===res._row)||rows.at(-1);
     buildFilters();render();detail();toast('Kontakt pridaný')
   }catch(e){toast('Chyba: '+e)}};
+$('#syncbadge').onclick=async()=>{await flushQueue_();toast(lastErr_||'Synchronizované ✓',6000)};
 $('#cfg').onclick=()=>{$('#url').value=URL_;dc.showModal()};
 $('#cs').onclick=()=>{
   URL_=$('#url').value.trim();
