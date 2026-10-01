@@ -77,25 +77,19 @@ const tkey=r=>{const d=pd(r['Dátum']);const [h,m]=(r['Čas']||'23:59').split(':
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
 
-let _ifc=0;
-function submitViaIframe_(url){
-  // Safari má dlhodobý bug: fetch()/XHR cez cross-origin 302 redirect (čo Apps Script
-  // vždy robí — presmeruje na script.googleusercontent.com) občas zahodí request a
-  // vráti "TypeError: Load failed", aj na GET. Natívna navigácia prehliadača (iframe)
-  // tento redirect zvládne bez problémov, preto zápis posielame takto namiesto fetch().
+function submitViaBeacon_(url){
+  // Iframe+form sa v Safari niekedy otvorí ako nová záložka namiesto tichého
+  // odoslania (ďalšia podoba toho istého problému s cross-origin redirectom
+  // cez script.googleusercontent.com). <img> request toto nerobí nikdy — je to
+  // čisto sieťový fetch bez navigácie, nech odpoveď aj redirect vyzerajú akokoľvek.
+  // Odpoveď je JSON, nie obrázok, takže vždy skončí na onerror — to nám stačí,
+  // skutočné overenie zápisu robíme hneď potom cez fetchRows_().
   return new Promise((resolve)=>{
-    const id='ifc'+(++_ifc);
-    const f=document.createElement('iframe');
-    f.name=id;f.style.display='none';
-    const done=()=>{clearTimeout(t);f.remove();resolve()};
+    const img=new Image();
+    const done=()=>{clearTimeout(t);resolve()};
     const t=setTimeout(done,8000);
-    f.onload=done;
-    document.body.appendChild(f);
-    const form=document.createElement('form');
-    form.method='GET';form.action=url;form.target=id;
-    document.body.appendChild(form);
-    form.submit();
-    form.remove();
+    img.onload=done;img.onerror=done;
+    img.src=url;
   });
 }
 async function fetchRows_(){
@@ -108,7 +102,7 @@ async function api(body){
   const sep=URL_.includes('?')?'&':'?';
   const url=URL_+sep+'payload='+encodeURIComponent(JSON.stringify(body));
   try{
-    await submitViaIframe_(url);
+    await submitViaBeacon_(url);
   }catch(e){
     throw new Error('Spojenie so serverom zlyhalo. Skontroluj, či je Apps Script nasadený ako webová appka s prístupom "Ktokoľvek", a či URL v nastaveniach je presná (bez medzier na konci).');
   }
