@@ -183,25 +183,36 @@ function updateBadge(){
 }
 
 // Pokus o jeden zápis do Sheetu. Vráti true/false (neháže exception).
+// JSONP: načítanie cez <script>, obchádza CORS/Safari "Load failed"
+function jsonp_(url,ms=20000){
+  return new Promise((res,rej)=>{
+    const cb='crmcb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const sc=document.createElement('script');
+    let t;
+    const done=()=>{clearTimeout(t);delete window[cb];sc.remove()};
+    t=setTimeout(()=>{done();rej(new Error('timeout – skontroluj /exec URL, nasadenie a prístup „Kdokoľvek“'))},ms);
+    window[cb]=d=>{done();res(d)};
+    sc.onerror=()=>{done();rej(new Error('skript sa nenačítal (sieť/URL)'))};
+    sc.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+    document.head.appendChild(sc);
+  });
+}
 async function sheetWrite_(body){
   if(!URL_)return true; // demo: predstierame úspech
   try{
     const url=URL_+(URL_.includes('?')?'&':'?')+'payload='+encodeURIComponent(JSON.stringify(body));
-    const res=await fetch(url);
-    if(!res.ok){lastErr_='HTTP '+res.status;return false}
-    const txt=await res.text();
-    let json;
-    try{json=JSON.parse(txt)}catch{lastErr_='Odpoveď nie je JSON (skontroluj prístup „Kdokoľvek“ a nasadenie /exec): '+txt.slice(0,80).replace(/\s+/g,' ');return false}
-    if(json.ok!==true){lastErr_='Script: '+(json.error||JSON.stringify(json).slice(0,120));return false}
+    const json=await jsonp_(url);
+    if(!json||json.ok!==true){lastErr_='Script: '+((json&&json.error)||'neznáma chyba');return false}
+    if(json.skipped&&json.skipped.length)toast('Pozor, v Sheete chýbajú stĺpce: '+json.skipped.join(', '),6000);
     return true;
-  }catch(e){lastErr_='Sieť/CORS: '+e.message;return false}
+  }catch(e){lastErr_='Sieť: '+e.message;return false}
 }
 
 // ── Načítanie zo Sheetu ──────────────────────────────────────────────────────
 async function fetchSheetRows_(){
-  const res=await fetch(URL_);
-  if(!res.ok)throw new Error('HTTP '+res.status);
-  return (await res.json()).rows||[];
+  const json=await jsonp_(URL_);
+  if(!json||json.ok!==true)throw new Error((json&&json.error)||'neplatná odpoveď');
+  return json.rows||[];
 }
 
 // ── Hlavná logika load/save ──────────────────────────────────────────────────
@@ -245,7 +256,7 @@ async function load(){
     const local=await dbLoadRows();
     rows=local.length?local:JSON.parse(JSON.stringify(DEMO));
     if(!local.length)await dbSaveRows(rows);
-    $('#mode').textContent='🟡 demo režim · v3';
+    $('#mode').textContent='🟡 demo režim · v4';
     buildFilters();render();return;
   }
   // Najprv zobraz lokálne dáta okamžite
@@ -258,12 +269,12 @@ async function load(){
     const fresh=await fetchSheetRows_();
     await dbSaveRows(fresh);
     rows=fresh;
-    $('#mode').textContent='🟢 Sheet · v3';
+    $('#mode').textContent='🟢 Sheet · v4';
     buildFilters();render();
     // Odošli prípadné čakajúce zápisy
     flushQueue_();
   }catch(e){
-    $('#mode').textContent='🟠 offline · v3';
+    $('#mode').textContent='🟠 offline · v4';
     if(!local.length){rows=[];buildFilters();render();}
     toast('Sheet nedostupný, pracujem lokálne',3000);
     flushQueue_();
