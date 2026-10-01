@@ -75,9 +75,11 @@ async function api(body){
   if(!URL_){return{ok:true,_row:body._row||Math.max(0,...rows.map(r=>r._row))+1}}
   let r;
   try{
-    // POST + text/plain: avoids the CORS preflight (ktorý Apps Script nevie spracovať)
-    // a zároveň sa vyhneme limitu na dĺžku URL pri GET s dlhým payloadom (spôsobovalo "Load failed").
-    r=await fetch(URL_,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+    // GET s ?payload=: vyhýba sa problému, že Apps Script robí 302 redirect na
+    // googleusercontent.com a pri POST-e prehliadač pri tomto redirecte často
+    // zahodí telo aj hlavičky ("Load failed"). GET týmto netrpí.
+    const sep=URL_.includes('?')?'&':'?';
+    r=await fetch(URL_+sep+'payload='+encodeURIComponent(JSON.stringify(body)));
   }catch(e){
     throw new Error('Spojenie so serverom zlyhalo. Skontroluj, či je Apps Script nasadený ako webová appka s prístupom "Ktokoľvek", a či URL v nastaveniach je presná (bez medzier na konci).');
   }
