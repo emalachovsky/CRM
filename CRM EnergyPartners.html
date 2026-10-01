@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CRM EnergyPartners</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mu:#6b7385;--ln:#e2e5eb;--ac:#2f6fed;--ok:#1a9d5b;--wa:#d9822b;--rd:#d64545}
+@media(prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--tx:#e8ebf2;--mu:#8e97ab;--ln:#2e3542;--ac:#5b8cff}}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui,sans-serif;background:var(--bg);color:var(--tx);height:100vh;display:flex;flex-direction:column}
+header{display:flex;gap:8px;padding:10px 14px;background:var(--card);border-bottom:1px solid var(--ln);align-items:center;flex-wrap:wrap}
+header h1{font-size:16px;margin:0 8px 0 0}
+input,select,textarea,button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--ln);border-radius:8px;padding:7px 10px}
+button{cursor:pointer}button.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
+main{flex:1;display:grid;grid-template-columns:340px 1fr;min-height:0}
+#list{overflow:auto;border-right:1px solid var(--ln)}
+.tabs{display:flex;gap:6px;padding:8px;position:sticky;top:0;background:var(--bg);z-index:1}
+.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.it{padding:9px 12px;border-bottom:1px solid var(--ln);cursor:pointer;background:var(--card)}
+.it.sel{outline:2px solid var(--ac);outline-offset:-2px}
+.it b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it small{color:var(--mu)}.it .r{float:right;font-size:12px;color:var(--mu)}.late .r{color:var(--rd);font-weight:600}
+.st{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;background:var(--ln);margin-right:4px}
+#det{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1;min-width:120px}.row.n>*{flex:none}
+a.call{display:inline-block;background:var(--ok);color:#fff;text-decoration:none;font-weight:600;padding:9px 14px;border-radius:8px}
+a.l{color:var(--ac);text-decoration:none;font-size:13px}
+label{display:block;font-size:12px;color:var(--mu);margin:8px 0 3px}
+textarea{width:100%;min-height:80px;resize:vertical}
+.chip{padding:3px 9px;font-size:12px;border-radius:14px}
+.hist{white-space:pre-wrap;color:var(--mu);font-size:13px;max-height:260px;overflow:auto}
+.hist div{padding:5px 0;border-bottom:1px dashed var(--ln)}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:20px;opacity:0;transition:.25s;pointer-events:none}
+#toast.on{opacity:1}
+dialog{border:1px solid var(--ln);border-radius:12px;background:var(--card);color:var(--tx);max-width:520px;width:92%}
+@media(max-width:760px){main{grid-template-columns:1fr}#list{max-height:38vh;border-right:0;border-bottom:1px solid var(--ln)}}
+</style></head><body>
+<header><h1>⚡ CRM</h1>
+<input id="q" placeholder="Hľadať firmu, meno, telefón…" style="flex:1;min-width:160px">
+<select id="fs" style="flex:none"><option value="">Všetky stavy</option></select>
+<button class="p" id="add" style="flex:none">+ Kontakt</button>
+<button id="cfg" title="Nastavenia" style="flex:none">⚙</button>
+<span id="mode" style="font-size:12px;color:var(--mu)"></span></header>
+<main><div id="list"></div><div id="det"><div class="card">Vyber kontakt zo zoznamu.</div></div></main>
+<div id="toast"></div>
+
+<dialog id="dc"><h3>Nastavenia</h3><label>URL Apps Script web aplikácie (prázdne = demo dáta)</label>
+<input id="url" style="width:100%" placeholder="https://script.google.com/macros/s/…/exec">
+<div class="row n" style="margin-top:12px"><button class="p" id="cs">Uložiť</button><button onclick="dc.close()">Zavrieť</button></div></dialog>
+<dialog id="dn"><h3>Nový kontakt</h3><div id="nf"></div>
+<div class="row n" style="margin-top:12px"><button class="p" id="ns">Pridať</button><button onclick="dn.close()">Zrušiť</button></div></dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+const STAV=['Oslovený','Pošle PDF','Analýza','Rozhoduje','Klient','Nezáujem'];
+const SMALL=['EE Spotreba','EE Cena','EE Viazanosť','PL Spotreba','PL Cena','PL Viazanosť','Mail','WEB','Ulica','PSČ','Mesto','Firma','IČO','Koniec služby','Odvetvie'];
+const CHIPS=['Nedvíhal','Zavolať neskôr','Pošle PDF','Poslal som SMS','Poslal som mail','Dohodnuté stretnutie','Nemá záujem'];
+const SEP='   ────────────────────   ';
+const DEMO=[
+{_row:2,'Názov firmy':'Pizza Club "U Šeba"','Meno':'Bagirov','Telefón':'0908 095 939','Stav':'Pošle PDF','Poznámka':'📅 14.09.2026   nestiha'+SEP+'📅 10.08.2026   má PL SPP aj EE Met, pošle fa','Dátum':'1.10.2026','Čas':'9:00','Nasleduje':'čakám fa','Mesto':'Košice'},
+{_row:4,'Názov firmy':'Dargov','Meno':'Kaňuk','Telefón':'0948 425 351','Telefón 2':'0910 926 864','Stav':'Analýza','Poznámka':'📅 14.07.2026   bude mať poradu vo štvrtok','Dátum':'1.10.2026','Čas':'10:00','Nasleduje':'zavolá'},
+{_row:16,'Názov firmy':'CROWN HOUSE (Nábytok Prešov)','Meno':'Ferenc','Telefón':'0911 727 220','Stav':'Rozhoduje','Poznámka':'📅 28.09.2026   poslal som mailom ponuku Spot 6,9','Dátum':'5.10.2026','Čas':'9:00','Nasleduje':'spot 6,9, podpísať splnomocnenie!','EE Spotreba':'407','EE Cena':'9,86','EE Viazanosť':'31.12.2026','Mail':'marko.ferenc34@gmail.com'}];
+let rows=[],sel=null,tab='dnes',URL_=localStorage.crmUrl||'';
+
+const pd=s=>{const m=/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec((s||'').trim());return m?new Date(+m[3],m[2]-1,+m[1]):null};
+const fd=d=>d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();
+const iso=s=>{const d=pd(s);return d?d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'):''};
+const fromIso=s=>{if(!s)return'';const[y,m,d]=s.split('-');return +d+'.'+ +m+'.'+y};
+const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const tkey=r=>{const d=pd(r['Dátum']);const [h,m]=(r['Čas']||'23:59').split(':');return d?d.getTime()+(+h*60+ +m)*6e4:9e15};
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
+
+async function api(body){
+  if(!URL_){return{ok:true,_row:body._row||Math.max(0,...rows.map(r=>r._row))+1}}
+  let r;
+  try{
+    // POST + text/plain: avoids the CORS preflight (ktorý Apps Script nevie spracovať)
+    // a zároveň sa vyhneme limitu na dĺžku URL pri GET s dlhým payloadom (spôsobovalo "Load failed").
+    r=await fetch(URL_,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+  }catch(e){
+    throw new Error('Spojenie so serverom zlyhalo. Skontroluj, či je Apps Script nasadený ako webová appka s prístupom "Ktokoľvek", a či URL v nastaveniach je presná (bez medzier na konci).');
+  }
+  let j;
+  try{j=await r.json()}catch(e){throw new Error('Server vrátil neočakávanú odpoveď (pravdepodobne prihlasovaciu stránku Google namiesto JSON) — skontroluj nastavenie prístupu k web app nasadeniu.')}
+  return j;
+}
+async function load(){
+  $('#mode').textContent=(URL_?'🟢 pripojené na Sheet':'🟡 demo režim')+' · v2';
+  if(!URL_){rows=JSON.parse(JSON.stringify(DEMO))}
+  else{try{const res=await fetch(URL_);if(!res.ok)throw new Error('HTTP '+res.status);rows=(await res.json()).rows||[]}catch(e){toast('Chyba načítania: '+e.message);rows=[]}}
+  const ss=[...new Set([...STAV,...rows.map(r=>r.Stav).filter(Boolean)])];
+  $('#fs').innerHTML='<option value="">Všetky stavy</option>'+ss.map(s=>`<option>${esc(s)}</option>`).join('');
+  render();
+}
+function filtered(){
+  const q=$('#q').value.toLowerCase().trim(),fs=$('#fs').value,t=today().getTime();
+  let a=rows.filter(r=>{
+    if(fs&&r.Stav!==fs)return false;
+    if(q)return [r['Názov firmy'],r.Meno,r['Telefón'],r['Telefón 2'],r.Mesto,r.Firma].join(' ').toLowerCase().includes(q.replace(/\s/g,'')||q)||[r['Telefón'],r['Telefón 2']].join(' ').replace(/\s/g,'').includes(q.replace(/\s/g,''));
+    if(tab==='dnes'){const d=pd(r['Dátum']);return d&&d.getTime()<=t}
+    return true});
+  return a.sort((x,y)=>tkey(x)-tkey(y));
+}
+function render(){
+  const a=filtered(),t=today().getTime(),nd=rows.filter(r=>{const d=pd(r['Dátum']);return d&&d.getTime()<=t}).length;
+  $('#list').innerHTML=`<div class="tabs"><button class="${tab==='dnes'?'on':''}" onclick="tab='dnes';render()">Dnes / po termíne (${nd})</button><button class="${tab==='all'?'on':''}" onclick="tab='all';render()">Všetko (${rows.length})</button></div>`+
+  a.map(r=>{const d=pd(r['Dátum']),late=d&&d.getTime()<t;return `<div class="it ${late?'late':''} ${sel&&sel._row===r._row?'sel':''}" onclick="pick(${r._row})"><span class="r">${esc(r['Dátum'])} ${esc(r['Čas'])}</span><b>${esc(r['Názov firmy']||'(bez názvu)')}</b><small><span class="st">${esc(r.Stav||'—')}</span>${esc(r.Meno)}</small><br><small>${esc(r.Nasleduje)}</small></div>`}).join('')||'<div class="it">Nič tu nie je 🎉</div>';
+}
+function pick(n){sel=rows.find(r=>r._row===n);render();detail()}
+function hist(p){return (p||'').split(/\s*─{5,}\s*/).filter(x=>x.trim()).map(x=>`<div>${esc(x.trim())}</div>`).join('')}
+function detail(){
+  const r=sel;if(!r)return;
+  const tel=x=>x?`<a class="call" href="tel:${esc(x.replace(/[^\d+]/g,''))}">📞 ${esc(x)}</a>`:'';
+  const ss=[...new Set([...STAV,r.Stav].filter(Boolean))];
+  $('#det').innerHTML=`<div class="card"><div class="row n" style="justify-content:space-between"><div><h2 style="margin:0">${esc(r['Názov firmy'])}</h2><div style="color:var(--mu)">${esc(r.Meno)} ${esc(r.Mesto)}</div></div><div class="row n">${tel(r['Telefón'])}${tel(r['Telefón 2'])}</div></div>
+  <div class="row n" style="margin-top:6px">${r.Mail?`<a class="l" href="mailto:${esc(r.Mail)}">✉ ${esc(r.Mail)}</a>`:''}${r.WEB?`<a class="l" target="_blank" href="${esc(/^http/.test(r.WEB)?r.WEB:'https://'+r.WEB)}">🌐 web</a>`:''}${r['IČO']?`<a class="l" target="_blank" href="https://www.google.com/search?q=${esc(r['IČO'])}+orsr">IČO ${esc(r['IČO'])}</a>`:''}</div></div>
+  <div class="card"><b>Záznam hovoru</b>
+  <div class="row n" style="margin:8px 0">${CHIPS.map(c=>`<button class="chip" onclick="chip('${c}')">${c}</button>`).join('')}</div>
+  <textarea id="nt" placeholder="Poznámka k hovoru…"></textarea>
+  <div class="row"><div><label>Stav</label><select id="sv" style="width:100%">${ss.map(s=>`<option ${s===r.Stav?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+  <div style="flex:2"><label>Nasleduje</label><input id="nx" style="width:100%" value="${esc(r.Nasleduje)}"></div></div>
+  <div class="row"><div><label>Dátum ďalšej komunikácie</label><input type="date" id="dt" style="width:100%" value="${iso(r['Dátum'])}"></div>
+  <div><label>Čas</label><input type="time" id="tm" style="width:100%" value="${esc((r['Čas']||'').padStart(5,'0'))}"></div></div>
+  <div class="row n" style="margin-top:8px">${[['Zajtra',1],['+3 dni',3],['+1 týždeň',7],['+2 týždne',14],['+1 mesiac',30]].map(([l,n])=>`<button class="chip" onclick="plus(${n})">${l}</button>`).join('')}</div>
+  <div class="row n" style="margin-top:12px"><button class="p" onclick="save(true)">💾 Uložiť a ďalší</button><button onclick="save(false)">Uložiť</button></div></div>
+  <details class="card"><summary><b>Údaje o zákazníkovi</b></summary><div class="g">${SMALL.map(k=>`<div><label>${k}</label><input data-k="${k}" style="width:100%" value="${esc(r[k])}"></div>`).join('')}</div></details>
+  <div class="card"><b>História</b><div class="hist">${hist(r['Poznámka'])||'—'}</div></div>`;
+  $('#nt').focus();
+}
+function chip(c){const t=$('#nt');t.value=(t.value?t.value+'. ':'')+c}
+function plus(n){const d=today();d.setDate(d.getDate()+n);$('#dt').value=iso(fd(d))}
+async function save(next){
+  const r=sel,txt=$('#nt').value.trim(),data={Stav:$('#sv').value,Nasleduje:$('#nx').value,'Dátum':fromIso($('#dt').value),'Čas':$('#tm').value.replace(/^0/,'')};
+  document.querySelectorAll('[data-k]').forEach(i=>{if(i.value!==(r[i.dataset.k]||''))data[i.dataset.k]=i.value});
+  if(txt)data['Poznámka']=`📅 ${String(new Date().getDate()).padStart(2,'0')}.${String(new Date().getMonth()+1).padStart(2,'0')}.${new Date().getFullYear()}   ${txt}`+(r['Poznámka']?SEP+r['Poznámka']:'');
+  const list=filtered(),i=list.indexOf(r);
+  try{const sd={...data};delete sd['Poznámka'];const res=await api({action:'update',_row:r._row,data:sd,note:txt});if(!res.ok)throw (res.error||'neznáma chyba');Object.assign(r,data);toast('Uložené ✓');
+    const nl=filtered(),nx=next?(nl[i]&&nl[i]!==r?nl[i]:nl[i+1]||nl[0]):r;
+    sel=nx||null;render();sel?detail():$('#det').innerHTML='<div class="card">Hotovo 🎉</div>'}
+  catch(e){toast('Chyba: '+e)}
+}
+$('#add').onclick=()=>{$('#nf').innerHTML=['Názov firmy','Meno','Telefón','Telefón 2','Mail','Mesto','IČO'].map(k=>`<label>${k}</label><input data-n="${k}" style="width:100%">`).join('');dn.showModal()};
+$('#ns').onclick=async()=>{
+  const data={Stav:'Oslovený','Dátum':fd(today()),'Čas':'9:00'};document.querySelectorAll('[data-n]').forEach(i=>{if(i.value)data[i.dataset.n]=i.value});
+  if(!data['Názov firmy']&&!data['Telefón'])return toast('Zadaj aspoň názov alebo telefón');
+  try{const res=await api({action:'add',data});if(!res.ok)throw res.error;rows.push({_row:res._row,...data});dn.close();sel=rows.at(-1);render();detail();toast('Kontakt pridaný')}catch(e){toast('Chyba: '+e)}};
+$('#cfg').onclick=()=>{$('#url').value=URL_;dc.showModal()};
+$('#cs').onclick=()=>{URL_=$('#url').value.trim();if(URL_&&!/[?&]app=crm/.test(URL_))URL_+=(URL_.includes('?')?'&':'?')+'app=crm';localStorage.crmUrl=URL_;dc.close();load()};
+$('#q').oninput=$('#fs').onchange=render;
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter'&&sel)save(true)});
+load();
+</script></body></html>
