@@ -77,21 +77,6 @@ const tkey=r=>{const d=pd(r['Dátum']);const [h,m]=(r['Čas']||'23:59').split(':
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
 
-function submitViaBeacon_(url){
-  // Iframe+form sa v Safari niekedy otvorí ako nová záložka namiesto tichého
-  // odoslania (ďalšia podoba toho istého problému s cross-origin redirectom
-  // cez script.googleusercontent.com). <img> request toto nerobí nikdy — je to
-  // čisto sieťový fetch bez navigácie, nech odpoveď aj redirect vyzerajú akokoľvek.
-  // Odpoveď je JSON, nie obrázok, takže vždy skončí na onerror — to nám stačí,
-  // skutočné overenie zápisu robíme hneď potom cez fetchRows_().
-  return new Promise((resolve)=>{
-    const img=new Image();
-    const done=()=>{clearTimeout(t);resolve()};
-    const t=setTimeout(done,8000);
-    img.onload=done;img.onerror=done;
-    img.src=url;
-  });
-}
 async function fetchRows_(){
   const res=await fetch(URL_);
   if(!res.ok)throw new Error('HTTP '+res.status);
@@ -99,31 +84,24 @@ async function fetchRows_(){
 }
 async function api(body){
   if(!URL_){return{ok:true,_row:body._row||Math.max(0,...rows.map(r=>r._row))+1}}
-  const sep=URL_.includes('?')?'&':'?';
-  const url=URL_+sep+'payload='+encodeURIComponent(JSON.stringify(body));
+  let res;
   try{
-    await submitViaBeacon_(url);
+    res=await fetch(URL_,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, // zámerne text/plain, nech prehliadač nepošle CORS preflight (OPTIONS), ktorý Apps Script nevie obslúžiť
+      body:JSON.stringify(body)
+    });
   }catch(e){
     throw new Error('Spojenie so serverom zlyhalo. Skontroluj, či je Apps Script nasadený ako webová appka s prístupom "Ktokoľvek", a či URL v nastaveniach je presná (bez medzier na konci).');
   }
-  // Keďže request ide cez iframe, nevidíme priamu odpoveď servera — overíme zápis
-  // tak, že dáta znova načítame a skontrolujeme, či sa zmena prejavila.
-  let fresh;
-  try{fresh=await fetchRows_()}catch(e){throw new Error('Zápis odišiel, ale overenie zlyhalo (nepodarilo sa znova načítať dáta): '+e.message)}
-  if(body.action==='add'){
-    const want=body.data||{};
-    const match=[...fresh].reverse().find(r=>Object.keys(want).every(k=>k==='Dátum'||k==='Čas'?true:(r[k]||'')===(want[k]||'')));
-    if(!match)throw new Error('Zápis sa po uložení nenašiel v hárku — skontroluj pripojenie alebo to skús znova.');
-    rows=fresh;
-    return{ok:true,_row:match._row};
-  }else{
-    const row=fresh.find(r=>r._row===body._row);
-    if(!row)throw new Error('Riadok ' + body._row + ' sa po uložení nenašiel v hárku.');
-    const changed=Object.keys(body.data||{}).filter(k=>k!=='Poznámka').every(k=>String(row[k]||'')===String(body.data[k]||''));
-    if(!changed)throw new Error('Zápis sa neprejavil v hárku — skontroluj pripojenie alebo to skús znova.');
-    rows=fresh;
-    return{ok:true,_row:body._row};
-  }
+  if(!res.ok)throw new Error('Server odpovedal chybou HTTP '+res.status);
+  let out;
+  try{out=await res.json()}catch(e){throw new Error('Server vrátil nečakanú odpoveď (nie JSON) — skontroluj nasadenie Apps Scriptu.')}
+  if(!out.ok)throw new Error(out.error||'neznáma chyba servera');
+  // Server pri zápise vracia len riadok, nie všetky dáta — pre istotu si čerstvé
+  // dáta znova načítame, nech appka presne odráža stav v hárku.
+  try{rows=await fetchRows_()}catch(e){/* zápis prebehol, len sa nepodarilo obnoviť zoznam — nevadí, dáta v hárku sú v poriadku */}
+  return{ok:true,_row:out._row};
 }
 async function load(){
   $('#mode').textContent=(URL_?'🟢 pripojené na Sheet':'🟡 demo režim')+' · v2';
