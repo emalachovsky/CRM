@@ -2,11 +2,16 @@
 <html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CRM EnergyPartners</title>
 <style>
-:root{--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mu:#6b7385;--ln:#e2e5eb;--ac:#2f6fed;--ok:#1a9d5b;--wa:#d9822b;--rd:#d64545}
-@media(prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--tx:#e8ebf2;--mu:#8e97ab;--ln:#2e3542;--ac:#5b8cff}}
-*{box-sizing:border-box}body{margin:0;font:14px system-ui,sans-serif;background:var(--bg);color:var(--tx);height:100vh;display:flex;flex-direction:column}
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mu:#6b7385;--ln:#e2e5eb;--ac:#2f6fed;--ok:#1a9d5b;--wa:#d9822b;--rd:#d64545;--fs:14px}
+@media(prefers-color-scheme:dark){:root{--bg:#0a0d14;--card:#141b29;--tx:#e8ebf2;--mu:#8e97ab;--ln:#2a3344;--ac:#5b8cff}}
+/* Veľkosť písma reaguje na šírku okna/rozlíšenie: menšie na malom MacBook okne (~1280px), väčšie na Full HD monitore (1920px) a viac. */
+@media(min-width:0px){:root{--fs:13px}}
+@media(min-width:1280px){:root{--fs:14px}}
+@media(min-width:1600px){:root{--fs:15px}}
+@media(min-width:1920px){:root{--fs:16px}}
+*{box-sizing:border-box}body{margin:0;font:var(--fs) system-ui,sans-serif;background:var(--bg);color:var(--tx);height:100vh;display:flex;flex-direction:column}
 header{display:flex;gap:8px;padding:10px 14px;background:var(--card);border-bottom:1px solid var(--ln);align-items:center;flex-wrap:wrap}
-header h1{font-size:16px;margin:0 8px 0 0}
+header h1{font-size:1.15em;margin:0 8px 0 0}
 input,select,textarea,button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--ln);border-radius:8px;padding:7px 10px}
 button{cursor:pointer}button.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
 main{flex:1;display:grid;grid-template-columns:340px 1fr;min-height:0}
@@ -16,18 +21,19 @@ main{flex:1;display:grid;grid-template-columns:340px 1fr;min-height:0}
 .it{padding:9px 12px;border-bottom:1px solid var(--ln);cursor:pointer;background:var(--card)}
 .it.sel{outline:2px solid var(--ac);outline-offset:-2px}
 .it b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.it small{color:var(--mu)}.it .r{float:right;font-size:12px;color:var(--mu)}.late .r{color:var(--rd);font-weight:600}
-.st{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;background:var(--ln);margin-right:4px}
+.it small{color:var(--mu)}.it .r{float:right;font-size:.85em;color:var(--mu)}.late .r{color:var(--rd);font-weight:600}
+.st{display:inline-block;font-size:.8em;padding:1px 7px;border-radius:9px;background:var(--ln);margin-right:4px}
 #det{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
-.card{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:14px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:14px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.card::before{content:'';position:absolute;top:0;left:12px;right:12px;height:2px;border-radius:0 0 3px 3px;background:linear-gradient(90deg,var(--ac),var(--ok));opacity:.7}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .row>*{flex:1;min-width:120px}.row.n>*{flex:none}
-a.call{display:inline-block;background:var(--ok);color:#fff;text-decoration:none;font-weight:600;padding:9px 14px;border-radius:8px}
-a.l{color:var(--ac);text-decoration:none;font-size:13px}
-label{display:block;font-size:12px;color:var(--mu);margin:8px 0 3px}
+a.call{display:inline-block;background:var(--ok);color:#fff;text-decoration:none;font-weight:600;padding:9px 14px;border-radius:8px;font-variant-numeric:tabular-nums}
+a.l{color:var(--ac);text-decoration:none;font-size:.9em}
+label{display:block;font-size:.85em;color:var(--mu);margin:8px 0 3px}
 textarea{width:100%;min-height:80px;resize:vertical}
-.chip{padding:3px 9px;font-size:12px;border-radius:14px}
-.hist{white-space:pre-wrap;color:var(--mu);font-size:13px;max-height:260px;overflow:auto}
+.chip{padding:3px 9px;font-size:.85em;border-radius:14px}
+.hist{white-space:pre-wrap;color:var(--mu);font-size:.9em;max-height:260px;overflow:auto}
 .hist div{padding:5px 0;border-bottom:1px dashed var(--ln)}
 .g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:20px;opacity:0;transition:.25s;pointer-events:none}
