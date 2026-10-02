@@ -51,6 +51,9 @@ h1,h2,h3{margin:0}
   display:grid;place-items:center;cursor:pointer}
 .ib.add{background:linear-gradient(135deg,#f2c76a,#ebbc5a);border:0;color:#2a1300}
 .sync{font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:.4rem}
+.qrow{display:flex;gap:.5rem;align-items:center}
+.qrow input{margin:0;flex:1}
+.qrow .ib{flex:none}
 .dot{width:.6rem;height:.6rem;border-radius:50%;background:var(--grey)}
 .dot.ok{background:var(--green)} .dot.sync{background:var(--orange);animation:pulse 1s infinite} .dot.err{background:var(--red)}
 @keyframes pulse{50%{opacity:.3}}
@@ -110,8 +113,15 @@ textarea{resize:vertical;line-height:1.4}
 input:focus,select:focus,textarea:focus{outline:0;border-color:var(--teal);box-shadow:0 0 0 3px rgba(235,188,90,.18)}
 input[readonly]{opacity:.7}
 .dt{display:grid;grid-template-columns:3fr 2fr;gap:.7rem}
-.qd{display:flex;gap:.4rem;flex-wrap:wrap;margin:-.3rem 0 .8rem}
-.qn{display:flex;gap:.4rem;flex-wrap:wrap;margin:-.3rem 0 .8rem}
+.qd{display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0 .8rem}
+.qn{display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0 .8rem}
+.dtRow{display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:start;margin-bottom:.2rem}
+.dtNarrow{display:flex;gap:.5rem;flex-wrap:wrap;max-width:15rem}
+.dtNarrow label{flex:1 1 6.5rem;min-width:6.5rem;margin-bottom:0}
+.dtNarrow .qd{flex-basis:100%;width:100%;margin:.4rem 0 0}
+.dtSmall{padding:.5rem .55rem;min-height:2.4rem}
+.dtAct{min-width:0}
+@media(max-width:480px){.dtRow{grid-template-columns:1fr}}
 .cta{width:100%;min-height:3rem;border:0;border-radius:14px;font-weight:750;font-size:1rem;cursor:pointer;
   background:linear-gradient(135deg,#f2c76a,#ebbc5a);color:#2a1300;box-shadow:0 8px 22px rgba(235,188,90,.25)}
 .cta:disabled{opacity:.6}
@@ -180,7 +190,7 @@ input[readonly]{opacity:.7}
 .vt.on{background:#ebbc5a;color:#1a1405}
 .ltitle{gap:.4rem}.sync{min-width:0;line-height:1.1}
 @media(max-width:520px){.cnt{display:none}.ib{width:2.3rem;height:2.3rem}.vt{padding:.35rem .6rem}}
-.qn .chip.sm,.qd .chip.sm{background:rgba(167,139,250,.16);border-color:rgba(167,139,250,.5);color:#d4c6ff}
+.qn .chip.sm,.qd .chip.sm{background:rgba(111,211,176,.14);border-color:rgba(111,211,176,.5);color:#8fe6c9}
 .hl{background:rgba(77,184,255,.14);border:1px solid rgba(77,184,255,.35);border-radius:10px;padding:.3rem .6rem;margin-top:.45rem}
 .hl .c-next{color:#9fd8ff}
 .addcols{margin:.5rem 0 1rem;padding:.7rem .9rem;border-radius:12px;background:rgba(235,188,90,.1);border:1px solid rgba(235,188,90,.4);font-size:.88rem}
@@ -223,6 +233,7 @@ const ICONS = {
   building:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>',
   activity:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
   sliders:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+  gear:'<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   refresh:'<path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/>',
   back:'<path d="M15 18l-6-6 6-6"/>',
@@ -452,11 +463,11 @@ function render() {
 function renderList() {
   const p = $('#listPane');
   if (!S.data) { p.innerHTML = `<div class="empty big">${S.cfg.url ? 'Načítavam…' : 'Nastav pripojenie v Nastaveniach.'}</div>`; return; }
-  p.innerHTML = `<div class="lhead"><div class="ltitle"><div class="vtabs"><button class="vt ${S.view === 'contacts' ? 'on' : ''}" data-nav="contacts">Kontakty</button><button class="vt ${S.view === 'companies' ? 'on' : ''}" data-nav="companies">Firmy</button></div><span class="cnt" id="cnt"></span><span class="sp"></span><div class="sync" id="sync"></div>
+  p.innerHTML = `<div class="lhead"><div class="ltitle"><h1>Kontakty</h1><span class="cnt" id="cnt"></span><span class="sp"></span><div class="sync" id="sync"></div>
     <button class="ib" data-act="refresh" aria-label="Obnoviť">${ico('refresh')}</button>
-    <button class="ib add" data-act="add" aria-label="Pridať">${ico('plus')}</button>
-    <button class="ib" data-nav="settings" aria-label="Nastavenia">${ico('sliders')}</button></div>
-    <input id="q" type="search" placeholder="Hľadať…" value="${esc(S.q)}" autocomplete="off" style="margin:0">
+    <button class="ib" data-nav="settings" aria-label="Nastavenia">${ico('gear')}</button></div>
+    <div class="qrow"><input id="q" type="search" placeholder="Hľadať…" value="${esc(S.q)}" autocomplete="off" style="margin:0">
+    <button class="ib add" data-act="add" aria-label="Pridať">${ico('plus')}</button></div>
     <div class="chips" id="chips"></div></div><div id="listBody"></div>`;
   renderChips(); renderListBody();
   paintSync();
@@ -512,27 +523,6 @@ function renderListBody() {
       return h + card(r);
     }).join('') || '<div class="empty">Nič sa nenašlo.</div>';
     if (rows.length > S.limit) html += `<button class="more" data-act="more">Zobraziť ďalších ${rows.length - S.limit}</button>`;
-  } else if (S.view === 'companies') {
-    const q = norm(S.q);
-    const T = todayISO(), byCo = new Map();
-    S.data.contacts.rows.forEach(r => { const k = norm(V(r, 'firma')); if (!byCo.has(k)) byCo.set(k, []); byCo.get(k).push(r); });
-    const names = companyNames().filter(x => {
-      if (q && !norm(x).includes(q)) return false;
-      const cs = byCo.get(norm(x)) || [];
-      if (S.chip === 'due' && !cs.some(r => { const d = DT(r).d; return d && d <= T; })) return false;
-      if (S.stSet.size && !cs.some(r => S.stSet.has(V(r, 'stav')))) return false;
-      return true;
-    }); n = names.length;
-    html = names.slice(0, S.limit).map(nm => {
-      const cr = compRow(nm), cnt = S.data.contacts.rows.filter(r => norm(V(r, 'firma')) === norm(nm)).length;
-      const hasA = cr && (cr.v['Spotreba el. (MWh/rok)'] || cr.v['Spotreba plyn (MWh/rok)']);
-      const sav = cr && cr.v['Úspora (€/rok)'];
-      const sts = [...new Set(S.data.contacts.rows.filter(r => norm(V(r, 'firma')) === norm(nm)).map(r => V(r, 'stav')).filter(Boolean))];
-      const legal = cr && cr.v['Názov spoločnosti'];
-      return `<div class="card ${S.sel === nm ? 'sel' : ''}" data-opencomp="${esc(nm)}"><div><div class="c-top" style="align-items:flex-start"><div><b class="c-firma">${esc(nm)}</b>${legal ? `<div class="c-sub">${esc(legal)}</div>` : ''}</div>
-        <div class="rcol"><span class="sts2">${sts.map(badge).join('')}</span>${hasA ? '<span class="badge b-green">S analýzou</span>' : '<span class="badge b-grey">Bez analýzy</span>'}</div></div>
-        <div class="c-bot"><span class="c-sub">${cnt} kontaktov</span>${sav ? `<span class="when over">úspora ${esc(sav)} €</span>` : ''}</div></div></div>`;
-    }).join('') || '<div class="empty">Žiadne firmy.</div>';
   } else {
     const q = norm(S.q);
     const rows = S.data.activities.rows.filter(r => !q || norm(Object.values(r.v).join(' ')).includes(q))
@@ -555,10 +545,11 @@ function histItem(a, withName) {
 /* ---------- detail: kontakt ---------- */
 function renderDetail() {
   const p = $('#detailPane');
-  if (!S.data || S.sel == null) { p.innerHTML = '<div class="ph">Vyber kontakt alebo firmu zo zoznamu.</div>'; return; }
-  if (S.view === 'contacts') { const r = rowBy(S.sel); p.innerHTML = r ? contactDetail(r) : '<div class="ph">Kontakt sa nenašiel.</div>'; }
-  else if (S.view === 'companies') p.innerHTML = companyDetail(S.sel);
-  else p.innerHTML = '<div class="ph">Vyber kontakt alebo firmu zo zoznamu.</div>';
+  if (!S.data) { p.innerHTML = '<div class="ph">Vyber kontakt zo zoznamu.</div>'; return; }
+  if (S.sel == null && innerWidth >= 900) { const rows = filtered(); if (rows.length) S.sel = rows[0].r; }
+  if (S.sel == null) { p.innerHTML = '<div class="ph">Vyber kontakt zo zoznamu.</div>'; return; }
+  const r = rowBy(S.sel);
+  p.innerHTML = r ? contactDetail(r) : '<div class="ph">Kontakt sa nenašiel.</div>';
 }
 function callBtns(r) {
   const ps = phones(r);
@@ -584,7 +575,7 @@ function contactDetail(r) {
   const em = V(r, 'email'), cr0 = V(r, 'firma') ? compRow(V(r, 'firma')) : null, web = cr0 ? String(cr0.v['Web'] || '').trim() : '', webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
   const tabs = [['hovor', 'Hovor'], ['firma', 'Firma / analýza'], ['hist', 'História'], ['udaje', 'Všetky údaje']];
   return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
-    <div style="flex:1"><h2>${V(r, 'firma') ? `<a class="gofirma" data-gocomp="${esc(V(r, 'firma'))}">${esc(V(r, 'firma'))}</a>` : '(bez firmy)'}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div>${stSelect(V(r, 'stav'))}</div>
+    <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div>${stSelect(V(r, 'stav'))}</div>
     ${callBtns(r)}
     ${em || web ? `<div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}</div>` : ''}
     <div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div>
@@ -607,16 +598,20 @@ function tabHovor(r) {
   const {d, t} = DT(r), A = k => esc(S.m[k]);
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
   const phs = ['tel', 'tel2'].filter(k => S.m[k]).map(k => `<label>${k === 'tel' ? 'Telefón' : 'Telefón 2'}<input type="tel" data-h="${A(k)}" value="${esc(r.v[S.m[k]] ?? '')}"></label>`).join('');
+  const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
+      <label>Dátum<input type="date" class="dtSmall" data-h="${A('datum')}" data-t="d" value="${d}"></label>
+      ${S.m.cas ? `<label>Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
+      <div class="qd">${['<button type="button" class="chip sm" data-qd="0">Dnes</button>', '<button type="button" class="chip sm" data-qd="1">Zajtra</button>', '<button type="button" class="chip sm" data-qd="7">+1 týždeň</button>'].join('')}</div>
+    </div>
+    ${S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : ''}
+    </div>` : (S.m.pozicia ? `<label>Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : '');
   return `<form id="fCall" class="win pad" autocomplete="off">
-    ${S.m.pozicia ? `<label>Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : ''}
+    ${dtBlock}
     ${phs ? `<div class="ph2">${phs}</div>` : ''}
     <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder="Čo sa riešilo…"></textarea></label>
-    <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qn="${esc(x)}">${x}</button>`).join('')}<button type="button" class="btn-sm" data-act="savenote">Uložiť poznámku</button></div>
-    ${S.m.dalsi ? `<label>Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label>` : ''}
-    ${S.m.datum ? `<div class="dt"><label>Ďalšia komunikácia – dátum<input type="date" data-h="${A('datum')}" data-t="d" value="${d}"></label>
-      ${S.m.cas ? `<label>Čas${timeSelect(`data-h="${A('cas')}"`, t)}</label>` : '<span></span>'}</div>
-      <div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button>
-      <button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>` : ''}
+    <button type="button" class="btn-sm" data-act="savenote">Uložiť poznámku</button>
+    ${S.m.dalsi ? `<label style="margin-top:.8rem">Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label>
+      <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qnx="${esc(x)}">${x}</button>`).join('')}</div>` : ''}
     <div id="notesBox">${notesHtml(r)}</div>
     ${savemsgHtml()}<button class="cta stick" type="submit">Uložiť zmeny</button></form>`;
 }
@@ -679,16 +674,6 @@ function calcSavings(form) {
   const u = form.querySelector('[data-h="Úspora (€/rok)"]');
   if (u && (!u.value || u.dataset.auto === '1')) { u.value = Math.round(tot); u.dataset.auto = '1'; }
 }
-function companyDetail(name) {
-  const cs = S.data.contacts.rows.filter(r => norm(V(r, 'firma')) === norm(name)), cr = compRow(name), legal = cr ? cr.v['Názov spoločnosti'] : '';
-  return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button><div style="flex:1"><h2>${esc(name)}</h2><div class="sub">${esc([legal, cs.length + ' kontaktov'].filter(Boolean).join(' · '))}</div></div><div class="sts">${[...new Set(cs.map(r => V(r, 'stav')).filter(Boolean))].map(badge).join('')}</div></div>
-    <div class="gtitle">Kontakty firmy</div>
-    ${cs.map(r => `<div class="card ${dueClass(DT(r).d)}" data-goto="${r.r}"><div><div class="c-top"><b>${esc(V(r, 'osoba') || '(bez mena)')}</b>${badge(V(r, 'stav'))}</div>
-      <div class="c-bot hl"><span class="when ${dueClass(DT(r).d)}">${esc(whenText(DT(r).d, DT(r).t))}</span><span class="c-next">${esc(V(r, 'dalsi'))}</span></div></div></div>`).join('') || '<div class="empty">Zatiaľ bez kontaktov.</div>'}
-    <div style="height:.6rem"></div>
-    ${companyBlock(name)}`;
-}
-
 /* ---------- ukladanie ---------- */
 function collect(form) {
   const o = {};
@@ -838,20 +823,15 @@ function setView(v) { S.view = v; S.sel = null; S.q = ''; S.chip = 'all'; S.limi
 /* ---------- nastavenia ---------- */
 function openSettings() {
   const hs = S.data ? S.data.contacts.headers : [];
-  const missing = S.data ? FIELDS.filter(f => !S.m[f.k] && S.map[f.k] === undefined) : [];
   modal(`<div class="mhead"><h2>Nastavenia</h2><button class="ib" data-act="close">${ico('x')}</button></div>
     <form id="fSet" autocomplete="off">
       <label>URL Apps Script web aplikácie (…/exec)<input type="url" id="sUrl" value="${esc(S.cfg.url || '')}" placeholder="https://script.google.com/macros/s/…/exec"></label>
             <button class="cta" type="submit">Uložiť a načítať</button>
       <button class="cta ghost" type="button" data-act="copycfg" style="margin-top:.6rem">Skopírovať odkaz pre iné zariadenie</button>
     </form>
-    ${hs.length ? (missing.length ? `<div class="addcols">V Sheete chýbajú stĺpce: <b>${missing.map(f => esc(f.label)).join(', ')}</b>.<button class="cta ghost" type="button" data-act="addcols" style="margin-top:.5rem">Pridať ich na koniec Sheetu</button></div>` : '') + `<div class="gtitle" style="margin-top:1.3rem">Všetky stĺpce Sheetu (${hs.length}) – spáruj ich</div>
-      ${hs.map(h => { const cur = (FIELDS.find(f => S.m[f.k] === h) || {}).k || ''; return `<div class="maprow"><span>${esc(h)}</span><select data-colmap="${esc(h)}"><option value="">(nepoužité)</option>${FIELDS.map(f => `<option value="${f.k}" ${f.k === cur ? 'selected' : ''}>${f.label}</option>`).join('')}</select></div>`; }).join('')}
-      <div class="gtitle" style="margin-top:1.3rem">Priradenie podľa poľa</div>
-      ${FIELDS.map(f => `<div class="maprow"><span>${f.label}</span><select data-map="${f.k}">
-        <option value="__auto" ${S.map[f.k] === undefined ? 'selected' : ''}>auto${S.auto[f.k] ? ' – ' + esc(S.auto[f.k]) : ' – nenájdené'}</option>
-        <option value="__none" ${S.map[f.k] === '' ? 'selected' : ''}>(nepoužiť)</option>
-        ${hs.map(h => `<option value="${esc(h)}" ${S.map[f.k] === h ? 'selected' : ''}>${esc(h)}</option>`).join('')}</select></div>`).join('')}` : ''}`);
+    ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Spárovanie stĺpcov (${hs.length})</div>
+      <button class="cta ghost" type="button" data-act="selectallcols" style="margin-bottom:.6rem">Vybrať všetky stĺpce</button>
+      ${hs.map(h => { const cur = (FIELDS.find(f => S.m[f.k] === h) || {}).k || ''; return `<div class="maprow"><span>${esc(h)}</span><select data-colmap="${esc(h)}"><option value="">(nepoužité)</option>${FIELDS.map(f => `<option value="${f.k}" ${f.k === cur ? 'selected' : ''}>${f.label}</option>`).join('')}</select></div>`; }).join('')}` : ''}`);
 }
 
 /* ---------- udalosti ---------- */
@@ -859,17 +839,14 @@ document.addEventListener('click', e => {
   const t = e.target;
   if (t.closest('a.qcall') || t.closest('a.call') || t.closest('a.lnk')) return;
   let el;
-  if ((el = t.closest('[data-nav]'))) { const v = el.dataset.nav; if (v === 'settings') openSettings(); else setView(v); return; }
+  if ((el = t.closest('[data-nav]'))) { if (el.dataset.nav === 'settings') openSettings(); return; }
   if ((el = t.closest('[data-tab]'))) { S.tab = el.dataset.tab; $('#tabBody').innerHTML = tabBody(rowBy(S.sel)); document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === el)); S.dirty = false; return; }
   if (S.stOpen && !t.closest('.chips')) { S.stOpen = false; renderChips(); }
   if ((el = t.closest('[data-stpop]'))) { S.stOpen = !S.stOpen; renderChips(); return; }
   if ((el = t.closest('[data-stall]'))) { S.stSet.clear(); S.limit = 150; renderChips(); renderListBody(); return; }
   if ((el = t.closest('[data-stitem]'))) { const v = el.dataset.stitem; S.stSet.has(v) ? S.stSet.delete(v) : S.stSet.add(v); S.limit = 150; renderChips(); renderListBody(); return; }
-  if ((el = t.closest('[data-gocomp]'))) { S.view = 'companies'; S.q = ''; S.chip = 'all'; S.limit = 150; openSel(el.dataset.gocomp); return; }
   if ((el = t.closest('[data-chip]'))) { S.chip = el.dataset.chip; S.stOpen = false; if (S.chip === 'all') S.stSet.clear(); S.limit = 150; renderChips(); renderListBody(); return; }
   if ((el = t.closest('[data-open]'))) { openSel(Number(el.dataset.open)); return; }
-  if ((el = t.closest('[data-opencomp]'))) { openSel(el.dataset.opencomp); return; }
-  if ((el = t.closest('[data-goto]'))) { S.view = 'contacts'; S.q = ''; S.chip = 'all'; openSel(Number(el.dataset.goto)); return; }
   if ((el = t.closest('[data-gotoact]'))) {
     const [f, o] = el.dataset.gotoact.split('|');
     const r = S.data.contacts.rows.find(r => norm(V(r, 'firma')) === norm(f) && (!o || norm(V(r, 'osoba')) === norm(o))) || S.data.contacts.rows.find(r => norm(V(r, 'firma')) === norm(f));
@@ -882,6 +859,11 @@ document.addEventListener('click', e => {
     inp.value = was ? '' : el.dataset.pv; if (!was) el.classList.add('on'); S.dirty = true; return;
   }
   if ((el = t.closest('[data-qn]'))) { const a = $('#callNote'); a.value = a.value ? a.value.replace(/[\s,]+$/, '') + ', ' + el.dataset.qn : el.dataset.qn; S.dirty = true; return; }
+  if ((el = t.closest('[data-qnx]'))) {
+    const f = el.closest('form'), inp = f.querySelector('[data-h="' + CSS.escape(S.m.dalsi || '') + '"]');
+    if (inp) { inp.value = el.dataset.qnx; S.dirty = true; }
+    return;
+  }
   if ((el = t.closest('[data-qd],[data-qdm],[data-qt]'))) {
     const f = el.closest('form'), de = f.querySelector('[data-t="d"]'), te = f.querySelector('[data-t="t"]');
     if (el.dataset.qd !== undefined) de.value = el.dataset.qd === 'clear' ? '' : addDays(Number(el.dataset.qd));
@@ -898,15 +880,16 @@ document.addEventListener('click', e => {
     else if (a === 'savenote') saveNote(el);
     else if (a === 'more') { S.limit += 150; renderListBody(); }
     else if (a === 'close') closeModal();
-    else if (a === 'add') {
-      if (S.view === 'contacts') openNewContact();
-      else { const n = prompt('Názov novej firmy:'); if (n && n.trim()) { S.extraCo.add(n.trim()); openSel(n.trim()); } }
-    }
+    else if (a === 'add') openNewContact();
     else if (a === 'addcols') {
       const names = FIELDS.filter(f => !S.m[f.k] && S.map[f.k] === undefined).map(f => f.label.replace(/ \(hlavný\)$/, ''));
       el.disabled = true;
       api('addcols', {headers: names}).then(j => { toast('Pridané do Sheetu: ' + ((j.added || []).join(', ') || 'nič'));  closeModal(); load(); })
         .catch(e => { el.disabled = false; toast(e.message, true); });
+    }
+    else if (a === 'selectallcols') {
+      S.map = {}; for (const f of FIELDS) if (S.auto[f.k]) S.map[f.k] = S.auto[f.k];
+      LS.setItem('crm.map', JSON.stringify(S.map)); buildMap(); render(); openSettings();
     }
     else if (a === 'copycfg') {
       const link = location.origin + location.pathname + '#cfg=' + btoa(JSON.stringify(S.cfg));
