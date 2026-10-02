@@ -14,6 +14,7 @@
   --bg:#0b0e18; --panel:#1a2340; --panel2:#1f2a4b; --field:#111833;
   --line:rgba(130,160,255,.18); --blue:#4db8ff; --blue-d:#ebbc5a;
   --teal:#ebbc5a; --teal-d:#c99a35; --orange:#e5605c; --grey:#8b91a1;
+  --acc:#8fd0ff; --acc-d:#5fb3ec; --acc-tx:#06263d;
   --text:#f0ece4; --muted:#8b91a1; --red:#e5605c; --green:#6fd3b0; --violet:#a78bfa;
 }
 *{box-sizing:border-box}
@@ -49,7 +50,7 @@ h1,h2,h3{margin:0}
 .sp{flex:1}
 .ib{width:2.5rem;height:2.5rem;border-radius:14px;border:1px solid var(--line);background:#141821;color:var(--text);
   display:grid;place-items:center;cursor:pointer}
-.ib.add{background:linear-gradient(135deg,#f2c76a,#ebbc5a);border:0;color:#2a1300}
+.ib.add{background:linear-gradient(135deg,var(--acc),var(--acc-d));border:0;color:var(--acc-tx)}
 .sync{font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:.4rem}
 .qrow{display:flex;gap:.5rem;align-items:center}
 .qrow input{margin:0;flex:1}
@@ -76,8 +77,8 @@ h1,h2,h3{margin:0}
 .c-next{color:var(--text);opacity:.85}
 .when{font-weight:650}
 .when.over{color:var(--orange)} .when.today{color:var(--teal)} .when.fut{color:#4db8ff} .when.none{color:var(--muted);font-weight:400}
-.qcall{width:2.9rem;height:2.9rem;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#f2c76a,var(--teal-d));
-  color:#2a1f05;text-decoration:none;box-shadow:0 6px 16px rgba(235,188,90,.25)}
+.qcall{width:2.9rem;height:2.9rem;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--acc),var(--acc-d));
+  color:var(--acc-tx);text-decoration:none;box-shadow:0 6px 16px rgba(95,179,236,.25)}
 .badge{display:inline-block;border-radius:999px;padding:.12rem .65rem;font-size:.75rem;font-weight:600;color:var(--c);background:var(--cb);border:1px solid var(--c)}
 .b-teal{--c:#1fd6c8;--cb:rgba(235,188,90,.12)} .b-orange{--c:#ff9f3d;--cb:rgba(229,96,92,.12)}
 .b-red{--c:#ff6b6b;--cb:rgba(255,107,107,.12)} .b-green{--c:#3ddc84;--cb:rgba(61,220,132,.12)}
@@ -95,7 +96,7 @@ h1,h2,h3{margin:0}
 .calls{display:grid;gap:.8rem;grid-template-columns:1fr;margin:.3rem 0 .9rem}
 @media(min-width:600px){.calls.two{grid-template-columns:3fr 2fr}}
 .call{display:flex;align-items:center;justify-content:center;gap:.7rem;text-decoration:none;border-radius:18px;font-weight:750;min-height:3.4rem;padding:.4rem 1rem}
-.call.main{background:linear-gradient(135deg,#f2c76a,var(--teal-d));color:#2a1f05;font-size:1.3rem;box-shadow:0 10px 28px rgba(235,188,90,.3)}
+.call.main{background:linear-gradient(135deg,var(--acc),var(--acc-d));color:var(--acc-tx);font-size:1.3rem;box-shadow:0 10px 28px rgba(95,179,236,.3)}
 .call.alt{background:#1a2538;border:1px solid #44556f;color:#d4dcea;font-size:1rem}
 .callnote{color:var(--muted);font-size:.85rem;margin-top:.35rem;padding:0 .3rem}
 .links{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:.8rem}
@@ -123,10 +124,10 @@ input[readonly]{opacity:.7}
 .dtAct{min-width:0}
 @media(max-width:480px){.dtRow{grid-template-columns:1fr}}
 .cta{width:100%;min-height:3rem;border:0;border-radius:14px;font-weight:750;font-size:1rem;cursor:pointer;
-  background:linear-gradient(135deg,#f2c76a,#ebbc5a);color:#2a1300;box-shadow:0 8px 22px rgba(235,188,90,.25)}
+  background:linear-gradient(135deg,var(--acc),var(--acc-d));color:var(--acc-tx);box-shadow:0 8px 22px rgba(95,179,236,.25)}
 .cta:disabled{opacity:.6}
 .cta.stick{position:sticky;bottom:.5rem;z-index:4;box-shadow:0 0 0 .5rem rgba(11,29,58,.85),0 8px 22px rgba(229,96,92,.3)}
-.btn-sm{margin-left:auto;border:0;border-radius:10px;padding:.35rem .8rem;font-size:.82rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#f2c76a,var(--teal-d));color:#2a1f05}
+.btn-sm{margin-left:auto;border:0;border-radius:10px;padding:.35rem .8rem;font-size:.82rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc-d));color:var(--acc-tx)}
 .btn-sm:disabled{opacity:.6}
 .qn{align-items:center}
 .dgrp{margin:.9rem .2rem .1rem;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
@@ -174,6 +175,7 @@ input[readonly]{opacity:.7}
 .stsel option,.actsel option{background:#1b2440;color:#f0ece4}
 .ph2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
 .savemsg{color:var(--muted);font-size:.82rem;text-align:center;min-height:1.1rem;margin:.3rem 0}
+.calmsg{color:var(--acc);font-size:.82rem;margin:.4rem 0 .2rem;font-weight:600}
 .gofirma{color:#4db8ff;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 .rcol{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex:none}
 .chips{position:relative}
@@ -269,14 +271,32 @@ const FIELDS = [
   {k:'pozn',   label:'Poznámka', pats:['poznamka','poznamky','notes','note']},
   {k:'firma',  label:'Firma', pats:['nazov spolocnosti','spolocnost','firma','company','nazov']},
   {k:'osoba',  label:'Kontaktná osoba', pats:['kontaktna osoba','meno a priezvisko','meno','kontakt','osoba','priezvisko']},
-  {k:'pozicia',label:'Aktivita', pats:['aktivita','pozicia','funkcia']}
+  {k:'pozicia',label:'Aktivita', pats:['aktivita','pozicia','funkcia']},
+  {k:'web',    label:'Web', pats:['web','stranka','website']},
+  {k:'ico',    label:'IČO', pats:['ico']},
+  {k:'ulica',  label:'Ulica / adresa', pats:['ulica','adresa','street']},
+  {k:'psc',    label:'PSČ', pats:['psc','zip']},
+  {k:'mesto',  label:'Mesto', pats:['mesto','obec','city']},
+  {k:'odvetvie',label:'Odvetvie', pats:['odvetvie','sektor','industry']},
+  {k:'el_dod', label:'EE Dodávateľ', pats:['ee dodavatel','dodavatel el','dodavatel elektriny']},
+  {k:'el_sp',  label:'EE Spotreba', pats:['ee spotreba','spotreba el','spotreba elektriny']},
+  {k:'el_cs',  label:'EE Cena súčasná', pats:['ee cena sucasna','cena el sucasna','cena elektriny sucasna','ee cena']},
+  {k:'el_cp',  label:'EE Cena ponuka', pats:['ee cena ponuka','cena el ponuka','cena elektriny ponuka']},
+  {k:'el_kon', label:'EE Viazanosť / koniec', pats:['ee viazanost','koniec zmluvy el','koniec zmluvy elektriny','ee koniec']},
+  {k:'pl_dod', label:'PL Dodávateľ', pats:['pl dodavatel','dodavatel plyn']},
+  {k:'pl_sp',  label:'PL Spotreba', pats:['pl spotreba','spotreba plyn']},
+  {k:'pl_cs',  label:'PL Cena súčasná', pats:['pl cena sucasna','cena plyn sucasna','pl cena']},
+  {k:'pl_cp',  label:'PL Cena ponuka', pats:['pl cena ponuka','cena plyn ponuka']},
+  {k:'pl_kon', label:'PL Viazanosť / koniec', pats:['pl viazanost','koniec zmluvy plyn','pl koniec']},
+  {k:'uspora', label:'Úspora (€/rok)', pats:['uspora']},
+  {k:'pozn_an',label:'Poznámka k analýze', pats:['poznamka k analyze','poznamka analyza']}
 ];
 const ACT_H = {dt:'Dátum a čas', firma:'Firma', kontakt:'Kontakt', typ:'Typ', stav:'Stav', pozn:'Poznámka', dalsi:'Ďalší krok', dalsiK:'Ďalší kontakt'};
 const CGROUPS = [
-  ['Analýza', ['Úspora (€/rok)','Poznámka k analýze']],
-  ['Základné údaje', ['Firma','Názov spoločnosti','IČO','Web','Adresa','Mesto','Odvetvie']],
-  ['Elektrina', ['Dodávateľ el.','Spotreba el. (MWh/rok)','Cena el. súčasná (€/MWh)','Cena el. ponuka (€/MWh)','Koniec zmluvy el.']],
-  ['Plyn', ['Dodávateľ plyn','Spotreba plyn (MWh/rok)','Cena plyn súčasná (€/MWh)','Cena plyn ponuka (€/MWh)','Koniec zmluvy plyn']]
+  ['Analýza', ['uspora', 'pozn_an']],
+  ['Základné údaje', ['ico', 'web', 'ulica', 'psc', 'mesto', 'odvetvie']],
+  ['Elektrina', ['el_dod', 'el_sp', 'el_cs', 'el_cp', 'el_kon']],
+  ['Plyn', ['pl_dod', 'pl_sp', 'pl_cs', 'pl_cp', 'pl_kon']]
 ];
 const QUICK_NOTES = ['Čakám na FA', 'Dohodnúť stretnutie', 'Pripraviť ponuku'];
 const SEP = '────────────────';
@@ -505,11 +525,9 @@ function companyNames() {
   const m = new Map();
   const add = n => { n = String(n || '').trim(); if (n && !m.has(norm(n))) m.set(norm(n), n); };
   S.data.contacts.rows.forEach(r => add(V(r, 'firma')));
-  S.data.companies.rows.forEach(r => add(r.v['Firma']));
   S.extraCo.forEach(add);
   return [...m.values()].sort((a, b) => a.localeCompare(b, 'sk'));
 }
-const compRow = name => S.data.companies.rows.find(r => norm(r.v['Firma']) === norm(name));
 function renderListBody() {
   const el = $('#listBody'); if (!el) return;
   let html = '', n = 0;
@@ -572,7 +590,7 @@ function timeSelect(a, val) {
   return `<select ${a} data-t="t"><option value=""></option>${L.map(x => `<option value="${x}" ${x === val ? 'selected' : ''}>${x}</option>`).join('')}</select>`;
 }
 function contactDetail(r) {
-  const em = V(r, 'email'), cr0 = V(r, 'firma') ? compRow(V(r, 'firma')) : null, web = cr0 ? String(cr0.v['Web'] || '').trim() : '', webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
+  const em = V(r, 'email'), web = String(V(r, 'web') || '').trim(), webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
   const tabs = [['hovor', 'Hovor'], ['firma', 'Firma / analýza'], ['hist', 'História'], ['udaje', 'Všetky údaje']];
   return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
     <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div>${stSelect(V(r, 'stav'))}</div>
@@ -583,7 +601,7 @@ function contactDetail(r) {
 }
 function tabBody(r) {
   if (S.tab === 'hovor') return tabHovor(r);
-  if (S.tab === 'firma') return V(r, 'firma') ? companyBlock(V(r, 'firma')) : '<div class="empty">Kontakt nemá vyplnenú firmu.</div>';
+  if (S.tab === 'firma') return companyBlock(r);
   if (S.tab === 'hist') {
     const f = norm(V(r, 'firma')), o = norm(V(r, 'osoba'));
     const rows = S.data.activities.rows.filter(a => norm(a.v[ACT_H.firma]) === f && (!o || !norm(a.v[ACT_H.kontakt]) || norm(a.v[ACT_H.kontakt]) === o))
@@ -603,8 +621,8 @@ function tabHovor(r) {
       ${S.m.cas ? `<label>Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
       <div class="qd">${['<button type="button" class="chip sm" data-qd="0">Dnes</button>', '<button type="button" class="chip sm" data-qd="1">Zajtra</button>', '<button type="button" class="chip sm" data-qd="7">+1 týždeň</button>'].join('')}</div>
     </div>
-    ${S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : ''}
-    </div>` : (S.m.pozicia ? `<label>Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : '');
+    ${S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label><div id="calMsgBox">${calMsgHtml()}</div>` : ''}
+    </div>` : (S.m.pozicia ? `<label>Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label><div id="calMsgBox">${calMsgHtml()}</div>` : '');
   return `<form id="fCall" class="win pad" autocomplete="off">
     ${dtBlock}
     ${phs ? `<div class="ph2">${phs}</div>` : ''}
@@ -617,8 +635,9 @@ function tabHovor(r) {
 }
 function fieldInput(h, val) {
   const k = Object.keys(S.m).find(x => S.m[x] === h), lists = S.data.contacts.lists[h], a = `data-h="${esc(h)}"`;
-  if (k === 'datum') return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
+  if (k === 'datum' || k === 'el_kon' || k === 'pl_kon') return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
   if (k === 'cas') return timeSelect(a, isoTime(val));
+  if (k === 'web') return `<input type="url" ${a} value="${esc(val)}">`;
   if (k === 'pozn') return `<textarea ${a} rows="6">${esc(val)}</textarea>`;
   if (k === 'pozicia' && !lists) { const L = ACTIVITIES.slice(); if (val && !L.includes(val)) L.unshift(val); return `<select ${a}><option value=""></option>${L.map(x => `<option value="${esc(x)}" ${x === val ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`; }
   if (k === 'stav' || lists) {
@@ -639,39 +658,45 @@ function tabAll(r) {
 }
 
 /* ---------- firma / analýza ---------- */
-function cInput(h, val, ro) {
+const CGROUP_LABELS = {uspora:'Úspora (€/rok)', pozn_an:'Poznámka k analýze', ico:'IČO', web:'Web', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', odvetvie:'Odvetvie',
+  el_dod:'Dodávateľ', el_sp:'Spotreba (MWh/rok)', el_cs:'Cena súčasná (€/MWh)', el_cp:'Cena ponuka (€/MWh)', el_kon:'Viazanosť / koniec zmluvy',
+  pl_dod:'Dodávateľ', pl_sp:'Spotreba (MWh/rok)', pl_cs:'Cena súčasná (€/MWh)', pl_cp:'Cena ponuka (€/MWh)', pl_kon:'Viazanosť / koniec zmluvy'};
+function cInput(k, h, val) {
   const a = `data-h="${esc(h)}"`;
-  if (/^Koniec zmluvy/.test(h)) return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
-  if (/^(Spotreba|Cena|Úspora)/.test(h)) return `<input type="text" inputmode="decimal" ${a} value="${esc(val)}">`;
-  if (/^Poznámka/.test(h)) return `<textarea ${a} rows="3">${esc(val)}</textarea>`;
-  if (h === 'Web') return `<input type="url" ${a} value="${esc(val)}">`;
-  return `<input type="text" ${a} value="${esc(val)}" ${ro ? 'readonly' : ''}>`;
+  if (/_kon$/.test(k)) return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
+  if (/_sp$|_cs$|_cp$|^uspora$/.test(k)) return `<input type="text" inputmode="decimal" ${a} value="${esc(val)}">`;
+  if (k === 'pozn_an') return `<textarea ${a} rows="3">${esc(val)}</textarea>`;
+  if (k === 'web') return `<input type="url" ${a} value="${esc(val)}">`;
+  return `<input type="text" ${a} value="${esc(val)}">`;
 }
-function companyBlock(name) {
-  const row = compRow(name), H = S.data.companies.headers, used = new Set();
-  const val = h => h === 'Firma' ? (row ? row.v['Firma'] : name) : (row ? (row.v[h] ?? '') : '');
-  let html = `<form id="fComp" class="win pad" data-name="${esc(name)}" autocomplete="off">`;
-  for (const [g, hs] of CGROUPS) {
-    const list = hs.filter(h => H.includes(h)); list.forEach(h => used.add(h));
+/* polia, pre ktoré v Sheete ešte nie je stĺpec – priradí sa im dočasný názov a pri uložení sa stĺpec vytvorí na konci */
+function fieldHeader(k) {
+  if (S.m[k]) return S.m[k];
+  const f = FIELDS.find(x => x.k === k);
+  return f ? '__new__' + f.label : '';
+}
+function companyBlock(r) {
+  let html = `<form id="fComp" class="win pad" autocomplete="off">`;
+  for (const [g, keys] of CGROUPS) {
+    const list = keys.filter(k => FIELDS.some(f => f.k === k));
     if (!list.length) continue;
-    html += `<div class="cg ${g === 'Elektrina' ? 'el' : g === 'Plyn' ? 'gas' : ''}"><div class="gtitle">${g}</div>` + list.map(h => `<label>${esc(h)}${cInput(h, val(h), h === 'Firma')}</label>`).join('');
+    html += `<div class="cg ${g === 'Elektrina' ? 'el' : g === 'Plyn' ? 'gas' : ''}"><div class="gtitle">${g}</div>` +
+      list.map(k => { const h = fieldHeader(k); return `<label>${esc(CGROUP_LABELS[k] || k)}${cInput(k, h, V(r, k))}</label>`; }).join('');
     if (g === 'Analýza') html += `<div class="saveOut" id="saveOut"></div>`;
     html += '</div>';
   }
-  const rest = H.filter(h => !used.has(h));
-  if (rest.length) html += `<div class="gtitle">Ostatné</div>` + rest.map(h => `<label>${esc(h)}${cInput(h, val(h))}</label>`).join('');
   return html + `${savemsgHtml()}<button class="cta stick" type="submit">Uložiť firmu</button></form>`;
 }
 function calcSavings(form) {
-  const g = h => { const el = form.querySelector(`[data-h="${h}"]`); return el ? num(el.value) : NaN; };
-  const el = (g('Cena el. súčasná (€/MWh)') - g('Cena el. ponuka (€/MWh)')) * g('Spotreba el. (MWh/rok)');
-  const gas = (g('Cena plyn súčasná (€/MWh)') - g('Cena plyn ponuka (€/MWh)')) * g('Spotreba plyn (MWh/rok)');
+  const g = k => { const el = form.querySelector(`[data-h="${esc(fieldHeader(k))}"]`); return el ? num(el.value) : NaN; };
+  const el = (g('el_cs') - g('el_cp')) * g('el_sp');
+  const gas = (g('pl_cs') - g('pl_cp')) * g('pl_sp');
   const parts = [el, gas].filter(Number.isFinite), out = $('#saveOut', form);
   if (!out) return;
   if (!parts.length) { out.style.display = 'none'; return; }
   const tot = parts.reduce((a, b) => a + b, 0);
   out.style.display = ''; out.innerHTML = `Odhad úspory: <b>${fmtNum(tot)} €/rok</b>${Number.isFinite(el) ? ` · elektrina ${fmtNum(el)} €` : ''}${Number.isFinite(gas) ? ` · plyn ${fmtNum(gas)} €` : ''}`;
-  const u = form.querySelector('[data-h="Úspora (€/rok)"]');
+  const u = form.querySelector(`[data-h="${esc(fieldHeader('uspora'))}"]`);
   if (u && (!u.value || u.dataset.auto === '1')) { u.value = Math.round(tot); u.dataset.auto = '1'; }
 }
 /* ---------- ukladanie ---------- */
@@ -681,6 +706,26 @@ function collect(form) {
     const t = el.dataset.t, h = el.dataset.h; o[h] = t ? {t, v: el.value} : ((h === S.m.tel || h === S.m.tel2) ? fmtPhone(el.value) : el.value.trim());
   });
   return o;
+}
+/* ak formulár obsahuje polia bez existujúceho stĺpca (data-h="__new__Label"), vytvorí ich v Sheete na konci,
+   premapuje S.m a prepíše kľúče vo vals na reálne názvy stĺpcov. Prázdne nové polia sa jednoducho vynechajú. */
+async function materializeNewCols(vals) {
+  const toCreate = Object.keys(vals).filter(h => h.startsWith('__new__'));
+  const out = {}; for (const h in vals) if (!h.startsWith('__new__')) out[h] = vals[h];
+  const real = toCreate.filter(h => { const v = vals[h]; return specVal(v) !== ''; });
+  if (!real.length) return out;
+  const labels = real.map(h => h.slice(7));
+  let added = labels;
+  try { const j = await api('addcols', {headers: labels}); if (j.added) added = j.added; } catch (e) { /* ak zlyhá, skús zapísať aspoň pod pôvodným názvom */ }
+  real.forEach((h, i) => { out[added[i] || labels[i]] = vals[h]; });
+  // premapuj S.m na novovytvorené stĺpce podľa FIELDS.label
+  labels.forEach((label, i) => {
+    const f = FIELDS.find(x => x.label === label || ('__new__' + x.label) === real[i]);
+    if (f) { S.m[f.k] = added[i] || label; S.map[f.k] = added[i] || label; }
+  });
+  LS.setItem('crm.map', JSON.stringify(S.map));
+  if (added.length) S.data.contacts.headers.push(...added.filter(h => !S.data.contacts.headers.includes(h)));
+  return out;
 }
 const specVal = s => (s && typeof s === 'object') ? s.v : s;
 function differs(cur, spec) {
@@ -693,6 +738,8 @@ function changedOnly(row, vals) {
 }
 function saveMsg(t) { S.msg = {row: S.sel, t}; document.querySelectorAll('.savemsg').forEach(e => e.textContent = t); }
 const savemsgHtml = () => `<div class="savemsg">${esc(S.msg && S.msg.row === S.sel ? S.msg.t : '')}</div>`;
+function calMsg(t) { S.calMsg = {row: S.sel, t}; const b = $('#calMsgBox'); if (b) b.innerHTML = calMsgHtml(); }
+const calMsgHtml = () => (S.calMsg && S.calMsg.row === S.sel && S.calMsg.t) ? `<div class="calmsg">${esc(S.calMsg.t)}</div>` : '';
 function busy(form, on, txt) {
   const b = form.querySelector('.cta'); if (!b) return;
   if (on) { b.dataset.t = b.textContent; b.textContent = 'Ukladám…'; b.disabled = true; }
@@ -717,18 +764,20 @@ async function saveCall(form) {
   if (!Object.keys(vals).length && !note) { saveMsg('Nič na uloženie'); return; }
   const act = actFor(r, 'Hovor', note, vals);
   const akt = S.m.pozicia ? specVal(all[S.m.pozicia]) : '', cd = S.m.datum ? specVal(all[S.m.datum]) : '', ct = S.m.cas ? specVal(all[S.m.cas]) : '', dal = S.m.dalsi ? specVal(all[S.m.dalsi]) : '';
-  let calendar = null, calMsg = '';
-  if (norm(akt) === 'stretnutie' || norm(akt) === 'telefonat') {
-    if (cd && ct) calendar = {title: [V(r, 'osoba'), dal].filter(Boolean).join(' – ') || V(r, 'firma') || akt, date: cd, time: ct, dur: norm(akt) === 'telefonat' ? 30 : 60,
-      desc: ['Aktivita: ' + akt, V(r, 'firma') && 'Firma: ' + V(r, 'firma'), dal && 'Nasleduje: ' + dal].filter(Boolean).join('\n')};
-    else calMsg = ' · do kalendára chýba dátum alebo čas';
+  let calendar = null, calStatus = '';
+  const isMeeting = norm(akt) === 'stretnutie', isCall = norm(akt) === 'telefonat';
+  if (isMeeting || isCall) {
+    if (cd && ct) calendar = {title: [V(r, 'osoba'), dal].filter(Boolean).join(' – ') || V(r, 'firma') || akt, date: cd, time: ct, dur: isCall ? 30 : 60,
+      desc: ['Aktivita: ' + akt, V(r, 'firma') && 'Firma: ' + V(r, 'firma'), V(r, 'osoba') && 'Meno: ' + V(r, 'osoba'), dal && 'Nasleduje: ' + dal].filter(Boolean).join('\n')};
+    else calStatus = 'Do kalendára chýba dátum alebo čas';
   }
   busy(form, true);
   try {
     const j = await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, calendar, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-    if (calendar) calMsg = j.cal === 'created' ? ' · pridané do kalendára' : j.cal === 'exists' ? ' · v kalendári už je' : j.cal === undefined || j.cal === null ? ' · kalendár: nasaď novú verziu skriptu' : ' · kalendár: ' + j.cal;
+    if (calendar) calStatus = j.cal === 'created' ? 'Uložené do kalendára' : j.cal === 'exists' ? 'V kalendári už je' : j.cal === undefined || j.cal === null ? 'Kalendár: nasaď novú verziu skriptu' : 'Kalendár: ' + j.cal;
     applyLocal(r, vals); pushActivity(act); persist(); S.dirty = false;
-    renderChips(); renderListBody(); renderDetail(); saveMsg('Hovor uložený ✔' + calMsg);
+    renderChips(); renderListBody(); renderDetail(); saveMsg('Hovor uložený ✔');
+    if (isMeeting || isCall) calMsg(calStatus);
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
 }
 async function saveStav(sel) {
@@ -767,22 +816,16 @@ async function saveAll(form) {
     renderChips(); renderListBody(); renderDetail(); saveMsg('Uložené ✔');
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
 }
-async function saveComp(form) {
-  const name = form.dataset.name, row = compRow(name), vals = collect(form);
+async function saveFirma(form) {
+  const r = rowBy(S.sel); if (!r) return;
   busy(form, true);
   try {
-    if (row) {
-      const ch = changedOnly(row, vals);
-      if (!Object.keys(ch).length) { busy(form, false); saveMsg('Nič na uloženie'); return; }
-      await api('update', {sheet: 'companies', row: row.r, values: ch, check: {header: 'Firma', value: row.v['Firma']}});
-      applyLocal(row, ch);
-    } else {
-      vals['Firma'] = name;
-      const j = await api('append', {sheet: 'companies', values: vals});
-      const v = {}; for (const h in vals) v[h] = specVal(vals[h]);
-      S.data.companies.rows.push({r: j.row, v, n: {}});
-    }
-    persist(); S.dirty = false; renderListBody(); busy(form, false); saveMsg('Firma uložená ✔');
+    const raw = collect(form);
+    const vals = changedOnly(r, await materializeNewCols(raw));
+    if (!Object.keys(vals).length) { busy(form, false); saveMsg('Nič na uloženie'); return; }
+    await api('update', {sheet: 'contacts', row: r.r, values: vals, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    applyLocal(r, vals); persist(); S.dirty = false;
+    renderDetail(); saveMsg('Firma uložená ✔');
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
 }
 function openNewContact() {
@@ -812,7 +855,7 @@ async function saveNew(form) {
 
 /* ---------- navigácia ---------- */
 function openSel(id) {
-  S.sel = id; S.tab = 'hovor'; S.dirty = false; S.msg = null;
+  S.sel = id; S.tab = 'hovor'; S.dirty = false; S.msg = null; S.calMsg = null;
   if (innerWidth < 900) history.pushState({d: 1}, '');
   render(); $('#detailPane').scrollTop = 0;
 }
@@ -899,7 +942,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('submit', e => {
   e.preventDefault(); const f = e.target;
-  ({fCall: saveCall, fAll: saveAll, fComp: saveComp, fNew: saveNew}[f.id] || (() => {}))(f);
+  ({fCall: saveCall, fAll: saveAll, fComp: saveFirma, fNew: saveNew}[f.id] || (() => {}))(f);
   if (f.id === 'fSet') {
     S.cfg = {url: CRM_URL || $('#sUrl').value.trim(), token: ''};
     LS.setItem('crm.cfg', JSON.stringify(S.cfg)); closeModal(); load();
