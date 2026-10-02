@@ -7,18 +7,18 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CRM">
-<meta name="theme-color" content="#080c12">
+<meta name="theme-color" content="#0b1d3a">
 <title>CRM</title>
 <style>
 :root{
-  --bg:#080c12; --panel:#0f1b2e; --panel2:#142540; --field:#0a1220;
+  --bg:#0b1d3a; --panel:#10264a; --panel2:#163158; --field:#0a1730;
   --line:rgba(59,130,246,.32); --blue:#3b82f6; --blue-d:#1d4ed8;
   --teal:#1fd6c8; --teal-d:#0ea5a0; --orange:#ff9f3d; --grey:#8c98ab;
   --text:#e8eef7; --muted:#93a1b5; --red:#ff6b6b; --green:#3ddc84; --violet:#a78bfa;
 }
 *{box-sizing:border-box}
-html{font-size:clamp(17px,.5vw + 14px,21px);-webkit-text-size-adjust:100%}
-body{margin:0;background:radial-gradient(1100px 600px at 85% -10%,rgba(59,130,246,.14),transparent),var(--bg);
+html{font-size:clamp(15px,.3vw + 13px,18px);-webkit-text-size-adjust:100%}
+body{margin:0;background:radial-gradient(1100px 600px at 85% -10%,rgba(59,130,246,.22),transparent),var(--bg);
   color:var(--text);font:1rem/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
 button,input,select,textarea{font:inherit;color:inherit}
 h1,h2,h3{margin:0}
@@ -28,62 +28,61 @@ h1,h2,h3{margin:0}
 #app{display:grid;grid-template-rows:1fr auto;height:100dvh}
 #main{position:relative;overflow:hidden;display:grid;min-height:0}
 .pane{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;min-height:0}
-#listPane{padding:env(safe-area-inset-top) .8rem 1rem}
+#listPane{padding:0 .8rem 1rem}
+#listPane>.empty.big{padding-top:calc(env(safe-area-inset-top) + 4rem)}
 #detailPane{position:absolute;inset:0;z-index:5;background:var(--bg);transform:translateX(102%);transition:transform .25s ease;
-  padding:env(safe-area-inset-top) .8rem 6rem}
+  padding:0 .8rem 1.5rem}
 .show-detail #detailPane{transform:none}
-#nav{display:flex;justify-content:space-around;background:#0a1322;border-top:1px solid var(--line);
+#nav{display:flex;justify-content:space-around;background:#081631;border-top:1px solid var(--line);
   padding:.35rem .4rem calc(.35rem + env(safe-area-inset-bottom))}
 .nb{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:.1rem;color:var(--muted);
-  font-size:.85rem;padding:.35rem .9rem;border-radius:12px;cursor:pointer}
+  font-size:.75rem;padding:.3rem .9rem;border-radius:12px;cursor:pointer}
 .nb.on{color:var(--teal);background:rgba(31,214,200,.1)}
 @media(min-width:900px){
   #app{grid-template-columns:6.2rem 1fr;grid-template-rows:1fr}
   #nav{flex-direction:column;justify-content:flex-start;gap:.4rem;border-top:0;border-right:1px solid var(--line);padding:1rem .5rem}
   #main{grid-template-columns:minmax(21rem,28rem) 1fr;gap:1rem;padding:1rem}
   #listPane,#detailPane{position:static;transform:none;border-radius:20px;border:1px solid var(--line);border-top:3px solid var(--blue);
-    background:linear-gradient(180deg,var(--panel2),var(--panel));box-shadow:0 14px 40px rgba(0,0,0,.45);padding:1rem 1.1rem 2rem}
-  #detailPane{padding-bottom:2rem}
+    background:linear-gradient(180deg,var(--panel2),var(--panel));box-shadow:0 14px 40px rgba(0,0,0,.45);padding:0 1.1rem 2rem}
   .back{display:none!important}
 }
 
 /* ---------- list ---------- */
-.lhead{position:sticky;top:0;z-index:3;margin:0 -.8rem;padding:.7rem .8rem .5rem;background:linear-gradient(var(--bg) 82%,transparent)}
-@media(min-width:900px){.lhead{margin:-1rem -1.1rem 0;padding:1rem 1.1rem .6rem;background:linear-gradient(var(--panel2) 85%,transparent);border-radius:20px 20px 0 0}}
+.lhead{position:sticky;top:0;z-index:6;margin:0 -.8rem;padding:calc(env(safe-area-inset-top) + .5rem) .8rem .5rem;background:var(--bg);border-bottom:1px solid rgba(59,130,246,.18)}
+@media(min-width:900px){.lhead{margin:0 -1.1rem;padding:.9rem 1.1rem .5rem;background:var(--panel2);border-radius:20px 20px 0 0}}
 .ltitle{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem}
-.ltitle h1{font-size:1.6rem;font-weight:750}
-.cnt{color:var(--muted);font-size:.95rem}
+.ltitle h1{font-size:1.35rem;font-weight:750}
+.cnt{color:var(--muted);font-size:.85rem}
 .sp{flex:1}
-.ib{width:2.9rem;height:2.9rem;border-radius:14px;border:1px solid var(--line);background:#12213a;color:var(--text);
+.ib{width:2.5rem;height:2.5rem;border-radius:14px;border:1px solid var(--line);background:#12213a;color:var(--text);
   display:grid;place-items:center;cursor:pointer}
 .ib.add{background:linear-gradient(135deg,var(--orange),#ff7a1a);border:0;color:#2a1300}
-.sync{font-size:.85rem;color:var(--muted);margin-top:.4rem;display:flex;align-items:center;gap:.4rem}
+.sync{font-size:.75rem;color:var(--muted);margin-top:.4rem;display:flex;align-items:center;gap:.4rem}
 .dot{width:.6rem;height:.6rem;border-radius:50%;background:var(--grey)}
 .dot.ok{background:var(--green)} .dot.sync{background:var(--orange);animation:pulse 1s infinite} .dot.err{background:var(--red)}
 @keyframes pulse{50%{opacity:.3}}
-.chips{display:flex;gap:.45rem;overflow-x:auto;padding:.5rem 0 .2rem;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chip{flex:none;border:1px solid var(--line);background:#101c31;color:var(--text);border-radius:999px;padding:.4rem .85rem;
-  font-size:.95rem;cursor:pointer;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:.3rem;padding:.5rem 0 .1rem}
+.chip{flex:none;border:1px solid var(--line);background:#12284a;color:var(--text);border-radius:999px;padding:.22rem .6rem;
+  font-size:.8rem;cursor:pointer;white-space:nowrap}
 .chip.on{background:var(--blue-d);border-color:var(--blue)}
 .chip.due{border-color:rgba(255,159,61,.6);color:var(--orange)}
 .chip.due.on{background:rgba(255,159,61,.22)}
-.chip.sm{font-size:.9rem;padding:.3rem .7rem}
+.chip.sm{font-size:.82rem;padding:.28rem .65rem}
 
 .card{display:grid;grid-template-columns:1fr auto;gap:.7rem;align-items:center;margin:.6rem 0;padding:.8rem .9rem;border-radius:16px;
-  background:linear-gradient(180deg,#132341,#0e1a2f);border:1px solid var(--line);border-left:4px solid var(--blue);cursor:pointer}
+  background:linear-gradient(180deg,#183762,#12294d);border:1px solid var(--line);border-left:4px solid var(--blue);cursor:pointer}
 .card.over{border-left-color:var(--orange)} .card.today{border-left-color:var(--teal)}
 .card.sel{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}
 .c-top{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
-.c-firma{font-size:1.1rem}
-.c-sub{color:var(--muted);font-size:.95rem;margin-top:.1rem}
-.c-bot{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap;margin-top:.3rem;font-size:.95rem}
+.c-firma{font-size:1rem}
+.c-sub{color:var(--muted);font-size:.85rem;margin-top:.1rem}
+.c-bot{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap;margin-top:.3rem;font-size:.85rem}
 .c-next{color:var(--text);opacity:.85}
 .when{font-weight:650}
 .when.over{color:var(--orange)} .when.today{color:var(--teal)} .when.fut{color:#9ec1ff} .when.none{color:var(--muted);font-weight:400}
-.qcall{width:3.2rem;height:3.2rem;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#22e3d3,var(--teal-d));
+.qcall{width:2.9rem;height:2.9rem;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#22e3d3,var(--teal-d));
   color:#032a28;text-decoration:none;box-shadow:0 6px 16px rgba(31,214,200,.25)}
-.badge{display:inline-block;border-radius:999px;padding:.12rem .65rem;font-size:.85rem;font-weight:600;color:var(--c);background:var(--cb);border:1px solid var(--c)}
+.badge{display:inline-block;border-radius:999px;padding:.12rem .65rem;font-size:.75rem;font-weight:600;color:var(--c);background:var(--cb);border:1px solid var(--c)}
 .b-teal{--c:#1fd6c8;--cb:rgba(31,214,200,.12)} .b-orange{--c:#ff9f3d;--cb:rgba(255,159,61,.12)}
 .b-red{--c:#ff6b6b;--cb:rgba(255,107,107,.12)} .b-green{--c:#3ddc84;--cb:rgba(61,220,132,.12)}
 .b-blue{--c:#6aa5ff;--cb:rgba(59,130,246,.15)} .b-violet{--c:#a78bfa;--cb:rgba(167,139,250,.12)} .b-grey{--c:#9aa6b8;--cb:rgba(140,152,171,.12)}
@@ -92,42 +91,53 @@ h1,h2,h3{margin:0}
 .empty.big{text-align:center;padding:4rem 1rem;font-size:1.1rem}
 
 /* ---------- detail ---------- */
-.dhead{display:flex;align-items:flex-start;gap:.7rem;padding:.8rem 0 .6rem}
-.dhead h2{font-size:1.5rem;line-height:1.2;overflow-wrap:anywhere}
+.dhead{position:sticky;top:0;z-index:6;display:flex;align-items:flex-start;gap:.7rem;margin:0 -.8rem .4rem;padding:calc(env(safe-area-inset-top) + .5rem) .8rem .6rem;background:var(--bg);border-bottom:1px solid rgba(59,130,246,.18)}
+@media(min-width:900px){.dhead{margin:0 -1.1rem .4rem;padding:.9rem 1.1rem .6rem;background:var(--panel2);border-radius:20px 20px 0 0}}
+.dhead h2{font-size:1.25rem;line-height:1.2;overflow-wrap:anywhere}
 .dhead .sub{color:var(--muted);margin-top:.15rem}
-.back{flex:none;width:2.8rem;height:2.8rem;border-radius:14px;border:1px solid var(--line);background:#12213a;display:grid;place-items:center;cursor:pointer}
+.back{flex:none;width:2.5rem;height:2.5rem;border-radius:14px;border:1px solid var(--line);background:#12213a;display:grid;place-items:center;cursor:pointer}
 .calls{display:grid;gap:.8rem;grid-template-columns:1fr;margin:.3rem 0 .9rem}
 @media(min-width:600px){.calls.two{grid-template-columns:3fr 2fr}}
-.call{display:flex;align-items:center;justify-content:center;gap:.7rem;text-decoration:none;border-radius:18px;font-weight:750;min-height:3.9rem;padding:.4rem 1rem}
-.call.main{background:linear-gradient(135deg,#22e3d3,var(--teal-d));color:#032a28;font-size:1.5rem;box-shadow:0 10px 28px rgba(31,214,200,.3)}
-.call.alt{background:#1a2538;border:1px solid #44556f;color:#d4dcea;font-size:1.15rem}
-.callnote{color:var(--orange);font-size:.95rem;margin-top:.35rem;padding:0 .3rem}
+.call{display:flex;align-items:center;justify-content:center;gap:.7rem;text-decoration:none;border-radius:18px;font-weight:750;min-height:3.4rem;padding:.4rem 1rem}
+.call.main{background:linear-gradient(135deg,#22e3d3,var(--teal-d));color:#032a28;font-size:1.3rem;box-shadow:0 10px 28px rgba(31,214,200,.3)}
+.call.alt{background:#1a2538;border:1px solid #44556f;color:#d4dcea;font-size:1rem}
+.callnote{color:var(--orange);font-size:.85rem;margin-top:.35rem;padding:0 .3rem}
 .links{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:.8rem}
-.lnk{display:inline-flex;align-items:center;gap:.4rem;color:#9ec1ff;text-decoration:none;font-size:.98rem;border:1px solid var(--line);border-radius:12px;padding:.35rem .7rem}
+.lnk{display:inline-flex;align-items:center;gap:.4rem;color:#9ec1ff;text-decoration:none;font-size:.88rem;border:1px solid var(--line);border-radius:12px;padding:.35rem .7rem}
 .tabs{display:flex;gap:.3rem;border-bottom:1px solid var(--line);margin-bottom:.9rem;overflow-x:auto;scrollbar-width:none}
-.tab{background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:.6rem .9rem;cursor:pointer;font-weight:600;white-space:nowrap}
+.tab{background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);font-size:.9rem;padding:.5rem .8rem;cursor:pointer;font-weight:600;white-space:nowrap}
 .tab.on{color:var(--teal);border-bottom-color:var(--teal)}
-.win{background:linear-gradient(180deg,#13233f,#0e192c);border:1px solid var(--line);border-top:2px solid var(--blue);border-radius:18px;
+.win{background:linear-gradient(180deg,#16315a,#112648);border:1px solid var(--line);border-top:2px solid var(--blue);border-radius:18px;
   box-shadow:0 10px 30px rgba(0,0,0,.35)}
 .pad{padding:1rem}
-label{display:block;color:var(--muted);font-size:.92rem;margin:.1rem 0 .8rem}
+label{display:block;color:var(--muted);font-size:.82rem;margin:.1rem 0 .8rem}
 input,select,textarea{display:block;width:100%;margin-top:.3rem;background:var(--field);border:1px solid rgba(59,130,246,.35);border-radius:12px;
-  color:var(--text);padding:.65rem .8rem;min-height:2.9rem;color-scheme:dark;min-width:0}
+  color:var(--text);padding:.55rem .75rem;min-height:2.6rem;color-scheme:dark;min-width:0;font-size:max(16px,1rem)}
 textarea{resize:vertical;line-height:1.4}
 input:focus,select:focus,textarea:focus{outline:0;border-color:var(--teal);box-shadow:0 0 0 3px rgba(31,214,200,.18)}
 input[readonly]{opacity:.7}
 .dt{display:grid;grid-template-columns:3fr 2fr;gap:.7rem}
 .qd{display:flex;gap:.4rem;flex-wrap:wrap;margin:-.3rem 0 .8rem}
 .qn{display:flex;gap:.4rem;flex-wrap:wrap;margin:-.3rem 0 .8rem}
-.cta{width:100%;min-height:3.4rem;border:0;border-radius:16px;font-weight:750;font-size:1.15rem;cursor:pointer;
+.cta{width:100%;min-height:3rem;border:0;border-radius:14px;font-weight:750;font-size:1rem;cursor:pointer;
   background:linear-gradient(135deg,var(--orange),#ff7a1a);color:#2a1300;box-shadow:0 8px 22px rgba(255,159,61,.25)}
 .cta:disabled{opacity:.6}
+.cta.stick{position:sticky;bottom:.5rem;z-index:4;box-shadow:0 0 0 .5rem rgba(11,29,58,.85),0 8px 22px rgba(255,159,61,.3)}
+.btn-sm{margin-left:auto;border:0;border-radius:10px;padding:.35rem .8rem;font-size:.82rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#22e3d3,var(--teal-d));color:#032a28}
+.btn-sm:disabled{opacity:.6}
+.qn{align-items:center}
+.dgrp{margin:.9rem .2rem .1rem;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.dgrp.over{color:var(--orange)}
+.dgrp.today{color:#032a28;background:var(--teal);display:inline-block;padding:.15rem .7rem;border-radius:999px;margin-left:0}
+.card.today{background:linear-gradient(180deg,rgba(31,214,200,.22),rgba(31,214,200,.07));border-color:rgba(31,214,200,.65);border-left-color:var(--teal)}
+.sts{display:flex;gap:.3rem;flex-wrap:wrap}
 .cta.ghost{background:#16253f;color:var(--text);box-shadow:none;border:1px solid var(--line)}
-.notes{white-space:pre-wrap;overflow-wrap:anywhere;margin:.9rem 0 0;padding:.9rem 1rem;font:inherit;font-size:.98rem;color:#cdd7e6}
-.gtitle{color:var(--teal);font-weight:700;margin:.4rem 0 .6rem;font-size:1.05rem}
+.notes{white-space:pre-wrap;overflow-wrap:anywhere;margin:.9rem 0 0;padding:.8rem .9rem;font:inherit;font-size:.88rem;color:#cdd7e6}
+.gtitle{color:var(--teal);font-weight:700;margin:.4rem 0 .6rem;font-size:.95rem}
 .saveOut{margin:.2rem 0 1rem;padding:.7rem .9rem;border-radius:12px;background:rgba(255,159,61,.1);border:1px solid rgba(255,159,61,.4);color:var(--orange)}
 .hist{padding:.7rem .9rem;margin:.5rem 0;border-radius:14px;background:#0d1a2e;border:1px solid var(--line)}
-.hist .h-top{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:.9rem}
+.hist .h-top{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:.8rem}
+.hist .h-txt{font-size:.9rem}
 .hist .h-txt{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:.25rem}
 .ph{display:grid;place-items:center;height:100%;color:var(--muted);text-align:center;min-height:14rem}
 
@@ -135,7 +145,7 @@ input[readonly]{opacity:.7}
 .ovl{position:fixed;inset:0;z-index:50;background:rgba(3,6,12,.72);display:grid;place-items:center;padding:1rem;backdrop-filter:blur(4px)}
 .modal{width:min(40rem,100%);max-height:92dvh;overflow:auto;padding:1.1rem 1.2rem 1.3rem}
 .mhead{display:flex;align-items:center;margin-bottom:.8rem}
-.mhead h2{flex:1;font-size:1.35rem}
+.mhead h2{flex:1;font-size:1.2rem}
 .maprow{display:grid;grid-template-columns:1fr 1.4fr;gap:.6rem;align-items:center;margin:.4rem 0}
 .maprow span{color:var(--muted)}
 .maprow select{margin:0}
@@ -163,7 +173,7 @@ input[readonly]{opacity:.7}
    CRM – single-file app (GitHub Pages) + Apps Script API
    ========================================================= */
 /* ===== PRIPOJENIE – vlož sem URL z Apps Scriptu (…/exec), potom sa už nič nezadáva ===== */
-const CRM_URL = 'https://script.google.com/macros/s/AKfycbwSq8AJ39T0kjIDWptK2dMzhwqQJdfKX0QZ9AqgQy6Zq95sc5IK65BJVJbEXwU6qXH-/exec';
+const CRM_URL = '';
 const LS = localStorage;
 const $ = (s, e = document) => e.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -244,6 +254,19 @@ function buildMap() {
     const o = S.map[f.k];
     S.m[f.k] = o === '' ? '' : (o && hs.includes(o) ? o : (auto[f.k] || ''));
   }
+  fillFirma();
+}
+/* kontakt bez firmy v bunke (zlúčené/prázdne bunky) dedí firmu z riadku nad ním – len v apke, do Sheetu sa nič nezapisuje */
+function fillFirma() {
+  const h = S.m.firma; if (!S.data) return;
+  let last = '';
+  for (const r of S.data.contacts.rows) {
+    if (r.fd) { r.v[r.fd] = ''; r.fd = null; }
+    if (!h) continue;
+    const x = String(r.v[h] ?? '').trim();
+    if (x) last = x;
+    else if (last) { r.v[h] = last; r.fd = h; delete r._s; }
+  }
 }
 
 /* ---------- prístup k dátam ---------- */
@@ -252,8 +275,8 @@ const rowBy = id => S.data.contacts.rows.find(r => r.r === id);
 function isoDate(s) {
   s = String(s || '').trim();
   let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return m[0];
-  m = s.match(/^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/);
-  return m ? `${m[3]}-${pad(m[2])}-${pad(m[1])}` : '';
+  m = s.match(/^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4}|\d{2})(?!\d)/);
+  return m ? `${m[3].length === 2 ? '20' + m[3] : m[3]}-${pad(m[2])}-${pad(m[1])}` : '';
 }
 function isoTime(s) { const m = String(s || '').match(/(\d{1,2}):(\d{2})/); return m ? pad(m[1]) + ':' + m[2] : ''; }
 function DT(r) {
@@ -309,11 +332,28 @@ function phones(r) {
 /* ---------- API ---------- */
 async function api(action, payload = {}) {
   if (!S.cfg.url) throw new Error('Chýba URL – otvor Nastavenia');
-  const res = await fetch(S.cfg.url, {method: 'POST', redirect: 'follow', body: JSON.stringify({token: S.cfg.token, action, ...payload})});
-  let j; try { j = await res.json(); } catch (e) { throw new Error('Server nevrátil JSON – skontroluj URL a nasadenie'); }
-  if (!j.ok) { const e = new Error(j.error || 'Chyba servera'); e.conflict = j.conflict; throw e; }
-  return j;
+  const body = JSON.stringify({token: S.cfg.token, action, ...payload});
+  const tries = action === 'read' || action === 'ping' ? 4 : 1;   // čítanie sa bezpečne opakuje, zápis nie
+  let last;
+  for (let i = 0; i < tries; i++) {
+    if (i) await new Promise(r => setTimeout(r, 700 * i));
+    try {
+      const res = await fetch(S.cfg.url, {method: 'POST', redirect: 'follow', body});
+      const txt = await res.text();
+      let j; try { j = JSON.parse(txt); } catch (e) {
+        last = new Error('Server nevrátil JSON (' + res.status + '): ' + txt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 140));
+        continue;
+      }
+      if (!j.ok) { const e = new Error(j.error || 'Chyba servera'); e.conflict = j.conflict; throw e; }
+      return j;
+    } catch (e) {
+      if (e.conflict !== undefined || tries === 1 || /^Chyba|Neplatn|Riadok|Záložka|Neznáma/.test(e.message)) throw e;
+      last = e;
+    }
+  }
+  throw last;
 }
+let loading = false;
 function persist() {
   try { LS.setItem('crm.cache', JSON.stringify(S.data, (k, v) => k === '_s' ? undefined : v)); } catch (e) {}
 }
@@ -324,13 +364,15 @@ function setSync(st, msg) {
   el.innerHTML = `<span class="dot ${st}"></span>${esc(t)}`;
 }
 async function load(silent) {
-  setSync('sync');
+  if (loading) return;
+  loading = true; setSync('sync');
   try {
     const j = await api('read');
     S.data = j; S.lastLoad = Date.now(); buildMap(); persist();
     if (S.sel != null && S.view === 'contacts' && !rowBy(S.sel)) S.sel = null;
     render(); setSync('ok');
   } catch (e) { setSync('err', 'Chyba: ' + e.message); if (!silent) toast(e.message, true); }
+  finally { loading = false; }
 }
 
 /* ---------- toast / modal ---------- */
@@ -378,8 +420,9 @@ function filtered() {
     if (q) { if (!(r._s || (r._s = norm(Object.values(r.v).join(' ')))).includes(q)) return false; }
     return true;
   });
-  const key = r => { const {d, t} = DT(r); return d ? d + (t || '99:99') : '9999'; };
-  return rows.sort((a, b) => key(a).localeCompare(key(b)));
+  const key = r => { const {d, t} = DT(r); return [d || '9999-99-99', t || '99:99']; };
+  return rows.sort((a, b) => { const x = key(a), y = key(b);
+    return x[0].localeCompare(y[0]) || x[1].localeCompare(y[1]) || String(V(a, 'firma')).localeCompare(String(V(b, 'firma')), 'sk'); });
 }
 function card(r) {
   const {d, t} = DT(r), c = dueClass(d), st = V(r, 'stav');
@@ -404,7 +447,13 @@ function renderListBody() {
   let html = '', n = 0;
   if (S.view === 'contacts') {
     const rows = filtered(); n = rows.length;
-    html = rows.slice(0, S.limit).map(card).join('') || '<div class="empty">Nič sa nenašlo.</div>';
+    let last = null;
+    html = rows.slice(0, S.limit).map(r => {
+      const d = DT(r).d; let h = '';
+      if (d !== last) { last = d; const c = dueClass(d), T1 = addDays(1);
+        h = `<div class="dgrp ${c}">${!d ? 'Bez termínu' : c === 'today' ? 'Dnes · ' + fmtD(d) : d === T1 ? 'Zajtra · ' + fmtD(d) : (c === 'over' ? 'Po termíne · ' : '') + fmtD(d)}</div>`; }
+      return h + card(r);
+    }).join('') || '<div class="empty">Nič sa nenašlo.</div>';
     if (rows.length > S.limit) html += `<button class="more" data-act="more">Zobraziť ďalších ${rows.length - S.limit}</button>`;
   } else if (S.view === 'companies') {
     const q = norm(S.q);
@@ -413,7 +462,8 @@ function renderListBody() {
       const cr = compRow(nm), cnt = S.data.contacts.rows.filter(r => norm(V(r, 'firma')) === norm(nm)).length;
       const hasA = cr && (cr.v['Spotreba el. (MWh/rok)'] || cr.v['Spotreba plyn (MWh/rok)']);
       const sav = cr && cr.v['Úspora (€/rok)'];
-      return `<div class="card ${S.sel === nm ? 'sel' : ''}" data-opencomp="${esc(nm)}"><div><b class="c-firma">${esc(nm)}</b>
+      const sts = [...new Set(S.data.contacts.rows.filter(r => norm(V(r, 'firma')) === norm(nm)).map(r => V(r, 'stav')).filter(Boolean))];
+      return `<div class="card ${S.sel === nm ? 'sel' : ''}" data-opencomp="${esc(nm)}"><div><div class="c-top"><b class="c-firma">${esc(nm)}</b>${sts.map(badge).join('')}</div>
         <div class="c-bot"><span class="c-sub">${cnt} kontaktov</span>${hasA ? '<span class="badge b-teal">analýza</span>' : '<span class="badge b-grey">bez analýzy</span>'}${sav ? `<span class="when over">úspora ${esc(sav)} €</span>` : ''}</div></div></div>`;
     }).join('') || '<div class="empty">Žiadne firmy.</div>';
   } else {
@@ -475,13 +525,14 @@ function tabBody(r) {
   }
   return tabAll(r);
 }
+function notesHtml(r) { return V(r, 'pozn') ? `<div class="gtitle" style="margin-top:.4rem">Poznámky zo Sheetu</div><pre class="notes" style="margin-top:0">${esc(V(r, 'pozn'))}</pre>` : ''; }
 function tabHovor(r) {
   const {d, t} = DT(r), st = V(r, 'stav'), sts = statuses(); if (st && !sts.includes(st)) sts.unshift(st);
   const A = k => esc(S.m[k]);
   return `<form id="fCall" class="win pad" autocomplete="off">
     ${S.m.stav ? `<label>Stav<select data-h="${A('stav')}"><option value=""></option>${sts.map(s => `<option value="${esc(s)}" ${s === st ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>` : ''}
     <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder="Čo sa riešilo…"></textarea></label>
-    <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qn="${esc(x)}">${x}</button>`).join('')}</div>
+    <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qn="${esc(x)}">${x}</button>`).join('')}<button type="button" class="btn-sm" data-act="savenote">Uložiť poznámku</button></div>
     ${S.m.dalsi ? `<label>Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label>` : ''}
     ${S.m.datum ? `<div class="dt"><label>Ďalšia komunikácia – dátum<input type="date" data-h="${A('datum')}" data-t="d" value="${d}"></label>
       ${S.m.cas ? `<label>Čas<input type="time" data-h="${A('cas')}" data-t="t" value="${t}"></label>` : '<span></span>'}</div>
@@ -489,8 +540,8 @@ function tabHovor(r) {
       <button type="button" class="chip sm" data-qd="3">+3 dni</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button>
       <button type="button" class="chip sm" data-qdm="1">+1 mesiac</button><button type="button" class="chip sm" data-qd="clear">Bez termínu</button></div>
       ${S.m.cas ? `<div class="qd">${['09:00', '11:00', '14:00', '16:00'].map(x => `<button type="button" class="chip sm" data-qt="${x}">${x}</button>`).join('')}</div>` : ''}` : ''}
-    <button class="cta" type="submit">Uložiť hovor</button></form>
-    ${V(r, 'pozn') ? `<pre class="notes win">${esc(V(r, 'pozn'))}</pre>` : ''}`;
+    <div id="notesBox">${notesHtml(r)}</div>
+    <button class="cta stick" type="submit">Uložiť zmeny</button></form>`;
 }
 function fieldInput(h, val) {
   const k = Object.keys(S.m).find(x => S.m[x] === h), lists = S.data.contacts.lists[h], a = `data-h="${esc(h)}"`;
@@ -511,7 +562,7 @@ function orderedHeaders() {
 }
 function tabAll(r) {
   return `<form id="fAll" class="win pad" autocomplete="off">${orderedHeaders().map(h => `<label>${esc(h)}${fieldInput(h, r.v[h] ?? '')}</label>`).join('')}
-    <button class="cta" type="submit">Uložiť zmeny</button></form>`;
+    <button class="cta stick" type="submit">Uložiť zmeny</button></form>`;
 }
 
 /* ---------- firma / analýza ---------- */
@@ -535,7 +586,7 @@ function companyBlock(name) {
   }
   const rest = H.filter(h => !used.has(h));
   if (rest.length) html += `<div class="gtitle">Ostatné</div>` + rest.map(h => `<label>${esc(h)}${cInput(h, val(h))}</label>`).join('');
-  return html + `<button class="cta" type="submit">Uložiť firmu</button></form>`;
+  return html + `<button class="cta stick" type="submit">Uložiť firmu</button></form>`;
 }
 function calcSavings(form) {
   const g = h => { const el = form.querySelector(`[data-h="${h}"]`); return el ? num(el.value) : NaN; };
@@ -551,7 +602,7 @@ function calcSavings(form) {
 }
 function companyDetail(name) {
   const cs = S.data.contacts.rows.filter(r => norm(V(r, 'firma')) === norm(name));
-  return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button><div style="flex:1"><h2>${esc(name)}</h2><div class="sub">${cs.length} kontaktov</div></div></div>
+  return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button><div style="flex:1"><h2>${esc(name)}</h2><div class="sub">${cs.length} kontaktov</div></div><div class="sts">${[...new Set(cs.map(r => V(r, 'stav')).filter(Boolean))].map(badge).join('')}</div></div>
     ${companyBlock(name)}
     <div class="gtitle" style="margin-top:1.2rem">Kontakty firmy</div>
     ${cs.map(r => `<div class="card ${dueClass(DT(r).d)}" data-goto="${r.r}"><div><b>${esc(V(r, 'osoba') || '(bez mena)')}</b> ${badge(V(r, 'stav'))}
@@ -600,11 +651,27 @@ async function saveCall(form) {
   const act = actFor(r, 'Hovor', note, vals);
   busy(form, true);
   try {
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     applyLocal(r, vals); pushActivity(act); persist(); S.dirty = false;
     toast('Hovor uložený ✔'); renderChips(); renderListBody();
     if (innerWidth < 900) closeSel(); else renderDetail();
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
+}
+async function saveNote(btn) {
+  const r = rowBy(S.sel); if (!r) return;
+  const ta = $('#callNote'), note = ta.value.trim();
+  if (!note) { toast('Najprv napíš poznámku'); return; }
+  if (!S.m.pozn) { toast('Chýba stĺpec Poznámka – pozri Nastavenia', true); return; }
+  const line = `📅 ${dmy()} – ${note}`, old = V(r, 'pozn'), vals = {[S.m.pozn]: old ? line + '\n' + old : line};
+  const act = actFor(r, 'Hovor', note, null);
+  btn.disabled = true;
+  try {
+    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    applyLocal(r, vals); pushActivity(act); persist(); ta.value = '';
+    const nb = $('#notesBox'); if (nb) nb.innerHTML = notesHtml(r);
+    toast('Poznámka uložená ✔');
+  } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
+  finally { btn.disabled = false; }
 }
 async function saveAll(form) {
   const r = rowBy(S.sel); if (!r) return;
@@ -612,7 +679,7 @@ async function saveAll(form) {
   if (!Object.keys(vals).length) { toast('Nič na uloženie'); return; }
   busy(form, true);
   try {
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actFor(r, 'Úprava', '', vals), check: S.m.firma ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actFor(r, 'Úprava', '', vals), check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     applyLocal(r, vals); pushActivity(actFor(r, 'Úprava', '', vals)); persist(); S.dirty = false;
     toast('Uložené ✔'); renderChips(); renderListBody(); renderDetail();
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
@@ -717,6 +784,7 @@ document.addEventListener('click', e => {
     const a = el.dataset.act;
     if (a === 'back') closeSel();
     else if (a === 'refresh') load();
+    else if (a === 'savenote') saveNote(el);
     else if (a === 'more') { S.limit += 150; renderListBody(); }
     else if (a === 'close') closeModal();
     else if (a === 'add') {
