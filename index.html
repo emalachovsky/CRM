@@ -207,6 +207,26 @@ input[readonly]{opacity:.7}
 .hl{background:rgba(77,184,255,.14);border:1px solid rgba(77,184,255,.35);border-radius:10px;padding:.3rem .6rem;margin-top:.45rem}
 .hl .c-next{color:#9fd8ff}
 .addcols{margin:.5rem 0 1rem;padding:.7rem .9rem;border-radius:12px;background:rgba(235,188,90,.1);border:1px solid rgba(235,188,90,.4);font-size:.88rem}
+
+/* ===== úpravy v2 ===== */
+.dtNarrow{max-width:24rem;flex-wrap:nowrap;gap:.6rem}
+.dtNarrow label{flex:1 1 0;min-width:0}
+.dtNarrow label input,.dtNarrow label select{height:2.9rem;min-height:2.9rem;width:100%;margin-top:.3rem;padding:.4rem .75rem;font-size:1.05rem;border-radius:12px;box-sizing:border-box;-webkit-appearance:none;appearance:none;text-align:left}
+.dtNarrow label select{background-image:linear-gradient(45deg,transparent 50%,#8b91a1 50%),linear-gradient(135deg,#8b91a1 50%,transparent 50%);background-position:calc(100% - 1.1rem) 50%,calc(100% - .8rem) 50%;background-size:.3rem .3rem,.3rem .3rem;background-repeat:no-repeat;padding-right:1.8rem}
+.dtAct{max-width:none;min-width:11rem;justify-self:end}
+.dtAct .actsel{width:100%}
+.stsel,.actsel{min-height:2.9rem;padding:.4rem 1.1rem;font-size:1.05rem;font-weight:800;border-radius:999px;border:2px solid transparent;min-width:9rem;width:auto;margin-top:.3rem}
+.stsel{margin-top:0}
+.actsel{border-color:currentColor}
+@media(max-width:480px){.dtNarrow{max-width:none}.dtAct{min-width:0;justify-self:stretch}}
+.callnote{font-size:1.1rem;color:#d9e2f0;line-height:1.35}
+.dhead h2,.c-firma,.firma{color:#4db8ff}
+.dhead .sub,.meno{color:#ff9f1c;text-shadow:0 0 9px rgba(255,159,28,.65);font-weight:700}
+.chip.on{background:#4db8ff;border-color:#4db8ff;color:#06263d}
+.anbox{margin-left:auto;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;justify-content:flex-end}
+.btn-an{border:0;border-radius:12px;padding:.5rem 1rem;font-weight:750;font-size:.9rem;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc-d));color:var(--acc-tx)}
+.btn-an:disabled{opacity:.6}
+.anok{display:inline-flex;align-items:center;gap:.3rem;font-weight:750;font-size:.88rem;color:#b9f5dc;background:rgba(111,211,176,.18);border:1px solid #6fd3b0;border-radius:12px;padding:.4rem .75rem;box-shadow:0 0 12px rgba(111,211,176,.45)}
 </style>
 </head>
 <body>
@@ -300,7 +320,8 @@ const FIELDS = [
   {k:'pl_cp',  label:'PL Cena ponuka', pats:['pl cena ponuka','cena plyn ponuka']},
   {k:'pl_kon', label:'PL Viazanosť / koniec', pats:['pl viazanost','koniec zmluvy plyn','pl koniec']},
   {k:'uspora', label:'Úspora (€/rok)', pats:['uspora']},
-  {k:'pozn_an',label:'Poznámka k analýze', pats:['poznamka k analyze','poznamka analyza']}
+  {k:'pozn_an',label:'Poznámka k analýze', pats:['poznamka k analyze','poznamka analyza']},
+  {k:'an_ok', label:'Analýza načítaná', pats:['analyza nacitana']}
 ];
 const ACT_H = {dt:'Dátum a čas', firma:'Firma', kontakt:'Kontakt', typ:'Typ', stav:'Stav', pozn:'Poznámka', dalsi:'Ďalší krok', dalsiK:'Ďalší kontakt'};
 const CGROUPS = [
@@ -527,7 +548,7 @@ function card(r) {
   const p = phones(r).find(x => x.num);
   return `<div class="card ${c} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
     <div><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b>${badge(st)}</div>
-    <div class="c-sub">${esc(V(r, 'osoba'))} ${badge(V(r, 'pozicia'))}</div>
+    <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${badge(V(r, 'pozicia'))}</div>
     <div class="c-bot"><span class="when ${c}">${esc(whenText(d, t))}</span><span class="c-next">${esc(V(r, 'dalsi'))}</span></div></div>
 </div>`;
 }
@@ -564,7 +585,7 @@ function histItem(a, withName) {
   const v = a.v, dt = String(v[ACT_H.dt] || '');
   const when = dt ? `${fmtD(isoDate(dt))} ${isoTime(dt)}` : '';
   return `<div class="hist" ${withName ? `data-gotoact="${esc(v[ACT_H.firma])}|${esc(v[ACT_H.kontakt])}" style="cursor:pointer"` : ''}>
-    <div class="h-top"><span>${esc(when)}</span>${withName ? `<b style="color:var(--text)">${esc(v[ACT_H.firma])}</b><span>${esc(v[ACT_H.kontakt])}</span>` : ''}
+    <div class="h-top"><span>${esc(when)}</span>${withName ? `<b class="firma">${esc(v[ACT_H.firma])}</b><span class="meno">${esc(v[ACT_H.kontakt])}</span>` : ''}
     ${v[ACT_H.typ] ? `<span class="badge b-grey">${esc(v[ACT_H.typ])}</span>` : ''}${badge(v[ACT_H.stav])}</div>
     ${v[ACT_H.pozn] ? `<div class="h-txt">${esc(v[ACT_H.pozn])}</div>` : ''}
     ${v[ACT_H.dalsi] ? `<div class="h-top" style="margin-top:.25rem">Ďalej: ${esc(v[ACT_H.dalsi])} ${v[ACT_H.dalsiK] ? '· ' + esc(v[ACT_H.dalsiK]) : ''}</div>` : ''}</div>`;
@@ -607,7 +628,8 @@ function contactDetail(r) {
   return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
     <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div>${stSelect(V(r, 'stav'))}</div>
     ${callBtns(r)}
-    ${em || web ? `<div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}</div>` : ''}
+    <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
+      <div class="anbox">${anBadge(r)}<button type="button" class="btn-an" data-act="loadan">Načítať analýzu</button><input type="file" id="anFile" accept=".xlsx,.xls" style="display:none"></div></div>
     <div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div>
     <div id="tabBody">${tabBody(r)}</div>`;
 }
@@ -943,6 +965,7 @@ document.addEventListener('click', e => {
     else if (a === 'undo') undoLast();
     else if (a === 'refresh') load();
     else if (a === 'savenote') saveNote(el);
+    else if (a === 'loadan') { const fi = $('#anFile'); if (fi) fi.click(); }
     else if (a === 'more') { S.limit += 150; renderListBody(); }
     else if (a === 'close') closeModal();
     else if (a === 'add') openNewContact();
@@ -972,11 +995,13 @@ document.addEventListener('submit', e => {
 });
 document.addEventListener('input', e => {
   const t = e.target;
+  if (t.id === 'anFile') return;
   if (t.id === 'q') { S.q = t.value; S.limit = 150; renderListBody(); return; }
   if (t.closest('#detailPane') && t.dataset.stsel === undefined) markDirty();
 });
 document.addEventListener('change', e => {
   const t = e.target;
+  if (t.id === 'anFile') { const f = t.files && t.files[0]; t.value = ''; if (f) importAnalysis(f); return; }
   if (t.dataset.stsel !== undefined) { saveStav(t); return; }
   if (t.classList.contains('actsel')) t.setAttribute('style', palStyle(t.value));
   if (t.dataset.colmap !== undefined) {
@@ -996,6 +1021,109 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
 
+
+/* ---------- načítanie analýzy z xlsx ---------- */
+function anBadge(r) {
+  const v = String(V(r, 'an_ok') || '').trim(); if (!v) return '';
+  const d = isoDate(v);
+  return `<span class="anok">✔ Analýza načítaná${d ? ' · ' + fmtD(d) : ''}</span>`;
+}
+function loadXLSX() {
+  if (window.XLSX) return Promise.resolve();
+  return new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = res; sc.onerror = () => rej(new Error('Nepodarilo sa načítať knižnicu pre xlsx (internet?)'));
+    document.head.appendChild(sc);
+  });
+}
+function parseAnalysis(wb) {
+  const name = wb.SheetNames.find(n => /analyz/.test(norm(n))) || wb.SheetNames[0];
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], {header: 1, raw: true, defval: ''});
+  const txt = x => String(x ?? '').trim();
+  const nn = x => typeof x === 'number' ? x : num(x);
+  const xd = v => { if (typeof v === 'number' && v > 20000) { const p = XLSX.SSF.parse_date_code(v); return `${p.y}-${pad(p.m)}-${pad(p.d)}`; } return isoDate(v); };
+  const heads = []; rows.forEach((r, i) => { if (norm(r[0]) === 'om') heads.push(i); });
+  if (!heads.length) throw new Error('V súbore som nenašiel tabuľky odberných miest (hlavička „OM #“)');
+  // odberateľ (riadky nad prvou tabuľkou: štítok v stĺpci A/B, hodnota vedľa)
+  const cust = {}, lab = {odberatel: 'odb', ico: 'ico', ulica: 'ulica', psc: 'psc', mesto: 'mesto'};
+  rows.slice(0, heads[0]).forEach(r => {
+    for (let c = 0; c < 4; c++) {
+      const k = lab[norm(r[c])];
+      if (k && cust[k] === undefined) { const v = r.slice(c + 1).find(x => txt(x) !== ''); if (v !== undefined) cust[k] = txt(v); }
+    }
+  });
+  const out = {cust, el: null, pl: null};
+  heads.forEach((hi, n) => {
+    let kind = null;
+    for (let i = hi - 1; i >= Math.max(0, hi - 3) && !kind; i--) {
+      const t = norm(rows[i][0]); if (t.includes('elektrin')) kind = 'el'; else if (t.includes('plyn')) kind = 'pl';
+    }
+    if (!kind) kind = n === 0 ? 'el' : 'pl';
+    const hr = rows[hi].map(norm);
+    const col = (pat, d) => { const i = hr.findIndex(h => h.includes(pat)); return i >= 0 ? i : d; };
+    const cD = col('dodavatel', 2), cS = col('spotreba', 9), cC = col('cena', 11), cK = col('druh', 10), cV = col('do kedy', 8);
+    const data = []; let sum = null;
+    for (let i = hi + 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (norm(r[0]).startsWith('spolu')) { sum = r; break; }
+      if (typeof r[0] !== 'number' && !/^\d+$/.test(txt(r[0]))) break;
+      data.push(r);
+    }
+    if (!data.length) return;
+    let sp = sum ? nn(sum[cS]) : NaN;
+    if (!(sp > 0)) sp = data.reduce((a, r) => a + (nn(r[cS]) || 0), 0);
+    let price = sum ? nn(sum[cC]) : NaN;
+    if (!(price > 0)) {
+      const ok = data.filter(r => nn(r[cS]) > 0 && nn(r[cC]) > 0), fix = ok.filter(r => /fix/.test(norm(r[cK])));
+      const base = fix.length ? fix : ok, w = base.reduce((a, r) => a + nn(r[cS]), 0);
+      price = w ? base.reduce((a, r) => a + nn(r[cS]) * nn(r[cC]), 0) / w : NaN;
+    }
+    const dod = [...new Set(data.map(r => txt(r[cD])).filter(Boolean))].join(', ');
+    const kon = data.map(r => xd(r[cV])).filter(Boolean).sort()[0] || '';
+    out[kind] = {dod, sp, cs: price, kon, oms: data.length};
+  });
+  if (!out.el && !out.pl) throw new Error('V súbore som nenašiel údaje o odberných miestach');
+  return out;
+}
+const r3 = x => Math.round(x * 1000) / 1000;
+const fmtDec = x => String(r3(x)).replace('.', ',');
+async function importAnalysis(file) {
+  const r = rowBy(S.sel); if (!r) return;
+  const btn = document.querySelector('.btn-an'); if (btn) btn.disabled = true;
+  try {
+    toast('Čítam analýzu…');
+    await loadXLSX();
+    const wb = XLSX.read(await file.arrayBuffer(), {type: 'array'});
+    const A = parseAnalysis(wb);
+    const a = norm(A.cust.odb), b = norm(V(r, 'firma'));
+    if (a && b && !a.includes(b) && !b.includes(a) && a.split(' ')[0] !== b.split(' ')[0] &&
+        !confirm(`Analýza je pre „${A.cust.odb}“, ale otvorená firma je „${V(r, 'firma')}“.\nPokračovať a zapísať údaje?`)) return;
+    const vals = {};
+    const put = (k, v, onlyEmpty) => {
+      if (v === '' || v == null || (typeof v === 'number' && !isFinite(v))) return;
+      if (onlyEmpty && String(V(r, k)).trim()) return;
+      const h = fieldHeader(k); if (h) vals[h] = v;
+    };
+    put('ico', A.cust.ico, true); put('ulica', A.cust.ulica, true); put('psc', A.cust.psc, true); put('mesto', A.cust.mesto, true);
+    for (const g of ['el', 'pl']) {
+      const x = A[g]; if (!x) continue;
+      put(g + '_dod', x.dod); put(g + '_sp', isFinite(x.sp) ? r3(x.sp) : null); put(g + '_cs', isFinite(x.cs) ? r3(x.cs) : null);
+      if (x.kon) put(g + '_kon', {t: 'd', v: x.kon});
+    }
+    put('an_ok', dmy());
+    const real = await materializeNewCols(vals);
+    await api('update', {sheet: 'contacts', row: r.r, values: real, activity: actFor(r, 'Analýza načítaná', '', real),
+      check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    setUndo(r, real);
+    const local = {}; for (const h in real) local[h] = typeof real[h] === 'number' ? fmtDec(real[h]) : real[h];
+    applyLocal(r, local); pushActivity(actFor(r, 'Analýza načítaná', '', real)); persist();
+    S.dirty = false; S.tab = 'firma'; renderChips(); renderListBody(); renderDetail();
+    const bits = []; if (A.el) bits.push(`elektrina ${fmtDec(A.el.sp)} MWh · ${fmtDec(A.el.cs)} €/MWh`); if (A.pl) bits.push(`plyn ${fmtDec(A.pl.sp)} MWh · ${fmtDec(A.pl.cs)} €/MWh`);
+    toast('Analýza načítaná: ' + bits.join(' | '));
+  } catch (e) { toast(e.message || String(e), true); if (e.conflict) load(true); }
+  finally { const b2 = document.querySelector('.btn-an'); if (b2) b2.disabled = false; }
+}
 
 /* ---------- ikona pre plochu iOS ---------- */
 (function () {
