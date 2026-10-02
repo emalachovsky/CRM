@@ -303,35 +303,29 @@ const FIELDS = [
   {k:'stav',   label:'Stav', pats:['stav','status']},
   {k:'dalsi',  label:'Čo nasleduje', pats:['co nasleduje','dalsi krok','nasleduje','akcia','next','uloha']},
   {k:'pozn',   label:'Poznámka', pats:['poznamka','poznamky','notes','note']},
-  {k:'firma',  label:'Firma', pats:['nazov spolocnosti','spolocnost','firma','company','nazov']},
+  {k:'firma',  label:'Firma', pats:['nazov firmy','nazov spolocnosti','spolocnost','company','nazov']},
   {k:'osoba',  label:'Kontaktná osoba', pats:['kontaktna osoba','meno a priezvisko','meno','kontakt','osoba','priezvisko']},
   {k:'pozicia',label:'Aktivita', pats:['aktivita','pozicia','funkcia']},
   {k:'web',    label:'Web', pats:['web','stranka','website']},
-  {k:'odb',    label:'Odberateľ', pats:['odberatel','obchodny nazov','nazov odberatela']},
   {k:'ico',    label:'IČO', pats:['ico']},
   {k:'ulica',  label:'Ulica / adresa', pats:['ulica','adresa','street']},
   {k:'psc',    label:'PSČ', pats:['psc','zip']},
   {k:'mesto',  label:'Mesto', pats:['mesto','obec','city']},
   {k:'odvetvie',label:'Odvetvie', pats:['odvetvie','sektor','industry']},
-  {k:'el_dod', label:'EE Dodávateľ', pats:['ee dodavatel','dodavatel el','dodavatel elektriny']},
   {k:'el_sp',  label:'EE Spotreba', pats:['ee spotreba','spotreba el','spotreba elektriny']},
   {k:'el_cs',  label:'EE Cena súčasná', pats:['ee cena sucasna','cena el sucasna','cena elektriny sucasna','ee cena']},
-  {k:'el_cp',  label:'EE Cena ponuka', pats:['ee cena ponuka','cena el ponuka','cena elektriny ponuka']},
   {k:'el_kon', label:'EE Viazanosť / koniec', pats:['ee viazanost','koniec zmluvy el','koniec zmluvy elektriny','ee koniec']},
-  {k:'pl_dod', label:'PL Dodávateľ', pats:['pl dodavatel','dodavatel plyn']},
   {k:'pl_sp',  label:'PL Spotreba', pats:['pl spotreba','spotreba plyn']},
   {k:'pl_cs',  label:'PL Cena súčasná', pats:['pl cena sucasna','cena plyn sucasna','pl cena']},
-  {k:'pl_cp',  label:'PL Cena ponuka', pats:['pl cena ponuka','cena plyn ponuka']},
   {k:'pl_kon', label:'PL Viazanosť / koniec', pats:['pl viazanost','koniec zmluvy plyn','pl koniec']},
-  {k:'uspora', label:'Úspora (€/rok)', pats:['uspora']},
-  {k:'pozn_an',label:'Poznámka k analýze', pats:['poznamka k analyze','poznamka analyza']},
-  {k:'an_ok', label:'Analýza načítaná', pats:['analyza nacitana']}
+  {k:'obch',   label:'Firma (obchodný názov)', pats:['firma']},
+  {k:'sluzba_kon', label:'Koniec služby', pats:['koniec sluzby']}
 ];
 const ACT_H = {dt:'Dátum a čas', firma:'Firma', kontakt:'Kontakt', typ:'Typ', stav:'Stav', pozn:'Poznámka', dalsi:'Ďalší krok', dalsiK:'Ďalší kontakt'};
 const CGROUPS = [
-  ['Základné údaje', ['odb', 'ico', 'web', 'email', 'ulica', 'psc', 'mesto', 'odvetvie']],
-  ['Elektrina', ['el_dod', 'el_sp', 'el_cs', 'el_kon']],
-  ['Plyn', ['pl_dod', 'pl_sp', 'pl_cs', 'pl_kon']]
+  ['Základné údaje', ['obch', 'ico', 'web', 'email', 'ulica', 'psc', 'mesto', 'odvetvie', 'sluzba_kon']],
+  ['Elektrina', ['el_sp', 'el_cs', 'el_kon']],
+  ['Plyn', ['pl_sp', 'pl_cs', 'pl_kon']]
 ];
 const QUICK_NOTES = ['Čakám na FA', 'Dohodnúť stretnutie', 'Pripraviť ponuku'];
 const SEP = '────────────────';
@@ -674,7 +668,7 @@ function tabHovor(r) {
 }
 function fieldInput(h, val) {
   const k = Object.keys(S.m).find(x => S.m[x] === h), lists = S.data.contacts.lists[h], a = `data-h="${esc(h)}"`;
-  if (k === 'datum' || k === 'el_kon' || k === 'pl_kon') return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
+  if (k === 'datum' || /_kon$/.test(k || '')) return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
   if (k === 'cas') return timeSelect(a, isoTime(val));
   if (k === 'web') return `<input type="url" ${a} value="${esc(val)}">`;
   if (k === 'pozn') return `<textarea ${a} rows="6">${esc(val)}</textarea>`;
@@ -697,9 +691,9 @@ function tabAll(r) {
 }
 
 /* ---------- firma / analýza ---------- */
-const CGROUP_LABELS = {odb:'Odberateľ (obchodný názov)', ico:'IČO', web:'Web', email:'E-mail', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', odvetvie:'Odvetvie',
-  el_dod:'Dodávateľ', el_sp:'Spotreba (MWh/rok)', el_cs:'Cena súčasná (€/MWh)', el_kon:'Viazanosť / koniec zmluvy',
-  pl_dod:'Dodávateľ', pl_sp:'Spotreba (MWh/rok)', pl_cs:'Cena súčasná (€/MWh)', pl_kon:'Viazanosť / koniec zmluvy'};
+const CGROUP_LABELS = {obch:'Firma (obchodný názov)', ico:'IČO', web:'Web', email:'E-mail', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', odvetvie:'Odvetvie', sluzba_kon:'Koniec služby',
+  el_sp:'Spotreba (MWh/rok)', el_cs:'Cena súčasná (€/MWh)', el_kon:'Viazanosť / koniec zmluvy',
+  pl_sp:'Spotreba (MWh/rok)', pl_cs:'Cena súčasná (€/MWh)', pl_kon:'Viazanosť / koniec zmluvy'};
 function cInput(k, h, val) {
   const a = `data-h="${esc(h)}"`;
   if (/_kon$/.test(k)) return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
@@ -1031,9 +1025,14 @@ document.addEventListener('keydown', e => {
 
 /* ---------- načítanie analýzy z xlsx ---------- */
 function anBadge(r) {
-  const v = String(V(r, 'an_ok') || '').trim(); if (!v) return '';
-  const d = isoDate(v);
-  return `<span class="anok">✔ Analýza načítaná${d ? ' · ' + fmtD(d) : ''}</span>`;
+  const f = norm(V(r, 'firma')); if (!f) return '';
+  let best = '';
+  for (const a of S.data.activities.rows) {
+    if (norm(a.v[ACT_H.typ]) !== 'analyza nacitana' || norm(a.v[ACT_H.firma]) !== f) continue;
+    const d = isoDate(a.v[ACT_H.dt]); if (d > best) best = d;
+  }
+  if (!best) return '';
+  return `<span class="anok">✔ Analýza načítaná ${best.split('-').reverse().join('.')}</span>`;
 }
 function loadXLSX() {
   if (window.XLSX) return Promise.resolve();
@@ -1112,13 +1111,12 @@ async function importAnalysis(file) {
       if (onlyEmpty && String(V(r, k)).trim()) return;
       const h = fieldHeader(k); if (h) vals[h] = v;
     };
-    put('odb', A.cust.odb); put('ico', A.cust.ico, true); put('ulica', A.cust.ulica, true); put('psc', A.cust.psc, true); put('mesto', A.cust.mesto, true);
+    put('obch', A.cust.odb); put('ico', A.cust.ico, true); put('ulica', A.cust.ulica, true); put('psc', A.cust.psc, true); put('mesto', A.cust.mesto, true);
     for (const g of ['el', 'pl']) {
       const x = A[g]; if (!x) continue;
-      put(g + '_dod', x.dod); put(g + '_sp', isFinite(x.sp) ? r3(x.sp) : null); put(g + '_cs', isFinite(x.cs) ? r3(x.cs) : null);
+      put(g + '_sp', isFinite(x.sp) ? r3(x.sp) : null); put(g + '_cs', isFinite(x.cs) ? r3(x.cs) : null);
       if (x.kon) put(g + '_kon', {t: 'd', v: x.kon});
     }
-    put('an_ok', dmy());
     const real = await materializeNewCols(vals);
     await api('update', {sheet: 'contacts', row: r.r, values: real, activity: actFor(r, 'Analýza načítaná', '', real),
       check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
