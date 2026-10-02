@@ -209,19 +209,22 @@ input[readonly]{opacity:.7}
 .addcols{margin:.5rem 0 1rem;padding:.7rem .9rem;border-radius:12px;background:rgba(235,188,90,.1);border:1px solid rgba(235,188,90,.4);font-size:.88rem}
 
 /* ===== úpravy v2 ===== */
-.dtNarrow{max-width:24rem;flex-wrap:nowrap;gap:.6rem}
-.dtNarrow label{flex:1 1 0;min-width:0}
+.dtRow{grid-template-columns:minmax(0,1fr) auto}
+.dtNarrow{max-width:none;flex-wrap:wrap;gap:.6rem;align-items:flex-end}
+.dtNarrow label{flex:0 0 9rem;min-width:0}
+.dtNarrow label.dtT{flex-basis:7rem}
+.dtNarrow .qd{flex:1 1 auto;margin:0 0 .5rem;gap:.35rem;flex-wrap:wrap}
 .dtNarrow label input,.dtNarrow label select{height:2.9rem;min-height:2.9rem;width:100%;margin-top:.3rem;padding:.4rem .75rem;font-size:1.05rem;border-radius:12px;box-sizing:border-box;-webkit-appearance:none;appearance:none;text-align:left}
 .dtNarrow label select{background-image:linear-gradient(45deg,transparent 50%,#8b91a1 50%),linear-gradient(135deg,#8b91a1 50%,transparent 50%);background-position:calc(100% - 1.1rem) 50%,calc(100% - .8rem) 50%;background-size:.3rem .3rem,.3rem .3rem;background-repeat:no-repeat;padding-right:1.8rem}
-.dtAct{max-width:none;min-width:11rem;justify-self:end}
+.dtAct{width:9rem;max-width:9rem;min-width:0;justify-self:end;margin-left:auto}
 .dtAct .actsel{width:100%}
-.stsel,.actsel{min-height:2.9rem;padding:.4rem 1.1rem;font-size:1.05rem;font-weight:800;border-radius:999px;border:2px solid transparent;min-width:9rem;width:auto;margin-top:.3rem}
+.stsel,.actsel{min-height:2.9rem;padding:.4rem .9rem;font-size:1rem;font-weight:800;border-radius:999px;border:2px solid transparent;min-width:0;width:auto;margin-top:.3rem}
 .stsel{margin-top:0}
 .actsel{border-color:currentColor}
-@media(max-width:480px){.dtNarrow{max-width:none}.dtAct{min-width:0;justify-self:stretch}}
-.callnote{font-size:1.1rem;color:#d9e2f0;line-height:1.35}
+@media(max-width:480px){.dtRow{grid-template-columns:1fr}.dtAct{width:auto;max-width:none;justify-self:stretch}}
+.callnote{font-size:.85rem;color:#cdd7e6;line-height:1.35}
 .dhead h2,.c-firma,.firma{color:#4db8ff}
-.dhead .sub,.meno{color:#ff9f1c;text-shadow:0 0 9px rgba(255,159,28,.65);font-weight:700}
+.dhead .sub,.meno{color:#fff;font-weight:700}
 .chip.on{background:#4db8ff;border-color:#4db8ff;color:#06263d}
 .anbox{margin-left:auto;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;justify-content:flex-end}
 .btn-an{border:0;border-radius:12px;padding:.5rem 1rem;font-weight:750;font-size:.9rem;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc-d));color:var(--acc-tx)}
@@ -304,6 +307,7 @@ const FIELDS = [
   {k:'osoba',  label:'Kontaktná osoba', pats:['kontaktna osoba','meno a priezvisko','meno','kontakt','osoba','priezvisko']},
   {k:'pozicia',label:'Aktivita', pats:['aktivita','pozicia','funkcia']},
   {k:'web',    label:'Web', pats:['web','stranka','website']},
+  {k:'odb',    label:'Odberateľ', pats:['odberatel','obchodny nazov','nazov odberatela']},
   {k:'ico',    label:'IČO', pats:['ico']},
   {k:'ulica',  label:'Ulica / adresa', pats:['ulica','adresa','street']},
   {k:'psc',    label:'PSČ', pats:['psc','zip']},
@@ -325,7 +329,7 @@ const FIELDS = [
 ];
 const ACT_H = {dt:'Dátum a čas', firma:'Firma', kontakt:'Kontakt', typ:'Typ', stav:'Stav', pozn:'Poznámka', dalsi:'Ďalší krok', dalsiK:'Ďalší kontakt'};
 const CGROUPS = [
-  ['Základné údaje', ['ico', 'web', 'email', 'ulica', 'psc', 'mesto', 'odvetvie']],
+  ['Základné údaje', ['odb', 'ico', 'web', 'email', 'ulica', 'psc', 'mesto', 'odvetvie']],
   ['Elektrina', ['el_dod', 'el_sp', 'el_cs', 'el_kon']],
   ['Plyn', ['pl_dod', 'pl_sp', 'pl_cs', 'pl_kon']]
 ];
@@ -651,10 +655,11 @@ function tabHovor(r) {
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
   const phs = ['tel', 'tel2'].filter(k => S.m[k]).map(k => `<label>${k === 'tel' ? 'Telefón' : 'Telefón 2'}<input type="tel" data-h="${A(k)}" value="${esc(r.v[S.m[k]] ?? '')}"></label>`).join('');
   const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : '';
+  const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
-      <label>Dátum<input type="date" class="dtSmall" data-h="${A('datum')}" data-t="d" value="${d}"></label>
-      ${S.m.cas ? `<label>Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}
-        <div class="qd">${['<button type="button" class="chip sm" data-qd="0">Dnes</button>', '<button type="button" class="chip sm" data-qd="1">Zajtra</button>', '<button type="button" class="chip sm" data-qd="7">+1 týždeň</button>'].join('')}</div></label>` : `<div class="qd">${['<button type="button" class="chip sm" data-qd="0">Dnes</button>', '<button type="button" class="chip sm" data-qd="1">Zajtra</button>', '<button type="button" class="chip sm" data-qd="7">+1 týždeň</button>'].join('')}</div>`}
+      <label class="dtD">Dátum<input type="date" class="dtSmall" data-h="${A('datum')}" data-t="d" value="${d}"></label>
+      ${S.m.cas ? `<label class="dtT">Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
+      ${qd}
     </div>
     ${actBlock}</div>` : (actBlock ? `<div class="dtRow dtRowSingle">${actBlock}</div>` : '');
   return `<form id="fCall" class="win pad" autocomplete="off">
@@ -692,7 +697,7 @@ function tabAll(r) {
 }
 
 /* ---------- firma / analýza ---------- */
-const CGROUP_LABELS = {ico:'IČO', web:'Web', email:'E-mail', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', odvetvie:'Odvetvie',
+const CGROUP_LABELS = {odb:'Odberateľ (obchodný názov)', ico:'IČO', web:'Web', email:'E-mail', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', odvetvie:'Odvetvie',
   el_dod:'Dodávateľ', el_sp:'Spotreba (MWh/rok)', el_cs:'Cena súčasná (€/MWh)', el_kon:'Viazanosť / koniec zmluvy',
   pl_dod:'Dodávateľ', pl_sp:'Spotreba (MWh/rok)', pl_cs:'Cena súčasná (€/MWh)', pl_kon:'Viazanosť / koniec zmluvy'};
 function cInput(k, h, val) {
@@ -916,6 +921,7 @@ function openSettings() {
       <button class="cta ghost" type="button" data-act="copycfg" style="margin-top:.6rem">Skopírovať odkaz pre iné zariadenie</button>
     </form>
     ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Spárovanie stĺpcov (${hs.length})</div>
+      <button class="cta ghost" type="button" data-act="reloadcols" style="margin-bottom:.5rem">Znovu načítať stĺpce zo Sheetu</button>
       <button class="cta ghost" type="button" data-act="selectallcols" style="margin-bottom:.6rem">Vybrať všetky stĺpce</button>
       ${hs.map(h => { const cur = (FIELDS.find(f => S.m[f.k] === h) || {}).k || ''; return `<div class="maprow"><span>${esc(h)}</span><select data-colmap="${esc(h)}"><option value="">(nepoužité)</option>${FIELDS.map(f => `<option value="${f.k}" ${f.k === cur ? 'selected' : ''}>${f.label}</option>`).join('')}</select></div>`; }).join('')}` : ''}`);
 }
@@ -925,7 +931,7 @@ document.addEventListener('click', e => {
   const t = e.target;
   if (t.closest('a.qcall') || t.closest('a.call') || t.closest('a.lnk')) return;
   let el;
-  if ((el = t.closest('[data-nav]'))) { if (el.dataset.nav === 'settings') openSettings(); return; }
+  if ((el = t.closest('[data-nav]'))) { if (el.dataset.nav === 'settings') { openSettings(); if (S.cfg.url) load(true).then(() => { if ($('#fSet') && !$('#sUrl').matches(':focus')) openSettings(); }); } return; }
   if ((el = t.closest('[data-tab]'))) { S.tab = el.dataset.tab; $('#tabBody').innerHTML = tabBody(rowBy(S.sel)); document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === el)); S.dirty = false; return; }
   if (S.stOpen && !t.closest('.chips')) { S.stOpen = false; renderChips(); }
   if ((el = t.closest('[data-stpop]'))) { S.stOpen = !S.stOpen; renderChips(); return; }
@@ -975,6 +981,7 @@ document.addEventListener('click', e => {
       api('addcols', {headers: names}).then(j => { toast('Pridané do Sheetu: ' + ((j.added || []).join(', ') || 'nič'));  closeModal(); load(); })
         .catch(e => { el.disabled = false; toast(e.message, true); });
     }
+    else if (a === 'reloadcols') { el.disabled = true; load().then(() => { if ($('#fSet')) openSettings(); }); }
     else if (a === 'selectallcols') {
       S.map = {}; for (const f of FIELDS) if (S.auto[f.k]) S.map[f.k] = S.auto[f.k];
       LS.setItem('crm.map', JSON.stringify(S.map)); buildMap(); render(); openSettings();
@@ -1105,7 +1112,7 @@ async function importAnalysis(file) {
       if (onlyEmpty && String(V(r, k)).trim()) return;
       const h = fieldHeader(k); if (h) vals[h] = v;
     };
-    put('ico', A.cust.ico, true); put('ulica', A.cust.ulica, true); put('psc', A.cust.psc, true); put('mesto', A.cust.mesto, true);
+    put('odb', A.cust.odb); put('ico', A.cust.ico, true); put('ulica', A.cust.ulica, true); put('psc', A.cust.psc, true); put('mesto', A.cust.mesto, true);
     for (const g of ['el', 'pl']) {
       const x = A[g]; if (!x) continue;
       put(g + '_dod', x.dod); put(g + '_sp', isFinite(x.sp) ? r3(x.sp) : null); put(g + '_cs', isFinite(x.cs) ? r3(x.cs) : null);
