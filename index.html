@@ -121,13 +121,15 @@ input[readonly]{opacity:.7}
 .qd{display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0 .8rem}
 .qn{display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0 .8rem}
 .dtRow{display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:start;margin-bottom:.2rem}
-.dtNarrow{display:flex;gap:.5rem;flex-wrap:wrap;max-width:15rem}
+.dtNarrow{display:flex;gap:.5rem;flex-wrap:wrap;max-width:18rem}
 .dtNarrow label{flex:1 1 6.5rem;min-width:6.5rem;margin-bottom:0;display:flex;flex-direction:column}
-.dtNarrow label select,.dtNarrow label input{flex:1}
-.dtNarrow .qd{flex-basis:100%;width:100%;margin:.4rem 0 0}
+.dtNarrow label select,.dtNarrow label input{flex:none}
+.dtNarrow .qd{margin:.4rem 0 0;flex-wrap:wrap;gap:.3rem}
+.dtNarrow .qd .chip.sm{padding:.22rem .5rem;font-size:.78rem}
 .dtSmall{padding:.5rem .55rem;min-height:2.4rem}
-.dtAct{min-width:0;max-width:9rem;margin-left:auto}
-@media(max-width:480px){.dtRow{grid-template-columns:1fr}}
+.dtAct{min-width:0;max-width:11rem;margin-left:auto}
+.dtRowSingle{grid-template-columns:1fr}
+@media(max-width:480px){.dtRow{grid-template-columns:1fr}.dtAct{margin-left:0;max-width:none}.dtRow{row-gap:.6rem}}
 .cta{width:100%;min-height:3rem;border:0;border-radius:14px;font-weight:750;font-size:1rem;cursor:pointer;
   background:linear-gradient(135deg,var(--acc),var(--acc-d));color:var(--acc-tx);box-shadow:0 8px 22px rgba(95,179,236,.25)}
 .cta:disabled{opacity:.6}
@@ -180,7 +182,7 @@ input[readonly]{opacity:.7}
 .chips select.on{border-color:#6fd3b0;color:#6fd3b0}
 .stsel,.actsel{appearance:auto;border:1px solid transparent;font-weight:700;color-scheme:dark}
 .stsel{width:auto;margin:0;min-height:2rem;border-radius:999px;padding:.25rem .6rem;font-size:.85rem;background:#2a3358;color:#f0ece4}
-.actsel{width:auto;max-width:100%;min-height:2rem;border-radius:999px;padding:.25rem .6rem;font-size:.85rem;background:#2a3358;color:#f0ece4}
+.actsel{width:auto;max-width:100%;min-height:2.4rem;border-radius:999px;padding:.35rem .9rem;font-size:.95rem;font-weight:800;background:#2a3358;color:#f0ece4;border:2px solid currentColor}
 .stsel option,.actsel option{background:#1b2440;color:#f0ece4}
 .ph2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
 .savemsg{color:var(--muted);font-size:.82rem;text-align:center;min-height:1.1rem;margin:.3rem 0}
@@ -260,7 +262,7 @@ const S = {
   map: JSON.parse(LS.getItem('crm.map') || '{}'),
   data: null, m: {}, auto: {},
   view: 'contacts', q: '', chip: 'all', sel: null, tab: 'hovor',
-  dirty: false, stSet: new Set(), stOpen: false, msg: null, sy: {st: 'ok'}, limit: 150, lastLoad: 0, extraCo: new Set(), undo: null
+  dirty: false, stSet: new Set(JSON.parse(LS.getItem('crm.stfilter') || '[]')), stOpen: false, msg: null, sy: {st: 'ok'}, limit: 150, lastLoad: 0, extraCo: new Set(), undo: null
 };
 if (location.hash.startsWith('#cfg=')) {
   try { S.cfg = JSON.parse(atob(location.hash.slice(5))); LS.setItem('crm.cfg', JSON.stringify(S.cfg)); } catch (e) {}
@@ -626,13 +628,13 @@ function tabHovor(r) {
   const {d, t} = DT(r), A = k => esc(S.m[k]);
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
   const phs = ['tel', 'tel2'].filter(k => S.m[k]).map(k => `<label>${k === 'tel' ? 'Telefón' : 'Telefón 2'}<input type="tel" data-h="${A(k)}" value="${esc(r.v[S.m[k]] ?? '')}"></label>`).join('');
+  const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : '';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
       <label>Dátum<input type="date" class="dtSmall" data-h="${A('datum')}" data-t="d" value="${d}"></label>
-      ${S.m.cas ? `<label>Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
-      <div class="qd">${['<button type="button" class="chip sm" data-qd="0">Dnes</button>', '<button type="button" class="chip sm" data-qd="1">Zajtra</button>', '<button type="button" class="chip sm" data-qd="7">+1 týždeň</button>'].join('')}</div>
+      ${S.m.cas ? `<label>Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}
+        <div class="qd">${['<button type="button" class="chip sm" data-qd="0">Dnes</button>', '<button type="button" class="chip sm" data-qd="1">Zajtra</button>', '<button type="button" class="chip sm" data-qd="7">+1 týždeň</button>'].join('')}</div></label>` : `<div class="qd">${['<button type="button" class="chip sm" data-qd="0">Dnes</button>', '<button type="button" class="chip sm" data-qd="1">Zajtra</button>', '<button type="button" class="chip sm" data-qd="7">+1 týždeň</button>'].join('')}</div>`}
     </div>
-    ${S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label><div id="calMsgBox">${calMsgHtml()}</div>` : ''}
-    </div>` : (S.m.pozicia ? `<label>Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label><div id="calMsgBox">${calMsgHtml()}</div>` : '');
+    ${actBlock}</div>` : (actBlock ? `<div class="dtRow dtRowSingle">${actBlock}</div>` : '');
   return `<form id="fCall" class="win pad" autocomplete="off">
     ${dtBlock}
     ${phs ? `<div class="ph2">${phs}</div>` : ''}
@@ -735,8 +737,6 @@ function changedOnly(row, vals) {
 }
 function saveMsg(t) { S.msg = {row: S.sel, t}; document.querySelectorAll('.savemsg').forEach(e => e.textContent = t); }
 const savemsgHtml = () => `<div class="savemsg">${esc(S.msg && S.msg.row === S.sel ? S.msg.t : '')}</div>`;
-function calMsg(t) { S.calMsg = {row: S.sel, t}; const b = $('#calMsgBox'); if (b) b.innerHTML = calMsgHtml(); }
-const calMsgHtml = () => (S.calMsg && S.calMsg.row === S.sel && S.calMsg.t) ? `<div class="calmsg">${esc(S.calMsg.t)}</div>` : '';
 function busy(form, on, txt) {
   const b = form.querySelector('.cta'); if (!b) return;
   if (on) { b.dataset.t = b.textContent; b.textContent = 'Ukladám…'; b.disabled = true; }
@@ -758,9 +758,15 @@ function setUndo(row, vals) {
   if (!Object.keys(prev).length) { S.undo = null; return; }
   S.undo = {row: row.r, prev};
 }
-function undoAvailable() { return S.undo && S.undo.row === S.sel; }
+function undoAvailable() { return S.dirty || (S.undo && S.undo.row === S.sel); }
 const undoBtnHtml = () => undoAvailable() ? `<button type="button" class="cta ghost undoBtn" data-act="undo">${ico('back')}Späť</button>` : '';
+function markDirty() {
+  if (S.dirty) return;
+  S.dirty = true;
+  document.querySelectorAll('.saveRow').forEach(row => { if (!row.querySelector('.undoBtn')) row.insertAdjacentHTML('afterbegin', `<button type="button" class="cta ghost undoBtn" data-act="undo">${ico('back')}Späť</button>`); });
+}
 async function undoLast() {
+  if (S.dirty) { S.dirty = false; $('#tabBody').innerHTML = tabBody(rowBy(S.sel)); return; }
   if (!S.undo) return;
   const r = rowBy(S.undo.row); if (!r) { S.undo = null; return; }
   const vals = S.undo.prev, undo = S.undo; S.undo = null;
@@ -787,21 +793,11 @@ async function saveCall(form) {
   if (note && S.m.pozn) { const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = V(r, 'pozn'); vals[S.m.pozn] = old ? line + '\n' + old : line; }
   if (!Object.keys(vals).length && !note) { saveMsg('Nič na uloženie'); return; }
   const act = actFor(r, 'Hovor', note, vals);
-  const akt = S.m.pozicia ? specVal(all[S.m.pozicia]) : '', cd = S.m.datum ? specVal(all[S.m.datum]) : '', ct = S.m.cas ? specVal(all[S.m.cas]) : '', dal = S.m.dalsi ? specVal(all[S.m.dalsi]) : '';
-  let calendar = null, calStatus = '';
-  const isMeeting = norm(akt) === 'stretnutie', isCall = norm(akt) === 'telefonat';
-  if (isMeeting || isCall) {
-    if (cd && ct) calendar = {title: [V(r, 'osoba'), dal].filter(Boolean).join(' – ') || V(r, 'firma') || akt, date: cd, time: ct, dur: isCall ? 30 : 60,
-      desc: ['Aktivita: ' + akt, V(r, 'firma') && 'Firma: ' + V(r, 'firma'), V(r, 'osoba') && 'Meno: ' + V(r, 'osoba'), dal && 'Nasleduje: ' + dal].filter(Boolean).join('\n')};
-    else calStatus = 'Do kalendára chýba dátum alebo čas';
-  }
   busy(form, true);
   try {
-    const j = await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, calendar, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-    if (calendar) calStatus = j.cal === 'created' ? 'Uložené do kalendára' : j.cal === 'exists' ? 'V kalendári už je' : j.cal === undefined || j.cal === null ? 'Kalendár: nasaď novú verziu skriptu' : 'Kalendár: ' + j.cal;
+    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); S.dirty = false;
     renderChips(); renderListBody(); renderDetail(); saveMsg('Hovor uložený ✔');
-    if (isMeeting || isCall) calMsg(calStatus);
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
 }
 async function saveStav(sel) {
@@ -879,13 +875,14 @@ async function saveNew(form) {
 
 /* ---------- navigácia ---------- */
 function openSel(id) {
-  S.sel = id; S.tab = 'hovor'; S.dirty = false; S.msg = null; S.calMsg = null; S.undo = null;
+  S.sel = id; S.tab = 'hovor'; S.dirty = false; S.msg = null; S.undo = null;
   if (innerWidth < 900) history.pushState({d: 1}, '');
   render(); $('#detailPane').scrollTop = 0;
 }
 function closeSel() { if (history.state && history.state.d) history.back(); else { S.sel = null; render(); } }
 addEventListener('popstate', () => { S.sel = null; S.dirty = false; render(); });
 function setView(v) { S.view = v; S.sel = null; S.q = ''; S.chip = 'all'; S.limit = 150; render(); }
+function saveStFilter() { try { LS.setItem('crm.stfilter', JSON.stringify([...S.stSet])); } catch (e) {} }
 
 /* ---------- nastavenia ---------- */
 function openSettings() {
@@ -910,9 +907,9 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-tab]'))) { S.tab = el.dataset.tab; $('#tabBody').innerHTML = tabBody(rowBy(S.sel)); document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === el)); S.dirty = false; return; }
   if (S.stOpen && !t.closest('.chips')) { S.stOpen = false; renderChips(); }
   if ((el = t.closest('[data-stpop]'))) { S.stOpen = !S.stOpen; renderChips(); return; }
-  if ((el = t.closest('[data-stall]'))) { S.stSet.clear(); S.limit = 150; renderChips(); renderListBody(); return; }
-  if ((el = t.closest('[data-stitem]'))) { const v = el.dataset.stitem; S.stSet.has(v) ? S.stSet.delete(v) : S.stSet.add(v); S.limit = 150; renderChips(); renderListBody(); return; }
-  if ((el = t.closest('[data-chip]'))) { S.chip = el.dataset.chip; S.stOpen = false; if (S.chip === 'all') S.stSet.clear(); S.limit = 150; renderChips(); renderListBody(); return; }
+  if ((el = t.closest('[data-stall]'))) { S.stSet.clear(); saveStFilter(); S.limit = 150; renderChips(); renderListBody(); return; }
+  if ((el = t.closest('[data-stitem]'))) { const v = el.dataset.stitem; S.stSet.has(v) ? S.stSet.delete(v) : S.stSet.add(v); saveStFilter(); S.limit = 150; renderChips(); renderListBody(); return; }
+  if ((el = t.closest('[data-chip]'))) { S.chip = el.dataset.chip; S.stOpen = false; if (S.chip === 'all') { S.stSet.clear(); saveStFilter(); } S.limit = 150; renderChips(); renderListBody(); return; }
   if ((el = t.closest('[data-open]'))) { openSel(Number(el.dataset.open)); return; }
   if ((el = t.closest('[data-gotoact]'))) {
     const [f, o] = el.dataset.gotoact.split('|');
@@ -923,12 +920,12 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-pv]'))) {
     const box = el.closest('[data-pick]'), inp = box.querySelector('input'), was = el.classList.contains('on');
     box.querySelectorAll('button').forEach(b => b.classList.remove('on'));
-    inp.value = was ? '' : el.dataset.pv; if (!was) el.classList.add('on'); S.dirty = true; return;
+    inp.value = was ? '' : el.dataset.pv; if (!was) el.classList.add('on'); markDirty(); return;
   }
-  if ((el = t.closest('[data-qn]'))) { const a = $('#callNote'); a.value = a.value ? a.value.replace(/[\s,]+$/, '') + ', ' + el.dataset.qn : el.dataset.qn; S.dirty = true; return; }
+  if ((el = t.closest('[data-qn]'))) { const a = $('#callNote'); a.value = a.value ? a.value.replace(/[\s,]+$/, '') + ', ' + el.dataset.qn : el.dataset.qn; markDirty(); return; }
   if ((el = t.closest('[data-qnx]'))) {
     const f = el.closest('form'), inp = f.querySelector('[data-h="' + CSS.escape(S.m.dalsi || '') + '"]');
-    if (inp) { inp.value = el.dataset.qnx; S.dirty = true; }
+    if (inp) { inp.value = el.dataset.qnx; markDirty(); }
     return;
   }
   if ((el = t.closest('[data-qd],[data-qdm],[data-qt]'))) {
@@ -937,7 +934,7 @@ document.addEventListener('click', e => {
     if (el.dataset.qdm !== undefined) de.value = addMonths(Number(el.dataset.qdm));
     if (el.dataset.qt !== undefined) { te.value = el.dataset.qt; if (!de.value) de.value = todayISO(); }
     if (el.dataset.qd === 'clear' && te) te.value = '';
-    S.dirty = true; return;
+    markDirty(); return;
   }
   if (t.classList.contains('ovl')) { closeModal(); return; }
   if ((el = t.closest('[data-act]'))) {
@@ -976,7 +973,7 @@ document.addEventListener('submit', e => {
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'q') { S.q = t.value; S.limit = 150; renderListBody(); return; }
-  if (t.closest('#detailPane') && t.dataset.stsel === undefined) S.dirty = true;
+  if (t.closest('#detailPane') && t.dataset.stsel === undefined) markDirty();
 });
 document.addEventListener('change', e => {
   const t = e.target;
