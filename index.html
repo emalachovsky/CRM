@@ -11,8 +11,8 @@
 <title>CRM</title>
 <style>
 :root{
-  --bg:#0b0c10; --panel:#141821; --panel2:#171b24; --field:#0e1016;
-  --line:rgba(255,255,255,.10); --blue:#4db8ff; --blue-d:#ebbc5a;
+  --bg:#0b0e18; --panel:#1a2340; --panel2:#1f2a4b; --field:#111833;
+  --line:rgba(130,160,255,.18); --blue:#4db8ff; --blue-d:#ebbc5a;
   --teal:#ebbc5a; --teal-d:#c99a35; --orange:#e5605c; --grey:#8b91a1;
   --text:#f0ece4; --muted:#8b91a1; --red:#e5605c; --green:#6fd3b0; --violet:#a78bfa;
 }
@@ -33,7 +33,7 @@ h1,h2,h3{margin:0}
 #detailPane{position:absolute;inset:0;z-index:5;background:var(--bg);transform:translateX(102%);transition:transform .25s ease;
   padding:0 .8rem 1.5rem}
 .show-detail #detailPane{transform:none}
-#nav{display:flex;justify-content:space-around;background:#0a0c11;border-top:1px solid var(--line);
+#nav{display:flex;justify-content:space-around;background:#0d1226;border-top:1px solid var(--line);
   padding:.35rem .4rem calc(.35rem + env(safe-area-inset-bottom))}
 .nb{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:.1rem;color:var(--muted);
   font-size:.75rem;padding:.3rem .9rem;border-radius:12px;cursor:pointer}
@@ -57,11 +57,11 @@ h1,h2,h3{margin:0}
 .ib{width:2.5rem;height:2.5rem;border-radius:14px;border:1px solid var(--line);background:#141821;color:var(--text);
   display:grid;place-items:center;cursor:pointer}
 .ib.add{background:linear-gradient(135deg,#f2c76a,#ebbc5a);border:0;color:#2a1300}
-.sync{font-size:.75rem;color:var(--muted);margin-top:.4rem;display:flex;align-items:center;gap:.4rem}
+.sync{font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:.4rem}
 .dot{width:.6rem;height:.6rem;border-radius:50%;background:var(--grey)}
 .dot.ok{background:var(--green)} .dot.sync{background:var(--orange);animation:pulse 1s infinite} .dot.err{background:var(--red)}
 @keyframes pulse{50%{opacity:.3}}
-.chips{display:flex;flex-wrap:wrap;gap:.3rem;padding:.5rem 0 .1rem}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;padding:.55rem 0 .1rem}
 .chip{flex:none;border:1px solid var(--line);background:#141821;color:var(--text);border-radius:999px;padding:.22rem .6rem;
   font-size:.8rem;cursor:pointer;white-space:nowrap}
 .chip.on{background:var(--blue-d);border-color:var(--blue)}
@@ -69,11 +69,11 @@ h1,h2,h3{margin:0}
 .chip.due.on{background:rgba(229,96,92,.22)}
 .chip.sm{font-size:.82rem;padding:.28rem .65rem}
 
-.card{display:grid;grid-template-columns:1fr auto;gap:.7rem;align-items:center;margin:.6rem 0;padding:.8rem .9rem;border-radius:16px;
-  background:linear-gradient(180deg,#181c26,#141821);border:1px solid var(--line);border-left:4px solid var(--blue);cursor:pointer}
+.card{display:grid;grid-template-columns:1fr;gap:.7rem;align-items:center;margin:.6rem 0;padding:.8rem .9rem;border-radius:16px;
+  background:linear-gradient(180deg,#222e52,#1b2544);border:1px solid var(--line);border-left:4px solid var(--blue);cursor:pointer}
 .card.over{border-left-color:var(--orange)} .card.today{border-left-color:var(--teal)}
 .card.sel{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}
-.c-top{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.c-top{display:flex;gap:.5rem;align-items:center;justify-content:space-between}
 .c-firma{font-size:1rem}
 .c-sub{color:var(--muted);font-size:.85rem;margin-top:.1rem}
 .c-bot{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap;margin-top:.3rem;font-size:.85rem}
@@ -107,7 +107,7 @@ h1,h2,h3{margin:0}
 .tabs{display:flex;gap:.3rem;border-bottom:1px solid var(--line);margin-bottom:.9rem;overflow-x:auto;scrollbar-width:none}
 .tab{background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);font-size:.9rem;padding:.5rem .8rem;cursor:pointer;font-weight:600;white-space:nowrap}
 .tab.on{color:var(--teal);border-bottom-color:var(--teal)}
-.win{background:linear-gradient(180deg,#181c26,#141821);border:1px solid var(--line);border-top:2px solid var(--blue);border-radius:18px;
+.win{background:linear-gradient(180deg,#222e52,#1b2544);border:1px solid var(--line);border-top:2px solid var(--blue);border-radius:18px;
   box-shadow:0 10px 30px rgba(0,0,0,.35)}
 .pad{padding:1rem}
 label{display:block;color:var(--muted);font-size:.82rem;margin:.1rem 0 .8rem}
@@ -135,7 +135,7 @@ input[readonly]{opacity:.7}
 .notes{white-space:pre-wrap;overflow-wrap:anywhere;margin:.9rem 0 0;padding:.8rem .9rem;font:inherit;font-size:.88rem;color:#cdd7e6}
 .gtitle{color:var(--teal);font-weight:700;margin:.4rem 0 .6rem;font-size:.95rem}
 .saveOut{margin:.2rem 0 1rem;padding:.7rem .9rem;border-radius:12px;background:rgba(229,96,92,.1);border:1px solid rgba(229,96,92,.4);color:var(--orange)}
-.hist{padding:.7rem .9rem;margin:.5rem 0;border-radius:14px;background:#0f1218;border:1px solid var(--line)}
+.hist{padding:.7rem .9rem;margin:.5rem 0;border-radius:14px;background:#141b34;border:1px solid var(--line)}
 .hist .h-top{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:.8rem}
 .hist .h-txt{font-size:.9rem}
 .hist .h-txt{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:.25rem}
@@ -162,6 +162,14 @@ input[readonly]{opacity:.7}
 .pick button{border:2px solid transparent;border-radius:999px;padding:.3rem .85rem;font-weight:600;font-size:.88rem;cursor:pointer;opacity:.45;font-family:inherit}
 .pick button.on{opacity:1;border-color:#f0ece4}
 .sts2{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end}
+.chips .chip,.chips select{padding:.5rem .4rem;font-size:.9rem;font-weight:700;text-align:center;border-radius:14px;min-height:0;margin:0;width:100%}
+.chips select{appearance:none;-webkit-appearance:none;background:#141821;color:var(--text);border:1px solid var(--line);text-align-last:center}
+.chips select.on{border-color:#6fd3b0;color:#6fd3b0}
+.stsel,.actsel{appearance:auto;border:1px solid transparent;font-weight:700;color-scheme:dark}
+.stsel{width:auto;margin:0;min-height:2rem;border-radius:999px;padding:.25rem .6rem;font-size:.85rem;background:#2a3358;color:#f0ece4}
+.actsel{background:#2a3358;color:#f0ece4}
+.stsel option,.actsel option{background:#1b2440;color:#f0ece4}
+.ph2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
 </style>
 </head>
 <body>
@@ -245,7 +253,8 @@ const CGROUPS = [
   ['Elektrina', ['Dodávateľ el.','Spotreba el. (MWh/rok)','Cena el. súčasná (€/MWh)','Cena el. ponuka (€/MWh)','Koniec zmluvy el.']],
   ['Plyn', ['Dodávateľ plyn','Spotreba plyn (MWh/rok)','Cena plyn súčasná (€/MWh)','Cena plyn ponuka (€/MWh)','Koniec zmluvy plyn']]
 ];
-const QUICK_NOTES = ['Nezdvihol', 'Obsadené', 'Hlasová schránka', 'Zavolať neskôr'];
+const QUICK_NOTES = ['Čakám na FA', 'Dohodnúť stretnutie', 'Pripraviť ponuku'];
+const SEP = '────────────────';
 
 function buildMap() {
   if (!S.data) return;
@@ -405,7 +414,7 @@ function modal(html) { $('#modal').innerHTML = `<div class="ovl"><div class="win
 function closeModal() { $('#modal').innerHTML = ''; }
 
 /* ---------- render ---------- */
-const NAV = [['contacts', 'users', 'Kontakty'], ['companies', 'building', 'Firmy'], ['activity', 'activity', 'Aktivita'], ['settings', 'sliders', 'Nastavenia']];
+const NAV = [['contacts', 'users', 'Kontakty'], ['companies', 'building', 'Firmy'], ['settings', 'sliders', 'Nastavenia']];
 function renderNav() { $('#nav').innerHTML = NAV.map(([k, i, l]) => `<button class="nb ${S.view === k ? 'on' : ''}" data-nav="${k}">${ico(i)}<span>${l}</span></button>`).join(''); }
 function render() {
   renderNav(); renderList(); renderDetail();
@@ -416,21 +425,20 @@ function titleOf() { return {contacts: 'Kontakty', companies: 'Firmy', activity:
 function renderList() {
   const p = $('#listPane');
   if (!S.data) { p.innerHTML = `<div class="empty big">${S.cfg.url ? 'Načítavam…' : 'Nastav pripojenie v Nastaveniach.'}</div>`; return; }
-  p.innerHTML = `<div class="lhead"><div class="ltitle"><h1>${titleOf()}</h1><span class="cnt" id="cnt"></span><span class="sp"></span>
+  p.innerHTML = `<div class="lhead"><div class="ltitle"><h1>${titleOf()}</h1><span class="cnt" id="cnt"></span><span class="sp"></span><div class="sync" id="sync"></div>
     <button class="ib" data-act="refresh" aria-label="Obnoviť">${ico('refresh')}</button>
     ${S.view !== 'activity' ? `<button class="ib add" data-act="add" aria-label="Pridať">${ico('plus')}</button>` : ''}</div>
     <input id="q" type="search" placeholder="Hľadať…" value="${esc(S.q)}" autocomplete="off" style="margin:0">
-    ${S.view === 'contacts' ? '<div class="chips" id="chips"></div>' : ''}<div class="sync" id="sync"></div></div><div id="listBody"></div>`;
+    ${S.view === 'contacts' ? '<div class="chips" id="chips"></div>' : ''}</div><div id="listBody"></div>`;
   renderChips(); renderListBody();
   setSync(S.lastLoad ? 'ok' : 'sync', S.lastLoad ? '' : 'Z pamäte – obnovujem…');
 }
 function renderChips() {
   const el = $('#chips'); if (!el) return;
-  const T = todayISO();
-  const due = S.data.contacts.rows.filter(r => { const d = DT(r).d; return d && d <= T; }).length;
-  el.innerHTML = `<button class="chip ${S.chip === 'all' ? 'on' : ''}" data-chip="all">Všetky</button>
-    <button class="chip due ${S.chip === 'due' ? 'on' : ''}" data-chip="due">Dnes / po termíne (${due})</button>` +
-    statuses().map(s => `<button class="chip ${S.chip === 'st:' + s ? 'on' : ''}" data-chip="${esc('st:' + s)}">${esc(s)}</button>`).join('');
+  const stSel = S.chip.startsWith('st:') ? S.chip.slice(3) : '';
+  el.innerHTML = `<button class="chip ${S.chip === 'due' ? 'on' : ''}" data-chip="due">Dnes</button>
+    <button class="chip ${S.chip === 'all' ? 'on' : ''}" data-chip="all">Všetky</button>
+    <select data-stfilter class="${stSel ? 'on' : ''}"><option value="">Stav</option>${statuses().map(x => `<option value="${esc(x)}" ${x === stSel ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
 }
 function filtered() {
   const q = norm(S.q), T = todayISO();
@@ -451,7 +459,7 @@ function card(r) {
     <div><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b>${badge(st)}</div>
     <div class="c-sub">${esc(V(r, 'osoba'))} ${badge(V(r, 'pozicia'))}</div>
     <div class="c-bot"><span class="when ${c}">${esc(whenText(d, t))}</span><span class="c-next">${esc(V(r, 'dalsi'))}</span></div></div>
-    ${p ? `<a class="qcall" href="tel:${esc(p.num)}" aria-label="Zavolať">${ico('phone')}</a>` : ''}</div>`;
+</div>`;
 }
 function companyNames() {
   const m = new Map();
@@ -483,7 +491,7 @@ function renderListBody() {
       const hasA = cr && (cr.v['Spotreba el. (MWh/rok)'] || cr.v['Spotreba plyn (MWh/rok)']);
       const sav = cr && cr.v['Úspora (€/rok)'];
       const sts = [...new Set(S.data.contacts.rows.filter(r => norm(V(r, 'firma')) === norm(nm)).map(r => V(r, 'stav')).filter(Boolean))];
-      return `<div class="card ${S.sel === nm ? 'sel' : ''}" data-opencomp="${esc(nm)}"><div><div class="c-top"><b class="c-firma">${esc(nm)}</b>${sts.map(badge).join('')}</div>
+      return `<div class="card ${S.sel === nm ? 'sel' : ''}" data-opencomp="${esc(nm)}"><div><div class="c-top"><b class="c-firma">${esc(nm)}</b><span class="sts2">${sts.map(badge).join('')}</span></div>
         <div class="c-bot"><span class="c-sub">${cnt} kontaktov</span>${hasA ? '<span class="badge b-teal">analýza</span>' : '<span class="badge b-grey">bez analýzy</span>'}${sav ? `<span class="when over">úspora ${esc(sav)} €</span>` : ''}</div></div></div>`;
     }).join('') || '<div class="empty">Žiadne firmy.</div>';
   } else {
@@ -523,11 +531,21 @@ function callBtns(r) {
       ${extra ? `<div class="callnote">${esc(extra)}</div>` : ''}</div>`;
   }).join('') + '</div>';
 }
+function stSelect(st) {
+  if (!S.m.stav) return '';
+  const L = statuses(); if (st && !L.some(x => norm(x) === norm(st))) L.unshift(st);
+  return `<select class="stsel" data-stsel style="${palStyle(st)}"><option value="">Stav</option>${L.map(x => `<option value="${esc(x)}" ${x === st ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
+}
+const TIMES = (() => { const a = []; for (let m = 480; m <= 1080; m += 15) a.push(pad(Math.floor(m / 60)) + ':' + pad(m % 60)); return a; })();
+function timeSelect(a, val) {
+  const L = TIMES.slice(); if (val && !L.includes(val)) { L.push(val); L.sort(); }
+  return `<select ${a} data-t="t"><option value=""></option>${L.map(x => `<option value="${x}" ${x === val ? 'selected' : ''}>${x}</option>`).join('')}</select>`;
+}
 function contactDetail(r) {
   const em = V(r, 'email');
   const tabs = [['hovor', 'Hovor'], ['firma', 'Firma / analýza'], ['hist', 'História'], ['udaje', 'Všetky údaje']];
   return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
-    <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div><div class="sts2">${badge(V(r, 'pozicia'))}${badge(V(r, 'stav'))}</div></div>
+    <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div>${stSelect(V(r, 'stav'))}</div>
     ${callBtns(r)}
     ${em ? `<div class="links"><a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a></div>` : ''}
     <div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div>
@@ -547,27 +565,26 @@ function tabBody(r) {
 }
 function notesHtml(r) { return V(r, 'pozn') ? `<div class="gtitle" style="margin-top:.4rem">Poznámky zo Sheetu</div><pre class="notes" style="margin-top:0">${esc(V(r, 'pozn'))}</pre>` : ''; }
 function tabHovor(r) {
-  const {d, t} = DT(r), st = V(r, 'stav'), sts = statuses();
-  const A = k => esc(S.m[k]);
+  const {d, t} = DT(r), A = k => esc(S.m[k]);
+  const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
+  const phs = ['tel', 'tel2'].filter(k => S.m[k]).map(k => `<label>${k === 'tel' ? 'Telefón' : 'Telefón 2'}<input type="tel" data-h="${A(k)}" value="${esc(r.v[S.m[k]] ?? '')}"></label>`).join('');
   return `<form id="fCall" class="win pad" autocomplete="off">
-    ${S.m.pozicia ? `<div class="gtitle">Aktivita</div>${pickList(S.m.pozicia, V(r, 'pozicia'), activitiesList())}` : ''}
-    ${S.m.stav ? `<div class="gtitle">Stav</div>${pickList(S.m.stav, st, sts)}` : ''}
+    ${S.m.pozicia ? `<label>Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : ''}
+    ${phs ? `<div class="ph2">${phs}</div>` : ''}
     <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder="Čo sa riešilo…"></textarea></label>
     <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qn="${esc(x)}">${x}</button>`).join('')}<button type="button" class="btn-sm" data-act="savenote">Uložiť poznámku</button></div>
     ${S.m.dalsi ? `<label>Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label>` : ''}
     ${S.m.datum ? `<div class="dt"><label>Ďalšia komunikácia – dátum<input type="date" data-h="${A('datum')}" data-t="d" value="${d}"></label>
-      ${S.m.cas ? `<label>Čas<input type="time" data-h="${A('cas')}" data-t="t" value="${t}"></label>` : '<span></span>'}</div>
+      ${S.m.cas ? `<label>Čas${timeSelect(`data-h="${A('cas')}"`, t)}</label>` : '<span></span>'}</div>
       <div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button>
-      <button type="button" class="chip sm" data-qd="3">+3 dni</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button>
-      <button type="button" class="chip sm" data-qdm="1">+1 mesiac</button><button type="button" class="chip sm" data-qd="clear">Bez termínu</button></div>
-      ${S.m.cas ? `<div class="qd">${['09:00', '11:00', '14:00', '16:00'].map(x => `<button type="button" class="chip sm" data-qt="${x}">${x}</button>`).join('')}</div>` : ''}` : ''}
+      <button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>` : ''}
     <div id="notesBox">${notesHtml(r)}</div>
     <button class="cta stick" type="submit">Uložiť zmeny</button></form>`;
 }
 function fieldInput(h, val) {
   const k = Object.keys(S.m).find(x => S.m[x] === h), lists = S.data.contacts.lists[h], a = `data-h="${esc(h)}"`;
   if (k === 'datum') return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
-  if (k === 'cas') return `<input type="time" ${a} data-t="t" value="${esc(isoTime(val))}">`;
+  if (k === 'cas') return timeSelect(a, isoTime(val));
   if (k === 'pozn') return `<textarea ${a} rows="6">${esc(val)}</textarea>`;
   if (k === 'pozicia' && !lists) { const L = ACTIVITIES.slice(); if (val && !L.includes(val)) L.unshift(val); return `<select ${a}><option value=""></option>${L.map(x => `<option value="${esc(x)}" ${x === val ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`; }
   if (k === 'stav' || lists) {
@@ -668,23 +685,40 @@ async function saveCall(form) {
   const r = rowBy(S.sel); if (!r) return;
   const all = collect(form), note = $('#callNote').value.trim();
   const vals = changedOnly(r, all);
-  if (note && S.m.pozn) { const line = `📅 ${dmy()} – ${note}`, old = V(r, 'pozn'); vals[S.m.pozn] = old ? line + '\n' + old : line; }
+  if (note && S.m.pozn) { const line = `📅 ${dmy()} – ${note}\n${SEP}`, old = V(r, 'pozn'); vals[S.m.pozn] = old ? line + '\n' + old : line; }
   if (!Object.keys(vals).length && !note) { toast('Nič na uloženie'); return; }
   const act = actFor(r, 'Hovor', note, vals);
+  const akt = S.m.pozicia ? specVal(all[S.m.pozicia]) : '', cd = S.m.datum ? specVal(all[S.m.datum]) : '', ct = S.m.cas ? specVal(all[S.m.cas]) : '', dal = S.m.dalsi ? specVal(all[S.m.dalsi]) : '';
+  let calendar = null, calMsg = '';
+  if (norm(akt) === 'stretnutie') {
+    if (cd && ct) calendar = {title: [V(r, 'osoba'), dal].filter(Boolean).join(' – ') || V(r, 'firma') || 'Stretnutie', date: cd, time: ct, dur: 60,
+      desc: [V(r, 'firma') && 'Firma: ' + V(r, 'firma'), dal && 'Nasleduje: ' + dal].filter(Boolean).join('\n')};
+    else calMsg = ' · do kalendára chýba dátum alebo čas';
+  }
   busy(form, true);
   try {
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    const j = await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, calendar, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    if (calendar) calMsg = j.cal === 'created' ? ' · pridané do kalendára' : j.cal === 'exists' ? ' · v kalendári už je' : j.cal === undefined || j.cal === null ? ' · kalendár: nasaď novú verziu skriptu' : ' · kalendár: ' + j.cal;
     applyLocal(r, vals); pushActivity(act); persist(); S.dirty = false;
-    toast('Hovor uložený ✔'); renderChips(); renderListBody();
+    toast('Hovor uložený ✔' + calMsg); renderChips(); renderListBody();
     if (innerWidth < 900) closeSel(); else renderDetail();
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
+}
+async function saveStav(sel) {
+  const r = rowBy(S.sel); if (!r || !S.m.stav) return;
+  const vals = {[S.m.stav]: sel.value}, act = actFor(r, 'Zmena stavu', '', vals);
+  sel.setAttribute('style', palStyle(sel.value));
+  try {
+    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    applyLocal(r, vals); pushActivity(act); persist(); toast('Stav uložený ✔'); renderChips(); renderListBody();
+  } catch (e) { sel.value = V(r, 'stav'); sel.setAttribute('style', palStyle(V(r, 'stav'))); toast(e.message, true); if (e.conflict) load(true); }
 }
 async function saveNote(btn) {
   const r = rowBy(S.sel); if (!r) return;
   const ta = $('#callNote'), note = ta.value.trim();
   if (!note) { toast('Najprv napíš poznámku'); return; }
   if (!S.m.pozn) { toast('Chýba stĺpec Poznámka – pozri Nastavenia', true); return; }
-  const line = `📅 ${dmy()} – ${note}`, old = V(r, 'pozn'), vals = {[S.m.pozn]: old ? line + '\n' + old : line};
+  const line = `📅 ${dmy()} – ${note}\n${SEP}`, old = V(r, 'pozn'), vals = {[S.m.pozn]: old ? line + '\n' + old : line};
   const act = actFor(r, 'Hovor', note, null);
   btn.disabled = true;
   try {
@@ -835,12 +869,15 @@ document.addEventListener('submit', e => {
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'q') { S.q = t.value; S.limit = 150; renderListBody(); return; }
-  if (t.closest('#detailPane')) S.dirty = true;
+  if (t.closest('#detailPane') && t.dataset.stsel === undefined) S.dirty = true;
   const f = t.closest('#fComp');
   if (f) { if (t.dataset.h === 'Úspora (€/rok)') t.dataset.auto = '0'; calcSavings(f); }
 });
 document.addEventListener('change', e => {
   const t = e.target;
+  if (t.dataset.stfilter !== undefined) { S.chip = t.value ? 'st:' + t.value : 'all'; S.limit = 150; renderChips(); renderListBody(); return; }
+  if (t.dataset.stsel !== undefined) { saveStav(t); return; }
+  if (t.classList.contains('actsel')) t.setAttribute('style', palStyle(t.value));
   if (t.dataset.map) {
     const v = t.value; if (v === '__auto') delete S.map[t.dataset.map]; else S.map[t.dataset.map] = v === '__none' ? '' : v;
     LS.setItem('crm.map', JSON.stringify(S.map)); buildMap(); render();
