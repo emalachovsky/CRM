@@ -162,6 +162,8 @@ input[readonly]{opacity:.7}
 /* =========================================================
    CRM – single-file app (GitHub Pages) + Apps Script API
    ========================================================= */
+/* ===== PRIPOJENIE – vlož sem URL z Apps Scriptu (…/exec), potom sa už nič nezadáva ===== */
+const CRM_URL = 'https://script.google.com/macros/s/AKfycbwSq8AJ39T0kjIDWptK2dMzhwqQJdfKX0QZ9AqgQy6Zq95sc5IK65BJVJbEXwU6qXH-/exec';
 const LS = localStorage;
 const $ = (s, e = document) => e.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -193,7 +195,7 @@ const ico = n => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="curre
 
 /* ---------- stav ---------- */
 const S = {
-  cfg: JSON.parse(LS.getItem('crm.cfg') || '{}'),
+  cfg: (() => { const c = JSON.parse(LS.getItem('crm.cfg') || '{}'); return {url: CRM_URL || c.url || '', token: ''}; })(),
   map: JSON.parse(LS.getItem('crm.map') || '{}'),
   data: null, m: {}, auto: {},
   view: 'contacts', q: '', chip: 'all', sel: null, tab: 'hovor',
@@ -674,8 +676,7 @@ function openSettings() {
   modal(`<div class="mhead"><h2>Nastavenia</h2><button class="ib" data-act="close">${ico('x')}</button></div>
     <form id="fSet" autocomplete="off">
       <label>URL Apps Script web aplikácie (…/exec)<input type="url" id="sUrl" value="${esc(S.cfg.url || '')}" placeholder="https://script.google.com/macros/s/…/exec"></label>
-      <label>Token<input type="password" id="sTok" value="${esc(S.cfg.token || '')}" autocomplete="off"></label>
-      <button class="cta" type="submit">Uložiť a načítať</button>
+            <button class="cta" type="submit">Uložiť a načítať</button>
       <button class="cta ghost" type="button" data-act="copycfg" style="margin-top:.6rem">Skopírovať odkaz pre iné zariadenie</button>
     </form>
     ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Priradenie stĺpcov zo Sheetu</div>
@@ -732,7 +733,7 @@ document.addEventListener('submit', e => {
   e.preventDefault(); const f = e.target;
   ({fCall: saveCall, fAll: saveAll, fComp: saveComp, fNew: saveNew}[f.id] || (() => {}))(f);
   if (f.id === 'fSet') {
-    S.cfg = {url: $('#sUrl').value.trim(), token: $('#sTok').value.trim()};
+    S.cfg = {url: CRM_URL || $('#sUrl').value.trim(), token: ''};
     LS.setItem('crm.cfg', JSON.stringify(S.cfg)); closeModal(); load();
   }
 });
