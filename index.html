@@ -319,13 +319,15 @@ const FIELDS = [
   {k:'pl_cs',  label:'PL Cena súčasná', pats:['pl cena sucasna','cena plyn sucasna','pl cena']},
   {k:'pl_kon', label:'PL Viazanosť / koniec', pats:['pl viazanost','koniec zmluvy plyn','pl koniec']},
   {k:'obch',   label:'Firma (obchodný názov)', pats:['firma']},
-  {k:'sluzba_kon', label:'Koniec služby', pats:['koniec sluzby']}
+  {k:'an_ok', label:'Analýza načítaná', pats:['analyza nacitana']},
+  {k:'el_dod', label:'EE Dodávateľ', pats:['ee dodavatel','dodavatel ee','dodavatel el','dodavatel elektriny','ee dod']},
+  {k:'pl_dod', label:'PL Dodávateľ', pats:['pl dodavatel','dodavatel pl','dodavatel plyn','pl dod']}
 ];
 const ACT_H = {dt:'Dátum a čas', firma:'Firma', kontakt:'Kontakt', typ:'Typ', stav:'Stav', pozn:'Poznámka', dalsi:'Ďalší krok', dalsiK:'Ďalší kontakt'};
 const CGROUPS = [
-  ['Základné údaje', ['obch', 'ico', 'web', 'email', 'ulica', 'psc', 'mesto', 'odvetvie', 'sluzba_kon']],
-  ['Elektrina', ['el_sp', 'el_cs', 'el_kon']],
-  ['Plyn', ['pl_sp', 'pl_cs', 'pl_kon']]
+  ['Základné údaje', ['obch', 'ico', 'web', 'email', 'ulica', 'psc', 'mesto', 'odvetvie', 'an_ok']],
+  ['Elektrina', ['el_dod', 'el_sp', 'el_cs', 'el_kon']],
+  ['Plyn', ['pl_dod', 'pl_sp', 'pl_cs', 'pl_kon']]
 ];
 const QUICK_NOTES = ['Čakám na FA', 'Dohodnúť stretnutie', 'Pripraviť ponuku'];
 const SEP = '────────────────';
@@ -668,7 +670,7 @@ function tabHovor(r) {
 }
 function fieldInput(h, val) {
   const k = Object.keys(S.m).find(x => S.m[x] === h), lists = S.data.contacts.lists[h], a = `data-h="${esc(h)}"`;
-  if (k === 'datum' || /_kon$/.test(k || '')) return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
+  if (k === 'datum' || k === 'an_ok' || /_kon$/.test(k || '')) return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
   if (k === 'cas') return timeSelect(a, isoTime(val));
   if (k === 'web') return `<input type="url" ${a} value="${esc(val)}">`;
   if (k === 'pozn') return `<textarea ${a} rows="6">${esc(val)}</textarea>`;
@@ -691,12 +693,13 @@ function tabAll(r) {
 }
 
 /* ---------- firma / analýza ---------- */
-const CGROUP_LABELS = {obch:'Firma (obchodný názov)', ico:'IČO', web:'Web', email:'E-mail', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', odvetvie:'Odvetvie', sluzba_kon:'Koniec služby',
+const CGROUP_LABELS = {obch:'Firma (obchodný názov)', ico:'IČO', web:'Web', email:'E-mail', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', odvetvie:'Odvetvie', an_ok:'Analýza načítaná (dátum)',
+  el_dod:'Dodávateľ', pl_dod:'Dodávateľ',
   el_sp:'Spotreba (MWh/rok)', el_cs:'Cena súčasná (€/MWh)', el_kon:'Viazanosť / koniec zmluvy',
   pl_sp:'Spotreba (MWh/rok)', pl_cs:'Cena súčasná (€/MWh)', pl_kon:'Viazanosť / koniec zmluvy'};
 function cInput(k, h, val) {
   const a = `data-h="${esc(h)}"`;
-  if (/_kon$/.test(k)) return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
+  if (/_kon$/.test(k) || k === 'an_ok') return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
   if (/_sp$|_cs$|_cp$|^uspora$/.test(k)) return `<input type="text" inputmode="decimal" ${a} value="${esc(val)}">`;
   if (k === 'pozn_an') return `<textarea ${a} rows="3">${esc(val)}</textarea>`;
   if (k === 'web') return `<input type="url" ${a} value="${esc(val)}">`;
@@ -1025,6 +1028,8 @@ document.addEventListener('keydown', e => {
 
 /* ---------- načítanie analýzy z xlsx ---------- */
 function anBadge(r) {
+  const col = isoDate(V(r, 'an_ok'));
+  if (col) return `<span class="anok">✔ Analýza načítaná ${col.split('-').reverse().join('.')}</span>`;
   const f = norm(V(r, 'firma')); if (!f) return '';
   let best = '';
   for (const a of S.data.activities.rows) {
@@ -1114,9 +1119,10 @@ async function importAnalysis(file) {
     put('obch', A.cust.odb); put('ico', A.cust.ico, true); put('ulica', A.cust.ulica, true); put('psc', A.cust.psc, true); put('mesto', A.cust.mesto, true);
     for (const g of ['el', 'pl']) {
       const x = A[g]; if (!x) continue;
-      put(g + '_sp', isFinite(x.sp) ? r3(x.sp) : null); put(g + '_cs', isFinite(x.cs) ? r3(x.cs) : null);
+      put(g + '_dod', x.dod); put(g + '_sp', isFinite(x.sp) ? r3(x.sp) : null); put(g + '_cs', isFinite(x.cs) ? r3(x.cs) : null);
       if (x.kon) put(g + '_kon', {t: 'd', v: x.kon});
     }
+    put('an_ok', {t: 'd', v: todayISO()});
     const real = await materializeNewCols(vals);
     await api('update', {sheet: 'contacts', row: r.r, values: real, activity: actFor(r, 'Analýza načítaná', '', real),
       check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
