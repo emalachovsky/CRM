@@ -670,6 +670,7 @@ function tabHovor(r) {
 }
 function fieldInput(h, val) {
   const k = Object.keys(S.m).find(x => S.m[x] === h), lists = S.data.contacts.lists[h], a = `data-h="${esc(h)}"`;
+  if (/_kon$/.test(k || '') && val && !isoDate(val)) return `<input type="text" ${a} value="${esc(val)}">`;
   if (k === 'datum' || k === 'an_ok' || /_kon$/.test(k || '')) return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
   if (k === 'cas') return timeSelect(a, isoTime(val));
   if (k === 'web') return `<input type="url" ${a} value="${esc(val)}">`;
@@ -699,6 +700,7 @@ const CGROUP_LABELS = {obch:'Firma (obchodný názov)', ico:'IČO', web:'Web', e
   pl_sp:'Spotreba (MWh/rok)', pl_cs:'Cena súčasná (€/MWh)', pl_kon:'Viazanosť / koniec zmluvy'};
 function cInput(k, h, val) {
   const a = `data-h="${esc(h)}"`;
+  if (/_kon$/.test(k) && val && !isoDate(val)) return `<input type="text" ${a} value="${esc(val)}">`;
   if (/_kon$/.test(k) || k === 'an_ok') return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
   if (/_sp$|_cs$|_cp$|^uspora$/.test(k)) return `<input type="text" inputmode="decimal" ${a} value="${esc(val)}">`;
   if (k === 'pozn_an') return `<textarea ${a} rows="3">${esc(val)}</textarea>`;
@@ -1091,7 +1093,8 @@ function parseAnalysis(wb) {
       price = w ? base.reduce((a, r) => a + nn(r[cS]) * nn(r[cC]), 0) / w : NaN;
     }
     const dod = [...new Set(data.map(r => txt(r[cD])).filter(Boolean))].join(', ');
-    const kon = data.map(r => xd(r[cV])).filter(Boolean).sort()[0] || '';
+    const kons = data.map(r => xd(r[cV])).filter(Boolean).sort();
+    const kon = kons[0] || (data.some(r => /neurcit/.test(norm(r[cV]))) ? 'neurčitá' : '');
     out[kind] = {dod, sp, cs: price, kon, oms: data.length};
   });
   if (!out.el && !out.pl) throw new Error('V súbore som nenašiel údaje o odberných miestach');
@@ -1120,7 +1123,7 @@ async function importAnalysis(file) {
     for (const g of ['el', 'pl']) {
       const x = A[g]; if (!x) continue;
       put(g + '_dod', x.dod); put(g + '_sp', isFinite(x.sp) ? r3(x.sp) : null); put(g + '_cs', isFinite(x.cs) ? r3(x.cs) : null);
-      if (x.kon) put(g + '_kon', {t: 'd', v: x.kon});
+      if (x.kon) put(g + '_kon', x.kon === 'neurčitá' ? 'neurčitá' : {t: 'd', v: x.kon});
     }
     put('an_ok', {t: 'd', v: todayISO()});
     const real = await materializeNewCols(vals);
