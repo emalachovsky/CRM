@@ -508,9 +508,13 @@ html[data-theme="light"]{--call-bg:linear-gradient(135deg,#bfeccd 0%,#e3f7ea 60%
 .card.fut:hover{background:color-mix(in srgb,#2563eb 19%,var(--raise))}
 html[data-theme="light"] .card.fut{background:color-mix(in srgb,#2563eb 6%,var(--panel))}
 /* po termíne – červený je len dátum a čas, karta zostáva bežná */
-.card.over{background:var(--panel);border-left-color:var(--line)}
-.card.over:hover{background:var(--raise)}
+.card.over{background:color-mix(in srgb,#b91c1c 20%,var(--panel));border-left-color:#b91c1c}
+.card.over:hover{background:color-mix(in srgb,#b91c1c 27%,var(--raise))}
+html[data-theme="light"] .card.over{background:color-mix(in srgb,#dc2626 11%,var(--panel))}
 .card.over .c-left .c-time,.card.over .c-left .c-date,.c-left.over .c-time,.c-left.over .c-date{color:var(--red);opacity:1}
+/* urgent zapnutý – zlatisté podfarbenie a pásik; po vypnutí je karta ako ostatné */
+.card.urgent,.card.urgent:hover{background:color-mix(in srgb,#d4a017 24%,var(--panel));border-left-color:#e3b023}
+html[data-theme="light"] .card.urgent,html[data-theme="light"] .card.urgent:hover{background:color-mix(in srgb,#d4a017 20%,var(--panel));border-left-color:#d19a00}
 /* hlavička zoznamu (hľadanie + filtre) – nižšia */
 .lhead{padding-top:calc(env(safe-area-inset-top) + .3rem);padding-bottom:.3rem}
 @media(min-width:900px){.lhead{padding-top:.5rem;padding-bottom:.3rem}}
@@ -777,12 +781,12 @@ async function api(action, payload = {}) {
   if (!S.cfg.url) throw new Error('Chýba URL – otvor Nastavenia');
   const body = JSON.stringify({token: S.cfg.token, action, ...payload});
   const isRead = action === 'read' || action === 'ping';
-  const tries = isRead ? 3 : 1;   // čítanie sa bezpečne opakuje, zápis nie (aby sa nezdvojil)
+  const tries = isRead ? 2 : 1;   // čítanie sa bezpečne opakuje, zápis nie (aby sa nezdvojil)
   let last;
   for (let i = 0; i < tries; i++) {
     if (i) await new Promise(r => setTimeout(r, 1200 * i));
     try {
-      const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), isRead ? 40000 : 45000);
+      const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), isRead ? 90000 : 60000);
       let res; try { res = await fetch(S.cfg.url, {method: 'POST', redirect: 'follow', cache: 'no-store', body, signal: ctl.signal}); } catch (e) { throw new Error(e.name === 'AbortError' ? 'Server neodpovedal včas' : e.message); } finally { clearTimeout(to); }
       const txt = await res.text();
       let j; try { j = JSON.parse(txt); } catch (e) {
@@ -877,7 +881,7 @@ function card(r) {
   const {d, t} = DT(r), c = dueClass(d), st = V(r, 'stav');
   const p = phones(r).find(x => x.num);
   const urg = isUrg(r), nx = V(r, 'dalsi');
-  return `<div class="card ${c} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
+  return `<div class="card ${c} ${urg ? 'urgent' : ''} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
     <div class="c-left ${c}"><div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b>${badge(st)}</div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${badge(V(r, 'pozicia'))}</div>
@@ -893,6 +897,7 @@ async function toggleUrgent() {
   /* okamžitá odozva – prepínač sa prepne hneď, zápis do Sheetu beží na pozadí */
   document.querySelectorAll('[data-urgent]').forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
   document.querySelectorAll('.nextCall,.c-next').forEach(e => e.classList.toggle('urg', on));
+  const cd = document.querySelector('.card[data-open="' + r.r + '"]'); if (cd) cd.classList.toggle('urgent', on);
   try {
     const vals = await materializeNewCols({[fieldHeader('urgent')]: on});
     applyLocal(r, vals); persist(); renderListBody(); renderDetail();
