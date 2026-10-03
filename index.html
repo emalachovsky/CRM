@@ -492,6 +492,15 @@ html[data-theme="light"]{--nx-bg:#d6e1ed;--nx-bd:#b7c8db;--urg-bg:#f0e7b8;--urg-
 .nxnote{margin:-.1rem 0 .8rem;padding:0 .3rem}
 /* telefóny v editovacom okne – svetlozelené */
 input[type=tel]{color:var(--tel-g)}
+/* ===== v14 ===== */
+/* poznámka pod Nasleduje (hore) – svetložltá */
+.callnote.nxnote{color:var(--dt-yel)}
+/* polia „Poznámka k …“ v editovacom okne – sivé */
+input[data-note]{color:var(--muted)}
+/* tlačidlá Telefón – zelené tieňovanie */
+:root{--call-bg:linear-gradient(135deg,#2f8f4e 0%,#1c5a33 55%,#143d27 100%);--call-bd:#4cc774;--call-tx:#e9fff0;--call-sh:inset 0 1px 0 rgba(200,255,220,.25),0 5px 14px rgba(0,0,0,.45)}
+html[data-theme="light"]{--call-bg:linear-gradient(135deg,#bfeccd 0%,#e3f7ea 60%,#f2fbf5 100%);--call-bd:#6fbf8a;--call-tx:#145a2e;--call-sh:inset 0 1px 0 #fff,0 4px 10px rgba(30,120,60,.18)}
+.qcall,.call.main,.call.alt{background:var(--call-bg);border:1px solid var(--call-bd);color:var(--call-tx);box-shadow:var(--call-sh)}
 </style>
 </head>
 <body>
@@ -703,7 +712,12 @@ function statuses() {
   const h = S.m.stav; if (!h) return [];
   const L = S.data.contacts.lists[h];
   if (L && L.length) return L.slice();
-  return STAVY.slice();
+  /* bez rozbaľovacieho zoznamu v sheete: stavy sa zoberú z hodnôt v stĺpci */
+  const seen = new Map();
+  for (const r of S.data.contacts.rows) { const v = String(r.v[h] ?? '').trim(); if (v && !seen.has(norm(v))) seen.set(norm(v), v); }
+  const idx = x => { const i = STAVY.findIndex(s => norm(s) === norm(x)); return i < 0 ? 99 : i; };
+  const out = [...seen.values()].sort((a, b) => idx(a) - idx(b) || a.localeCompare(b, 'sk'));
+  return out.length ? out : STAVY.slice();
 }
 function activitiesList() { const h = S.m.pozicia, L = h && S.data.contacts.lists[h]; return L && L.length ? L.slice() : ACTIVITIES.slice(); }
 function fmtPhone(raw) {
@@ -1176,6 +1190,7 @@ async function saveStav(sel) {
   try {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); saveMsg('Stav uložený ✔'); toast('Stav uložený do sheetu ✔'); renderChips(); renderListBody();
+    if (!S.dirty) load(true);   /* po zápise sa dáta znova načítajú zo sheetu, aby apka ukazovala presne to, čo je v sheete */
   } catch (e) { sel.value = V(r, 'stav'); sel.setAttribute('style', palStyle(V(r, 'stav'))); toast(e.message, true); if (e.conflict) load(true); }
 }
 async function clearHist() {
