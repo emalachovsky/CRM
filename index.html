@@ -381,6 +381,38 @@ html[data-theme="light"]{
 /* názvy okien veľkými písmenami */
 .gtitle,.mhead h2,.dgrp{text-transform:uppercase;letter-spacing:.08em}
 .mhead h2{font-size:1.1rem}
+/* ===== v8 ===== */
+:root{--nx-bg:#a4bdd6;--nx-bd:#8aa6c2;--nx-tx:#0b0f14;--urg-bg:#e3d58e;--urg-bd:#c8b75f;
+  --f-bg:#141821;--f-bd:#222a38;--f-tx:#8b91a1;--f-on-bg:#ebbc5a;--f-on-tx:#1a1405;--f-sel:#6fd3b0}
+html[data-theme="light"]{--nx-bg:#d3e0ee;--nx-bd:#a9bfd6;--urg-bg:#f1e7ae;--urg-bd:#d6c875;
+  --f-bg:#ffffff;--f-bd:#c3cbe0;--f-tx:#66738a;--f-on-bg:#ebbc5a;--f-on-tx:#2d2200;--f-sel:#1e7a3c}
+/* filtre podľa obrázka */
+.chips .chip,.chips .chip.due,.chips select{background:var(--f-bg);border:1px solid var(--f-bd);color:var(--f-tx);box-shadow:none;font-weight:700}
+.chips .chip.on,.chips .chip.due.on{background:var(--f-on-bg);border-color:var(--f-on-bg);color:var(--f-on-tx)}
+.chips .stbtn.sel,.chips select.on{background:var(--f-bg);border:1px solid var(--f-sel);color:var(--f-sel)}
+/* čiara hore v hlavných oknách */
+.lhead,.dhead{background:linear-gradient(90deg,var(--blue),var(--ok) 50%,var(--gas-tx)) top/100% 3px no-repeat var(--panel)}
+/* názvy kolóniek veľkými písmenami */
+label{text-transform:uppercase;letter-spacing:.05em;font-size:.8rem}
+label input,label select,label textarea{text-transform:none;letter-spacing:normal;font-size:1rem}
+/* záložky */
+.tabsRow{display:flex;align-items:flex-end;gap:.6rem;border-bottom:1.5px solid var(--ibd);margin-bottom:.9rem}
+.tabs{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:.25rem;border-bottom:0;margin-bottom:0;overflow:visible}
+.tab{border:1px solid var(--line);border-bottom:0;border-radius:12px 12px 0 0;background:var(--field);color:var(--muted);padding:.5rem 1rem;margin-bottom:-1.5px;font-weight:600;border-top:3px solid transparent}
+.tab.on{background:var(--panel);color:var(--text);border-color:var(--ibd);border-top-color:var(--firma);border-bottom:1.5px solid var(--panel);font-weight:700}
+.tabsRow .anbox{margin:0 0 .4rem auto;gap:.5rem}
+.btn-an{font-size:.76rem;padding:.3rem .75rem;border-radius:10px;background:var(--btn-bg);border:1px solid var(--btn-bd);color:var(--btn-tx);box-shadow:var(--btn-sh)}
+@media(max-width:600px){.tab{padding:.45rem .6rem;font-size:.82rem}.tabsRow{flex-wrap:wrap}.tabsRow .anbox{margin:0 0 .4rem auto}}
+/* urgent prepínač */
+.urgSw{display:flex;align-items:center;gap:.45rem;background:none;border:0;cursor:pointer;padding:0 .25rem;flex:none}
+.urgSw .trk{position:relative;width:2.7rem;height:1.55rem;border-radius:999px;border:2px solid #4b5563;background:#1a212c;transition:.18s}
+.urgSw .knob{position:absolute;top:50%;left:.18rem;width:1.05rem;height:1.05rem;border-radius:50%;background:#8b949e;transform:translateY(-50%);transition:left .18s,background .18s}
+.urgSw.on .trk{border-color:#3fb950;background:#1d4a27}
+.urgSw.on .knob{left:calc(100% - 1.23rem);background:#4cd964}
+.urgSw .bang{font-weight:800;font-size:1.35rem;line-height:1;color:var(--muted)}
+.urgSw.on .bang{color:var(--urg-tx)}
+html[data-theme="light"] .urgSw .trk{background:#e3e7f0;border-color:#aab3c8}
+html[data-theme="light"] .urgSw.on .trk{background:#cfeedd;border-color:#1e7a3c}
 </style>
 </head>
 <body>
@@ -485,7 +517,7 @@ const CGROUPS = [
   ['Plyn', ['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']]
 ];
 const QUICK_NOTES = ['Čakám na FA', 'Dohodnúť stretnutie', 'Pripraviť ponuku'];
-const SEP = '────────────────';
+const SEP = '────────────────────────';
 
 function buildMap() {
   if (!S.data) return;
@@ -771,7 +803,7 @@ function callBtns(r) {
   const ps = phones(r);
   const next = V(r, 'dalsi');
   const urg = isUrg(r);
-  const nextHtml = next ? `<div class="nextRow"><div class="nextCall ${urg ? 'urg' : ''}">${ico('phone')}<span>${esc(next)}</span></div><button type="button" class="urgBtn ${urg ? 'on' : ''}" data-urgent aria-pressed="${urg}">${ico('alert')}<span>Urgent</span></button></div>` : '';
+  const nextHtml = next ? `<div class="nextRow"><div class="nextCall ${urg ? 'urg' : ''}">${ico('phone')}<span>${esc(next)}</span></div><button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span><span class="bang">!</span></button></div>` : '';
   if (!ps.length) return nextHtml + '<div class="empty">Žiadne telefónne číslo.</div>';
   return nextHtml + `<div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
     const main = p.k === 'tel', extra = [p.label, p.note].filter(Boolean).join(' · ');
@@ -792,13 +824,13 @@ function timeSelect(a, val) {
 }
 function contactDetail(r) {
   const em = V(r, 'email'), web = String(V(r, 'web') || '').trim(), webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
-  const tabs = [['hovor', 'Hovor'], ['firma', 'Firma / analýza'], ['hist', 'História'], ['udaje', 'Všetky údaje']];
+  const tabs = [['hovor', 'Hovor'], ['firma', 'Firma'], ['hist', 'História'], ['udaje', 'Všetky údaje']];
   return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
     <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div>${stSelect(V(r, 'stav'))}</div>
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
-      <div class="anbox">${anBadge(r)}<button type="button" class="btn-an" data-act="loadan">Načítať analýzu</button><input type="file" id="anFile" accept=".xlsx,.xls" style="display:none"></div></div>
-    <div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div>
+</div>
+    <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div class="anbox">${anBadge(r)}<button type="button" class="btn-an" data-act="loadan">Načítať analýzu</button><input type="file" id="anFile" accept=".xlsx,.xls" style="display:none"></div></div>
     <div id="tabBody">${tabBody(r)}</div>`;
 }
 function tabBody(r) {
@@ -809,11 +841,11 @@ function tabBody(r) {
     const rows = S.data.activities.rows.filter(a => norm(a.v[ACT_H.firma]) === f && (!o || !norm(a.v[ACT_H.kontakt]) || norm(a.v[ACT_H.kontakt]) === o))
       .sort((a, b) => String(b.v[ACT_H.dt]).localeCompare(String(a.v[ACT_H.dt])));
     return (rows.map(a => histItem(a, false)).join('') || '<div class="empty">Zatiaľ bez zaznamenanej aktivity.</div>') +
-      (V(r, 'pozn') ? `<div class="gtitle" style="margin-top:1rem">Poznámky zo Sheetu</div><pre class="notes win">${esc(V(r, 'pozn'))}</pre>` : '');
+      (rows.length ? '<button type="button" class="cta ghost" data-act="clearhist" style="margin-top:1rem">Vyčistiť históriu</button>' : '');
   }
   return tabAll(r);
 }
-function notesHtml(r) { return V(r, 'pozn') ? `<div class="gtitle" style="margin-top:.4rem">Poznámky zo Sheetu</div><pre class="notes" style="margin-top:0">${esc(V(r, 'pozn'))}</pre>` : ''; }
+function notesHtml(r) { return V(r, 'pozn') ? `<div class="gtitle" style="margin-top:.4rem">Poznámky</div><pre class="notes" style="margin-top:0">${esc(V(r, 'pozn'))}</pre>` : ''; }
 function tabHovor(r) {
   const {d, t} = DT(r), A = k => esc(S.m[k]);
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
@@ -977,6 +1009,17 @@ function pushActivity(a) {
     [ACT_H.pozn]: a.pozn || '', [ACT_H.dalsi]: a.dalsi || '', [ACT_H.dalsiK]: a.dalsiKontakt || ''};
   S.data.activities.rows.push({r: 0, v});
 }
+function changeTyp(vals, note) {
+  const has = k => S.m[k] && vals && vals[S.m[k]] !== undefined, out = [];
+  if (note) out.push('Poznámka');
+  if (has('dalsi') || has('datum') || has('cas')) out.push('Nasleduje');
+  if (has('stav')) out.push('Stav');
+  if (has('pozicia')) out.push('Aktivita');
+  if (has('tel') || has('tel2')) out.push('Telefón');
+  const known = ['pozn', 'dalsi', 'datum', 'cas', 'stav', 'pozicia', 'tel', 'tel2'];
+  if (vals && Object.keys(vals).some(h => !known.some(k => S.m[k] === h))) out.push('Úprava');
+  return out.join(' + ') || 'Úprava';
+}
 function actFor(r, typ, note, vals) {
   const g = k => vals && vals[S.m[k]] !== undefined ? specVal(vals[S.m[k]]) : V(r, k);
   const d = isoDate(g('datum')), t = isoTime(g('cas'));
@@ -988,22 +1031,32 @@ async function saveCall(form) {
   const vals = changedOnly(r, all);
   if (note && S.m.pozn) { const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = V(r, 'pozn'); vals[S.m.pozn] = old ? line + '\n' + old : line; }
   if (!Object.keys(vals).length && !note) { saveMsg('Nič na uloženie'); return; }
-  const act = actFor(r, 'Hovor', note, vals);
+  const act = actFor(r, changeTyp(vals, note), note, vals);
   busy(form, true);
   try {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); S.dirty = false;
-    renderChips(); renderListBody(); renderDetail(); saveMsg('Hovor uložený ✔');
+    renderChips(); renderListBody(); renderDetail(); saveMsg('Uložené ✔');
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
 }
 async function saveStav(sel) {
   const r = rowBy(S.sel); if (!r || !S.m.stav) return;
-  const vals = {[S.m.stav]: sel.value}, act = actFor(r, 'Zmena stavu', '', vals);
+  const vals = {[S.m.stav]: sel.value}, act = actFor(r, 'Stav', '', vals);
   sel.setAttribute('style', palStyle(sel.value));
   try {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); saveMsg('Stav uložený ✔'); renderChips(); renderListBody();
   } catch (e) { sel.value = V(r, 'stav'); sel.setAttribute('style', palStyle(V(r, 'stav'))); toast(e.message, true); if (e.conflict) load(true); }
+}
+async function clearHist() {
+  const r = rowBy(S.sel); if (!r) return;
+  if (!confirm('Vymazať celú históriu tohto kontaktu?\nNedá sa vrátiť späť.')) return;
+  try {
+    await api('clearact', {firma: V(r, 'firma'), kontakt: V(r, 'osoba')});
+    const f = norm(V(r, 'firma')), o = norm(V(r, 'osoba'));
+    S.data.activities.rows = S.data.activities.rows.filter(a => !(norm(a.v[ACT_H.firma]) === f && (!o || !norm(a.v[ACT_H.kontakt]) || norm(a.v[ACT_H.kontakt]) === o)));
+    persist(); renderDetail(); toast('História vymazaná');
+  } catch (e) { toast(e.message, true); }
 }
 async function saveNote(btn) {
   const r = rowBy(S.sel); if (!r) return;
@@ -1011,7 +1064,7 @@ async function saveNote(btn) {
   if (!note) { toast('Najprv napíš poznámku'); return; }
   if (!S.m.pozn) { toast('Chýba stĺpec Poznámka – pozri Nastavenia', true); return; }
   const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = V(r, 'pozn'), vals = {[S.m.pozn]: old ? line + '\n' + old : line};
-  const act = actFor(r, 'Hovor', note, null);
+  const act = actFor(r, 'Poznámka', note, null);
   btn.disabled = true;
   try {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
@@ -1027,8 +1080,8 @@ async function saveAll(form) {
   if (!Object.keys(vals).length) { saveMsg('Nič na uloženie'); return; }
   busy(form, true);
   try {
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actFor(r, 'Úprava', '', vals), check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-    setUndo(r, vals); applyLocal(r, vals); pushActivity(actFor(r, 'Úprava', '', vals)); persist(); S.dirty = false;
+    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actFor(r, changeTyp(vals, ''), '', vals), check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    setUndo(r, vals); applyLocal(r, vals); pushActivity(actFor(r, changeTyp(vals, ''), '', vals)); persist(); S.dirty = false;
     renderChips(); renderListBody(); renderDetail(); saveMsg('Uložené ✔');
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
 }
@@ -1043,8 +1096,9 @@ async function saveFirma(form) {
       const ic = specVal(vals[S.m.ico]), d = findDupIco(ic, r.r, norm(V(r, 'firma')));
       if (d && !confirm(`⚠️ IČO ${ic} už má aj firma „${V(d, 'firma')}“.\nUložiť napriek tomu?`)) { busy(form, false); return; }
     }
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-    setUndo(r, vals); applyLocal(r, vals); persist(); S.dirty = false;
+    const actF = actFor(r, 'Firma', '', vals);
+    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actF, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    setUndo(r, vals); applyLocal(r, vals); pushActivity(actF); persist(); S.dirty = false;
     renderDetail(); saveMsg('Firma uložená ✔');
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
 }
@@ -1168,6 +1222,7 @@ document.addEventListener('click', e => {
     else if (a === 'undo') undoLast();
     else if (a === 'refresh') load();
     else if (a === 'savenote') saveNote(el);
+    else if (a === 'clearhist') clearHist();
     else if (a === 'loadan') { const fi = $('#anFile'); if (fi) fi.click(); }
     else if (a === 'more') { S.limit += 150; renderListBody(); }
     else if (a === 'close') closeModal();
