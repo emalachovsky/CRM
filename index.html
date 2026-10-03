@@ -550,6 +550,23 @@ html .card .c-next:not(.urg){background:#3a4150;border-color:#4a5263;color:#d5da
 /* Aktivita Telefonát / Stretnutie v detaile – dizajn ako tlačidlo Načítať analýzu, bez bold */
 .actsel.actbtn{background:var(--btn-bg)!important;color:var(--btn-tx)!important;border:1px solid var(--btn-bd)!important;box-shadow:var(--btn-sh);border-radius:10px;font-weight:400}
 .actsel.actbtn option{font-weight:400}
+/* oznam Telefonát / Stretnutie v karte – dizajn a farby ako tlačidlo telefónu */
+.c-stcol .badge.actnote{display:inline-flex;align-items:center;justify-content:center;gap:.3rem;background:var(--call-bg);border:1px solid var(--call-bd);color:var(--call-tx);font-weight:400;box-shadow:none}
+.c-stcol .badge.actnote .ico{width:.95em;height:.95em;flex:none}
+/* tlačidlá telefónu – rovnako široké, doľava, nižšie */
+.calls,.calls.two{display:grid;grid-template-columns:max-content;grid-auto-flow:row;justify-content:start;gap:.5rem;margin:.3rem 0 .8rem}
+@media(min-width:600px){.calls,.calls.two{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:1fr;gap:.6rem}}
+.calls>div{min-width:0}
+.calls .callnote{width:0;min-width:100%}
+html .call,html .call.main,html .call.alt{min-height:2.5rem;padding:.2rem 1.6rem;border-radius:14px;font-size:1.1rem;justify-content:center}
+/* Telefón 2 – tmavšie pozadie, sivé číslo */
+html .call.alt{background:#10151d;border:1px solid #2a3342;color:#9aa4b2;box-shadow:none}
+html[data-theme="light"] .call.alt{background:#c9d0db;border-color:#aeb7c6;color:#4b5563}
+/* Nasleduje nad číslom – nižšie okienko */
+html .nextCall{padding:.25rem .7rem;min-height:0;font-size:.95rem}
+html .urgBtn{padding-top:0;padding-bottom:0}
+/* Aktivita vpravo – písmo bez bold */
+.actsel,.actsel option,.dtAct .actsel{font-weight:400!important}
 </style>
 </head>
 <body>
@@ -677,7 +694,7 @@ const CGROUPS = [
   ['Plyn', ['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']]
 ];
 const QUICK_NOTES = ['Čakám na FA', 'Dohodnúť stretnutie', 'Pripraviť ponuku'];
-const SEP = '────────────────────────';
+const SEP = '──────────────────────';
 
 function buildMap() {
   if (!S.data) return;
@@ -908,7 +925,7 @@ function card(r) {
   const act = ['stretnutie', 'telefonat'].includes(norm(V(r, 'pozicia')));
   return `<div class="card ${c} ${act ? 'act' : ''} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
     <div class="c-left ${c}"><div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
-    <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b><span class="c-stcol">${badge(st)}${act ? badge(V(r, 'pozicia')) : ''}</span></div>
+    <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b><span class="c-stcol">${badge(st)}${act ? `<span class="badge actnote">${norm(V(r, 'pozicia')) === 'telefonat' ? ico('phone') : ''}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}</span></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
 </div>`;
