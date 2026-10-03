@@ -547,13 +547,15 @@ html .card.sel.act{border-left-color:#f5c518!important}
 .c-stcol .badge{min-width:var(--stw,0);box-sizing:border-box;text-align:center}
 /* „Nasleduje“ v karte – tmavosivé pozadie, svetlosivé písmo */
 html .card .c-next:not(.urg){background:#3a4150;border-color:#4a5263;color:#d5dae3}
-/* oznam Telefonát / Stretnutie v karte – nad časom vľavo hore, farba podľa Aktivity */
-.c-left{min-width:6.4rem}
-.c-left .badge.actnote{display:flex;align-items:center;justify-content:center;gap:.25rem;margin:0 .3rem .3rem 0;padding:.08rem .45rem;font-size:.7rem;font-weight:400;box-shadow:none;white-space:nowrap}
+/* oznam Telefonát / Stretnutie / Email v karte – vľavo v riadku so Stav, rovnaká veľkosť ako Stav */
+.c-left{min-width:calc(var(--stw,6rem) + 1.1rem)}
+.c-left.hasl{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start}
+.c-left.hasl .c-time,.c-left.hasl .c-date{align-self:center;width:var(--stw,auto);text-align:center}
+.c-left .badge.actnote{display:flex;align-items:center;justify-content:center;gap:.25rem;width:var(--stw,auto);box-sizing:border-box;margin:0 0 .3rem;padding:.12rem .65rem;font-size:.75rem;font-weight:600;box-shadow:none;white-space:nowrap}
 .c-left .badge.actnote .ico{width:.95em;height:.95em;flex:none}
-/* štítok nad časom v okne kontaktu */
-.actTag{display:inline-flex;align-items:center;gap:.3rem;align-self:flex-start;margin-bottom:.35rem;padding:.15rem .6rem;border-radius:10px;font-size:.76rem;font-weight:400;line-height:1.2;border:1px solid transparent}
-.actTag .ico{width:1em;height:1em;flex:none}
+/* štítok nad časom v okne kontaktu – rovnaký štýl */
+.actTag{display:inline-flex;align-items:center;gap:.25rem;align-self:flex-start;margin-bottom:.35rem;padding:.12rem .65rem;border-radius:999px;font-size:.75rem;font-weight:600;line-height:1.3;box-sizing:border-box}
+.actTag .ico{width:.95em;height:.95em;flex:none}
 /* záložka Firma – základné údaje v 2 stĺpcoch, Elektrina a Plyn vedľa seba */
 .cg.basic{display:grid;grid-template-columns:1fr 1fr;column-gap:.8rem}
 .cg.basic .gtitle{grid-column:1/-1}
@@ -569,8 +571,14 @@ html .card .c-next:not(.urg){background:#3a4150;border-color:#4a5263;color:#d5da
 .calls .callnote{width:0;min-width:100%}
 html .call,html .call.main,html .call.alt{min-height:2.5rem;padding:.2rem 1rem;border-radius:14px;font-size:1.1rem;justify-content:center;white-space:nowrap}
 /* Nasleduje nad číslom – nižšie okienko */
-/* Telefón 2 – svetlosivé písmo (tmavá téma) */
-html:not([data-theme="light"]) .call.alt{color:#cfd5de}
+/* Telefón 2 – sivé písmo */
+html .call.alt{color:#aeb6c2}
+html[data-theme="light"] .call.alt{color:#5b6472}
+/* tlačidlo Uložiť pod prepínačom urgent */
+.urgCol{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;flex:none}
+.nextRow{align-items:flex-start}
+.saveTop{width:auto;min-height:0;padding:.3rem 1rem;font-size:.85rem;border-radius:10px;margin:0}
+body.dirty .saveTop{background:linear-gradient(135deg,#e5484d,#a1141c);color:#fff;box-shadow:0 4px 14px rgba(229,72,77,.45)}
 html .nextCall{padding:.25rem .7rem;min-height:0;font-size:.95rem}
 html .urgBtn{padding-top:0;padding-bottom:0}
 /* Aktivita vpravo – písmo bez bold */
@@ -773,10 +781,14 @@ function stCol(s) {
 const PAL = {
   osloveny:['#f5e642','#2b2b2b'], 'posle pdf':['#6b3a12','#ffffff'], mailom:['#6d9eeb','#10223f'], analyza:['#b6f0b6','#12301a'],
   klient:['#2e6b4a','#d3f5de'], lost:['#eaa5a5','#4a1616'], odlozeny:['#6b6b6b','#8fe040'], rozhoduje:['#5b2d86','#e3d2f5'],
-  telefonat:['#14532d','#e9fff0'], stretnutie:['#a4510a','#fff4e5'], email:['#1f4fa8','#d6e6ff'], mail:['#1f4fa8','#d6e6ff'], uloha:['#a82018','#ffd0cc']
+  telefonat:['#3a3315','#f2d34e'], stretnutie:['#3d2410','#ff9a4a'], email:['#12284a','#6fb0ff'], mail:['#12284a','#6fb0ff'], uloha:['#a82018','#ffd0cc']
 };
 const ACTIVITIES = ['Telefonát', 'Stretnutie', 'Email', 'Úloha'];
 const STAVY = ['Oslovený', 'Pošle PDF', 'Mailom', 'Analýza', 'Klient', 'Lost', 'Odložený', 'Rozhoduje'];
+const ACT_ST = {telefonat:['#3a3315','#b8962b','#f2d34e'], stretnutie:['#3d2410','#c2691f','#ff9a4a'], email:['#12284a','#2f6fc4','#6fb0ff'], mail:['#12284a','#2f6fc4','#6fb0ff']};
+const actStyle = s => { const a = ACT_ST[norm(s)]; return a ? `background:${a[0]};border:1px solid ${a[1]};color:${a[2]}` : ''; };
+const actIcon = s => ico(norm(s) === 'telefonat' ? 'phone' : norm(s) === 'stretnutie' ? 'user' : 'mail');
+const isActLbl = s => ['telefonat', 'stretnutie', 'email', 'mail'].includes(norm(s));
 function palStyle(s) { const p = PAL[norm(s)]; return p ? `background:${p[0]};color:${p[1]};border-color:${p[0]}` : ''; }
 const badge = s => s ? (PAL[norm(s)] ? `<span class="badge" style="${palStyle(s)}">${esc(s)}</span>` : `<span class="badge b-${stCol(s)}">${esc(s)}</span>`) : '';
 function pickList(h, cur, items) {
@@ -933,7 +945,7 @@ function card(r) {
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = ['stretnutie', 'telefonat'].includes(norm(V(r, 'pozicia')));
   return `<div class="card ${c} ${act ? 'act' : ''} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
-    <div class="c-left ${c}">${act ? `<span class="badge actnote" style="${palStyle(V(r, 'pozicia'))}">${ico(norm(V(r, 'pozicia')) === 'telefonat' ? 'phone' : 'user')}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
+    <div class="c-left ${c} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b><span class="c-stcol">${badge(st)}</span></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
@@ -993,15 +1005,18 @@ function companyNames() {
 /* všetky štítky Stav a oznam Telefonát/Stretnutie v kartách majú šírku podľa najdlhšieho stavu */
 let _stwKey = '';
 function setStateW() {
-  const names = statuses().concat(['Telefonát', 'Stretnutie']).map(x => String(x));
-  const longest = names.reduce((a, b) => (b.length > a.length ? b : a), '');
-  if (!longest || longest === _stwKey) return;
-  const m = document.createElement('span');
-  m.className = 'badge'; m.textContent = longest;
-  m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
-  document.body.appendChild(m);
-  const w = Math.ceil(m.getBoundingClientRect().width) + 2; m.remove();
-  _stwKey = longest;
+  const st = statuses().map(x => String(x)), ac = ['Telefonát', 'Stretnutie', 'Email'];
+  const key = st.concat(ac).join('|');
+  if (key === _stwKey) return;
+  let w = 0;
+  [...st.map(t => [t, 0]), ...ac.map(t => [t, 18])].forEach(([t, extra]) => {
+    const m = document.createElement('span');
+    m.className = 'badge'; m.textContent = t;
+    m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
+    document.body.appendChild(m);
+    w = Math.max(w, Math.ceil(m.getBoundingClientRect().width) + 2 + extra); m.remove();
+  });
+  _stwKey = key;
   document.documentElement.style.setProperty('--stw', w + 'px');
 }
 function renderListBody() {
@@ -1050,7 +1065,8 @@ function callBtns(r) {
   const ps = phones(r);
   const next = V(r, 'dalsi');
   const urg = isUrg(r);
-  const nextHtml = next ? `<div class="nextRow"><div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div><button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button></div>` : '';
+  const saveTop = '<button type="button" class="cta saveTop" data-act="savetop">Uložiť</button>';
+  const nextHtml = `<div class="nextRow">${next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '<div style="flex:1"></div>'}<div class="urgCol">${next ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : ''}${saveTop}</div></div>`;
   const nn = String((r.n && S.m.dalsi && r.n[S.m.dalsi]) || '').trim();
   const noteHtml = nn ? `<div class="callnote nxnote">${esc(nn)}</div>` : '';
   if (!ps.length) return nextHtml + noteHtml + '<div class="empty">Žiadne telefónne číslo.</div>';
@@ -1104,7 +1120,7 @@ function tabHovor(r) {
   const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
       <label class="dtD">Dátum<input type="date" class="dtSmall" data-h="${A('datum')}" data-t="d" value="${d}"></label>
-      ${S.m.cas ? `<label class="dtT">${['stretnutie', 'telefonat'].includes(norm(ak)) ? `<span class="actTag" style="${palStyle(ak)}">${ico(norm(ak) === 'telefonat' ? 'phone' : 'user')}<span>${esc(ak)}</span></span>` : ''}Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
+      ${S.m.cas ? `<label class="dtT">${isActLbl(ak) ? `<span class="actTag" style="${actStyle(ak)}">${actIcon(ak)}<span>${esc(ak)}</span></span>` : ''}Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
       ${qd}
     </div>
     ${actBlock}</div>` : (actBlock ? `<div class="dtRow dtRowSingle">${actBlock}</div>` : '');
@@ -1117,7 +1133,7 @@ function tabHovor(r) {
       <label>Poznámka k Nasleduje<input type="text" data-note="${A('dalsi')}" value="${esc((r.n && r.n[S.m.dalsi]) || '')}" placeholder="napr. telefón, kontakt, detail"></label>
       <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qnx="${esc(x)}">${x}</button>`).join('')}</div>` : ''}
     <div id="notesBox">${notesHtml(r)}</div>
-    ${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}<button class="cta stick" type="submit">Uložiť zmeny</button></div></form>`;
+    ${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}</div></form>`;
 }
 function fieldInput(h, val) {
   const k = Object.keys(S.m).find(x => S.m[x] === h), lists = S.data.contacts.lists[h], a = `data-h="${esc(h)}"`;
@@ -1141,7 +1157,7 @@ function orderedHeaders() {
 }
 function tabAll(r) {
   return `<form id="fAll" class="win pad" autocomplete="off">${orderedHeaders().map(h => `<label>${esc(h)}${fieldInput(h, r.v[h] ?? '')}</label>`).join('')}
-    ${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}<button class="cta stick" type="submit">Uložiť zmeny</button></div></form>`;
+    ${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}</div></form>`;
 }
 
 /* ---------- firma / analýza ---------- */
@@ -1176,7 +1192,7 @@ function companyBlock(r) {
       list.map(k => { const h = k === 'email' ? S.m.email : fieldHeader(k); if (!h) return ''; return `<label>${esc(CGROUP_LABELS[k] || k)}${k === 'email' ? `<input type="email" data-h="${esc(h)}" value="${esc(V(r, 'email'))}">` : cInput(k, h, V(r, k))}</label>`; }).join('') + '</div>';
     if (cls === 'basic') basic += blk; else pair += blk;
   }
-  return `<form id="fComp" class="win pad" autocomplete="off">${basic}${pair ? `<div class="cgpair">${pair}</div>` : ''}${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}<button class="cta stick" type="submit">Uložiť firmu</button></div></form>`;
+  return `<form id="fComp" class="win pad" autocomplete="off">${basic}${pair ? `<div class="cgpair">${pair}</div>` : ''}${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}</div></form>`;
 }
 /* ---------- ukladanie ---------- */
 function collect(form) {
@@ -1524,6 +1540,7 @@ document.addEventListener('click', e => {
     else if (a === 'undo') undoLast();
     else if (a === 'refresh') load();
     else if (a === 'savenote') saveNote(el);
+    else if (a === 'savetop') { const f = document.querySelector('#tabBody form'); if (f) f.requestSubmit(); }
     else if (a === 'clearhist') clearHist();
     else if (a === 'loadan') { const fi = $('#anFile'); if (fi) fi.click(); }
     else if (a === 'more') { S.limit += 150; renderListBody(); }
