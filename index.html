@@ -483,6 +483,15 @@ html[data-theme="light"]{--nx-bg:#f4f8fc;--nx-bd:#e1eaf3;--urg-bg:#fcf8e4;--urg-
 body.dirty .cta.stick{background:linear-gradient(135deg,#e5484d,#a1141c);color:#fff;box-shadow:0 0 0 .5rem var(--panel),0 6px 18px rgba(229,72,77,.5);animation:dirtyGlow 1.6s ease-in-out infinite}
 body.dirty .cta.stick::before{content:"● "}
 @keyframes dirtyGlow{50%{filter:brightness(1.22)}}
+/* ===== v13 ===== */
+/* Nasleduje – tmavšie pozadie, čierne písmo čitateľné */
+:root{--nx-bg:#b4c4d6;--nx-bd:#9bafc5;--urg-bg:#e6dba3;--urg-bd:#cfc183;--tel-g:#b6f0c6}
+html[data-theme="light"]{--nx-bg:#d6e1ed;--nx-bd:#b7c8db;--urg-bg:#f0e7b8;--urg-bd:#d9cc8e;--tel-g:#1e7a3c}
+/* poznámky pod číslom a pod Nasleduje – sivé */
+.callnote,.callnote.nxnote{color:var(--muted);opacity:1}
+.nxnote{margin:-.1rem 0 .8rem;padding:0 .3rem}
+/* telefóny v editovacom okne – svetlozelené */
+input[type=tel]{color:var(--tel-g)}
 </style>
 </head>
 <body>
@@ -903,8 +912,8 @@ function callBtns(r) {
   const next = V(r, 'dalsi');
   const urg = isUrg(r);
   const nextHtml = next ? `<div class="nextRow"><div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div><button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button></div>` : '';
-  const pz = String(V(r, 'pozn') || '').trim();
-  const noteHtml = pz ? `<div class="notePrev"><div class="npl">Poznámka</div><div class="npt">${esc(pz)}</div></div>` : '';
+  const nn = String((r.n && S.m.dalsi && r.n[S.m.dalsi]) || '').trim();
+  const noteHtml = nn ? `<div class="callnote nxnote">${esc(nn)}</div>` : '';
   if (!ps.length) return nextHtml + noteHtml + '<div class="empty">Žiadne telefónne číslo.</div>';
   return nextHtml + noteHtml + `<div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
     const main = p.k === 'tel', extra = [p.label, p.note].filter(Boolean).join(' · ');
@@ -966,6 +975,7 @@ function tabHovor(r) {
     <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder="Čo sa riešilo…"></textarea></label>
     <button type="button" class="btn-sm" data-act="savenote">Uložiť poznámku</button>
     ${S.m.dalsi ? `<label style="margin-top:.8rem">Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label>
+      <label>Poznámka k Nasleduje<input type="text" data-note="${A('dalsi')}" value="${esc((r.n && r.n[S.m.dalsi]) || '')}" placeholder="napr. telefón, kontakt, detail"></label>
       <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qnx="${esc(x)}">${x}</button>`).join('')}</div>` : ''}
     <div id="notesBox">${notesHtml(r)}</div>
     ${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}<button class="cta stick" type="submit">Uložiť zmeny</button></div></form>`;
@@ -1195,9 +1205,7 @@ async function saveNote(btn) {
   try {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); ta.value = '';
-    const nb = $('#notesBox'); if (nb) nb.innerHTML = notesHtml(r);
-    const np = $('.notePrev .npt'); if (np) np.textContent = V(r, 'pozn');
-    saveMsg('Poznámka uložená ✔');
+    const nb = $('#notesBox'); if (nb) nb.innerHTML = notesHtml(r);    saveMsg('Poznámka uložená ✔');
   } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
   finally { btn.disabled = false; }
 }
