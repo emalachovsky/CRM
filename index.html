@@ -574,15 +574,21 @@ html .call,html .call.main,html .call.alt{min-height:2.5rem;padding:.2rem 1rem;b
 /* Telefón 2 – sivé písmo */
 html .call.alt{color:#aeb6c2}
 html[data-theme="light"] .call.alt{color:#5b6472}
-/* tlačidlo Uložiť pod prepínačom urgent */
+/* riadok: telefóny vľavo, Späť + Uložiť vpravo */
 .urgCol{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;flex:none}
 .nextRow{align-items:flex-start}
-.saveTop{width:auto;min-height:0;padding:.3rem 1rem;font-size:.85rem;border-radius:10px;margin:0}
-body.dirty .saveTop{background:linear-gradient(135deg,#e5484d,#a1141c);color:#fff;box-shadow:0 4px 14px rgba(229,72,77,.45)}
-html .nextCall{padding:.25rem .7rem;min-height:0;font-size:.95rem}
-html .urgBtn{padding-top:0;padding-bottom:0}
-/* Aktivita vpravo – písmo bez bold */
-.actsel,.actsel option,.dtAct .actsel{font-weight:400!important}
+.callRow{display:flex;flex-wrap:wrap;gap:.8rem;align-items:flex-start;justify-content:space-between}
+.saveGrp{display:flex;gap:.5rem;align-items:stretch;margin:.3rem 0 .8rem auto}
+.saveTop,.undoTop{width:auto;min-height:3.2rem;margin:0;padding:.2rem 1.4rem;border-radius:14px;font-size:1.25rem;display:flex;align-items:center;justify-content:center;gap:.4rem;white-space:nowrap;cursor:pointer}
+.saveTop{border:2px solid #fff;font-weight:700;box-shadow:0 0 0 2px rgba(255,255,255,.18),0 6px 18px color-mix(in srgb,var(--acc) 30%,transparent)}
+html[data-theme="light"] .saveTop{border-color:#1f2937;box-shadow:0 0 0 2px rgba(31,41,55,.15)}
+body.dirty .saveTop{background:linear-gradient(135deg,#e5484d,#a1141c);color:#fff}
+.undoTop{font-size:1.1rem;font-weight:600;background:#2b313c;color:#7d8795;border:1px solid #3a4250;pointer-events:none}
+.undoTop .ico{width:1.05em;height:1.05em}
+.undoTop.can{background:#fff;color:#111;border-color:#fff;pointer-events:auto}
+html[data-theme="light"] .undoTop{background:#d5d9e0;color:#8a93a1;border-color:#c3c9d3}
+html[data-theme="light"] .undoTop.can{background:#fff;color:#111;border-color:#1f2937}
+.savemsg{text-align:left;margin:.2rem 0 .4rem}
 </style>
 </head>
 <body>
@@ -663,7 +669,9 @@ const S = {
 /* neuložené zmeny → tlačidlo „Uložiť“ sa zvýrazní (body.dirty) */
 (function () {
   let d = false;
-  Object.defineProperty(S, 'dirty', {get: () => d, set: v => { d = !!v; if (document.body) document.body.classList.toggle('dirty', d); }, enumerable: true, configurable: true});
+  Object.defineProperty(S, 'dirty', {get: () => d, set: v => { d = !!v; if (document.body) document.body.classList.toggle('dirty', d); syncUndo(); }, enumerable: true, configurable: true});
+  let u = null;
+  Object.defineProperty(S, 'undo', {get: () => u, set: v => { u = v; syncUndo(); }, enumerable: true, configurable: true});
 })();
 if (location.hash.startsWith('#cfg=')) {
   try { S.cfg = JSON.parse(atob(location.hash.slice(5))); LS.setItem('crm.cfg', JSON.stringify(S.cfg)); } catch (e) {}
@@ -711,7 +719,7 @@ const CGROUPS = [
   ['Plyn', ['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']]
 ];
 const QUICK_NOTES = ['Čakám na FA', 'Dohodnúť stretnutie', 'Pripraviť ponuku'];
-const SEP = '──────────────────────';
+const SEP = '─────────────────────';
 
 function buildMap() {
   if (!S.data) return;
@@ -1065,17 +1073,17 @@ function callBtns(r) {
   const ps = phones(r);
   const next = V(r, 'dalsi');
   const urg = isUrg(r);
-  const saveTop = '<button type="button" class="cta saveTop" data-act="savetop">Uložiť</button>';
-  const nextHtml = `<div class="nextRow">${next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '<div style="flex:1"></div>'}<div class="urgCol">${next ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : ''}${saveTop}</div></div>`;
+  const grp = `<div class="saveGrp"><button type="button" class="undoTop ${undoAvailable() ? 'can' : ''}" data-act="undo">${ico('back')}Späť</button><button type="button" class="cta saveTop" data-act="savetop">Uložiť</button></div>`;
+  const nextHtml = `<div class="nextRow">${next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '<div style="flex:1"></div>'}<div class="urgCol">${next ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : ''}</div></div>`;
   const nn = String((r.n && S.m.dalsi && r.n[S.m.dalsi]) || '').trim();
   const noteHtml = nn ? `<div class="callnote nxnote">${esc(nn)}</div>` : '';
-  if (!ps.length) return nextHtml + noteHtml + '<div class="empty">Žiadne telefónne číslo.</div>';
-  return nextHtml + noteHtml + `<div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
+  if (!ps.length) return nextHtml + noteHtml + `<div class="callRow"><div class="empty" style="margin:0">Žiadne telefónne číslo.</div>${grp}</div>`;
+  return nextHtml + noteHtml + `<div class="callRow"><div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
     const main = p.k === 'tel', extra = [p.label, p.note].filter(Boolean).join(' · ');
     const inner = `${ico('phone')}<span>${esc(p.shown || p.label)}</span>`;
     return `<div>${p.num ? `<a class="call ${main ? 'main' : 'alt'}" href="tel:${esc(p.num)}">${inner}</a>` : `<div class="call alt">${inner}</div>`}
       ${extra ? `<div class="callnote">${esc(extra)}</div>` : ''}</div>`;
-  }).join('') + '</div>';
+  }).join('') + `</div>${grp}</div>`;
 }
 function stSelect(st) {
   if (!S.m.stav) return '';
@@ -1092,6 +1100,7 @@ function contactDetail(r) {
   const tabs = [['hovor', 'Hovor'], ['firma', 'Firma'], ['hist', 'História'], ['udaje', 'Všetky údaje']];
   return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
     <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div>${stSelect(V(r, 'stav'))}</div>
+    ${savemsgHtml()}
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
 </div>
@@ -1116,11 +1125,11 @@ function tabHovor(r) {
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
   const phs = ['tel', 'tel2'].filter(k => S.m[k]).map(k => `<div><label>${k === 'tel' ? 'Telefón' : 'Telefón 2'}<input type="tel" data-h="${A(k)}" value="${esc(r.v[S.m[k]] ?? '')}"></label>
     <label>Poznámka k číslu<input type="text" data-note="${A(k)}" value="${esc((r.n && r.n[S.m[k]]) || '')}" placeholder="napr. riaditeľ, volať po 14:00"></label></div>`).join('');
-  const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" style="${palStyle(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>${['stretnutie', 'telefonat'].includes(norm(ak)) && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend') ? '<span class="calsaved">Uložené do kalendára</span>' : ''}</label>` : '';
+  const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${isActLbl(ak) ? actStyle(ak) : palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" style="${palStyle(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>${['stretnutie', 'telefonat'].includes(norm(ak)) && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend') ? '<span class="calsaved">Uložené do kalendára</span>' : ''}</label>` : '';
   const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
       <label class="dtD">Dátum<input type="date" class="dtSmall" data-h="${A('datum')}" data-t="d" value="${d}"></label>
-      ${S.m.cas ? `<label class="dtT">${isActLbl(ak) ? `<span class="actTag" style="${actStyle(ak)}">${actIcon(ak)}<span>${esc(ak)}</span></span>` : ''}Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
+      ${S.m.cas ? `<label class="dtT">Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
       ${qd}
     </div>
     ${actBlock}</div>` : (actBlock ? `<div class="dtRow dtRowSingle">${actBlock}</div>` : '');
@@ -1133,7 +1142,7 @@ function tabHovor(r) {
       <label>Poznámka k Nasleduje<input type="text" data-note="${A('dalsi')}" value="${esc((r.n && r.n[S.m.dalsi]) || '')}" placeholder="napr. telefón, kontakt, detail"></label>
       <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qnx="${esc(x)}">${x}</button>`).join('')}</div>` : ''}
     <div id="notesBox">${notesHtml(r)}</div>
-    ${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}</div></form>`;
+    </form>`;
 }
 function fieldInput(h, val) {
   const k = Object.keys(S.m).find(x => S.m[x] === h), lists = S.data.contacts.lists[h], a = `data-h="${esc(h)}"`;
@@ -1157,7 +1166,7 @@ function orderedHeaders() {
 }
 function tabAll(r) {
   return `<form id="fAll" class="win pad" autocomplete="off">${orderedHeaders().map(h => `<label>${esc(h)}${fieldInput(h, r.v[h] ?? '')}</label>`).join('')}
-    ${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}</div></form>`;
+    </form>`;
 }
 
 /* ---------- firma / analýza ---------- */
@@ -1192,7 +1201,7 @@ function companyBlock(r) {
       list.map(k => { const h = k === 'email' ? S.m.email : fieldHeader(k); if (!h) return ''; return `<label>${esc(CGROUP_LABELS[k] || k)}${k === 'email' ? `<input type="email" data-h="${esc(h)}" value="${esc(V(r, 'email'))}">` : cInput(k, h, V(r, k))}</label>`; }).join('') + '</div>';
     if (cls === 'basic') basic += blk; else pair += blk;
   }
-  return `<form id="fComp" class="win pad" autocomplete="off">${basic}${pair ? `<div class="cgpair">${pair}</div>` : ''}${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}</div></form>`;
+  return `<form id="fComp" class="win pad" autocomplete="off">${basic}${pair ? `<div class="cgpair">${pair}</div>` : ''}</form>`;
 }
 /* ---------- ukladanie ---------- */
 function collect(form) {
@@ -1254,12 +1263,15 @@ function setUndo(row, vals) {
   if (!Object.keys(prev).length) { S.undo = null; return; }
   S.undo = {row: row.r, prev};
 }
+function syncUndo() {
+  const can = !!(S.dirty || (S.undo && S.undo.row === S.sel));
+  document.querySelectorAll('.undoTop').forEach(b => b.classList.toggle('can', can));
+}
 function undoAvailable() { return S.dirty || (S.undo && S.undo.row === S.sel); }
-const undoBtnHtml = () => undoAvailable() ? `<button type="button" class="cta ghost undoBtn" data-act="undo">${ico('back')}Späť</button>` : '';
+const undoBtnHtml = () => '';
 function markDirty() {
   if (S.dirty) return;
   S.dirty = true;
-  document.querySelectorAll('.saveRow').forEach(row => { if (!row.querySelector('.undoBtn')) row.insertAdjacentHTML('afterbegin', `<button type="button" class="cta ghost undoBtn" data-act="undo">${ico('back')}Späť</button>`); });
 }
 async function undoLast() {
   if (S.dirty) { S.dirty = false; $('#tabBody').innerHTML = tabBody(rowBy(S.sel)); return; }
