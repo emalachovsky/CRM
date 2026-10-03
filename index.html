@@ -514,13 +514,10 @@ html[data-theme="light"] .card.fut{background:color-mix(in srgb,#2563eb 6%,var(-
 .card.over.sel{border-color:#b91c1c;box-shadow:0 0 0 1px #b91c1c}
 html[data-theme="light"] .card.over{background:color-mix(in srgb,#dc2626 11%,var(--panel))}
 .card.over .c-left .c-time,.card.over .c-left .c-date,.c-left.over .c-time,.c-left.over .c-date{color:var(--red);opacity:1}
-/* aktivita Stretnutie / Telefonát – tmavooranžové podfarbenie */
-.card.act,.card.act:hover{background:color-mix(in srgb,#c2410c 32%,var(--panel));border-left-color:#ea580c}
-html[data-theme="light"] .card.act,html[data-theme="light"] .card.act:hover{background:color-mix(in srgb,#ea580c 17%,var(--panel))}
-.calsaved{display:inline-block;margin-left:.4rem;font-size:.78rem;color:var(--ok);white-space:nowrap}
-/* urgent zapnutý – zlatý pásik a tmavé hnedozlaté podfarbenie; po vypnutí je karta ako ostatné */
-.card.urgent,.card.urgent:hover{background:color-mix(in srgb,#7c4a05 58%,var(--panel));border-left-color:#e3b023}
-html[data-theme="light"] .card.urgent,html[data-theme="light"] .card.urgent:hover{background:color-mix(in srgb,#a16207 30%,var(--panel));border-left-color:#d19a00}
+/* aktivita Stretnutie / Telefonát – zlato-žlté podfarbenie */
+.card.act,.card.act:hover{background:color-mix(in srgb,#e0a800 27%,var(--panel));border-left-color:#f5c518}
+html[data-theme="light"] .card.act,html[data-theme="light"] .card.act:hover{background:color-mix(in srgb,#f5c518 30%,var(--panel))}
+.calsaved{display:block;margin:.25rem 0 0;font-size:.75rem;line-height:1.2;color:var(--ok);white-space:normal}
 /* hlavička zoznamu (hľadanie + filtre) – nižšia */
 .lhead{padding-top:calc(env(safe-area-inset-top) + .3rem);padding-bottom:.3rem}
 @media(min-width:900px){.lhead{padding-top:.5rem;padding-bottom:.3rem}}
@@ -532,6 +529,8 @@ html[data-theme="light"] .card.urgent,html[data-theme="light"] .card.urgent:hove
 .qrow input{height:2.1rem;min-height:0;padding:.15rem .7rem;font-size:.9rem}
 .chips{padding:.3rem 0 .05rem;gap:.3rem}
 .chips .chip,.chips select{padding:.28rem .3rem;font-size:.82rem}
+/* vybraný kontakt – rámik len jednou sivou farbou ako polia na editáciu */
+html .card.sel,html .card.sel.over,html .card.sel.today,html .card.sel.fut,html .card.sel.act,html .card.sel.none{border:1.5px solid var(--ibd)!important;box-shadow:none!important}
 </style>
 </head>
 <body>
@@ -888,11 +887,10 @@ function card(r) {
   const p = phones(r).find(x => x.num);
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = ['stretnutie', 'telefonat'].includes(norm(V(r, 'pozicia')));
-  const saved = act && S.m.pozicia && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend');
-  return `<div class="card ${c} ${act ? 'act' : ''} ${urg ? 'urgent' : ''} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
+  return `<div class="card ${c} ${act ? 'act' : ''} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
     <div class="c-left ${c}"><div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b>${badge(st)}</div>
-    <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${badge(V(r, 'pozicia'))}${saved ? '<span class="calsaved">📅 Uložené do kalendára</span>' : ''}</div>
+    <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
 </div>`;
 }
@@ -905,7 +903,6 @@ async function toggleUrgent() {
   /* okamžitá odozva – prepínač sa prepne hneď, zápis do Sheetu beží na pozadí */
   document.querySelectorAll('[data-urgent]').forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
   document.querySelectorAll('.nextCall,.c-next').forEach(e => e.classList.toggle('urg', on));
-  const cd = document.querySelector('.card[data-open="' + r.r + '"]'); if (cd) cd.classList.toggle('urgent', on);
   try {
     const vals = await materializeNewCols({[fieldHeader('urgent')]: on});
     applyLocal(r, vals); persist(); renderListBody(); renderDetail();
@@ -1043,7 +1040,7 @@ function tabHovor(r) {
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
   const phs = ['tel', 'tel2'].filter(k => S.m[k]).map(k => `<div><label>${k === 'tel' ? 'Telefón' : 'Telefón 2'}<input type="tel" data-h="${A(k)}" value="${esc(r.v[S.m[k]] ?? '')}"></label>
     <label>Poznámka k číslu<input type="text" data-note="${A(k)}" value="${esc((r.n && r.n[S.m[k]]) || '')}" placeholder="napr. riaditeľ, volať po 14:00"></label></div>`).join('');
-  const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : '';
+  const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>${['stretnutie', 'telefonat'].includes(norm(ak)) && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend') ? '<span class="calsaved">📅 Uložené do kalendára</span>' : ''}</label>` : '';
   const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
       <label class="dtD">Dátum<input type="date" class="dtSmall" data-h="${A('datum')}" data-t="d" value="${d}"></label>
