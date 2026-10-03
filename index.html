@@ -413,6 +413,29 @@ label input,label select,label textarea{text-transform:none;letter-spacing:norma
 .urgSw.on .bang{color:var(--urg-tx)}
 html[data-theme="light"] .urgSw .trk{background:#e3e7f0;border-color:#aab3c8}
 html[data-theme="light"] .urgSw.on .trk{background:#cfeedd;border-color:#1e7a3c}
+/* ===== v9 ===== */
+:root{--lr:#ff8f8f;--lr-bg:rgba(255,120,120,.16)}
+html[data-theme="light"]{--lr:#e04a4a;--lr-bg:rgba(224,74,74,.12)}
+/* Nasleduje v karte = rovnaké okienko ako v detaile */
+.c-next{display:inline-flex;align-items:center;gap:.35rem;margin-top:.35rem;padding:.2rem .65rem;border-radius:10px;border:1px solid var(--nx-bd);background:var(--nx-bg);color:var(--nx-tx);font-size:.85rem;max-width:100%}
+.c-next .ico{width:1em;height:1em;flex:none}
+.c-next span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-next.urg{background:var(--urg-bg);border-color:var(--urg-bd);color:var(--urg-tx)}
+/* Urgent prepínač – svetločervený + ikona trojuholník */
+.urgSw{color:var(--lr)}
+.urgSw .ico{width:1.5rem;height:1.5rem;color:var(--lr)}
+.urgSw .trk{border-color:var(--lr);background:transparent;opacity:.75}
+.urgSw .knob{background:var(--lr);opacity:.55}
+.urgSw.on .trk{border-color:var(--lr);background:var(--lr-bg);opacity:1}
+.urgSw.on .knob{background:var(--lr);opacity:1}
+html[data-theme="light"] .urgSw .trk,html[data-theme="light"] .urgSw.on .trk{border-color:var(--lr)}
+html[data-theme="light"] .urgSw.on .trk{background:var(--lr-bg)}
+/* Druh – rovnaká výška ako ostatné kolónky vo Firme */
+label input,label select,label textarea{font-size:max(16px,1rem)}
+.cg label input,.cg label select{height:2.75rem;min-height:2.75rem}
+.cg label select{-webkit-appearance:none;appearance:none;padding-right:2rem;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 1.1rem) 50%,calc(100% - .8rem) 50%;background-size:.3rem .3rem,.3rem .3rem;background-repeat:no-repeat}
+/* kontakt – bez tučného písma */
+.card,.card *,.dhead h2,.dhead .sub{font-weight:400}
 </style>
 </head>
 <body>
@@ -517,7 +540,7 @@ const CGROUPS = [
   ['Plyn', ['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']]
 ];
 const QUICK_NOTES = ['Čakám na FA', 'Dohodnúť stretnutie', 'Pripraviť ponuku'];
-const SEP = '────────────────────────';
+const SEP = '────────────────────';
 
 function buildMap() {
   if (!S.data) return;
@@ -639,24 +662,30 @@ function phones(r) {
 async function api(action, payload = {}) {
   if (!S.cfg.url) throw new Error('Chýba URL – otvor Nastavenia');
   const body = JSON.stringify({token: S.cfg.token, action, ...payload});
-  const tries = action === 'read' || action === 'ping' ? 2 : 1;   // čítanie sa bezpečne opakuje, zápis nie
+  const isRead = action === 'read' || action === 'ping';
+  const tries = isRead ? 3 : 1;   // čítanie sa bezpečne opakuje, zápis nie (aby sa nezdvojil)
   let last;
   for (let i = 0; i < tries; i++) {
-    if (i) await new Promise(r => setTimeout(r, 700 * i));
+    if (i) await new Promise(r => setTimeout(r, 1200 * i));
     try {
-      const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 25000);
-      let res; try { res = await fetch(S.cfg.url, {method: 'POST', redirect: 'follow', body, signal: ctl.signal}); } catch (e) { throw new Error(e.name === 'AbortError' ? 'Server neodpovedal včas' : e.message); } finally { clearTimeout(to); }
+      const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), isRead ? 40000 : 45000);
+      let res; try { res = await fetch(S.cfg.url, {method: 'POST', redirect: 'follow', cache: 'no-store', body, signal: ctl.signal}); } catch (e) { throw new Error(e.name === 'AbortError' ? 'Server neodpovedal včas' : e.message); } finally { clearTimeout(to); }
       const txt = await res.text();
       let j; try { j = JSON.parse(txt); } catch (e) {
         last = new Error('Server nevrátil JSON (' + res.status + '): ' + txt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 140));
+        last.lost = true;
         continue;
       }
       if (!j.ok) { const e = new Error(j.error || 'Chyba servera'); e.conflict = j.conflict; throw e; }
       return j;
     } catch (e) {
-      if (e.conflict !== undefined || tries === 1 || /^Chyba|Neplatn|Riadok|Záložka|Neznáma/.test(e.message)) throw e;
+      if (e.conflict !== undefined || tries === 1 || /^Chyba|Neplatn|Riadok|Záložka|Neznáma/.test(e.message)) { last = e; break; }
       last = e;
     }
+  }
+  if (!isRead && last && (last.lost || /neodpovedal/.test(last.message))) {
+    setTimeout(() => { if (!loading) load(true); }, 1500);
+    throw new Error('Odpoveď servera sa stratila – zmena sa pravdepodobne uložila, dáta si znova načítavam.');
   }
   throw last;
 }
@@ -738,7 +767,7 @@ function card(r) {
     <div class="c-left ${c}"><div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b>${badge(st)}</div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${badge(V(r, 'pozicia'))}</div>
-    ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${esc(nx)}</div>` : ''}</div>
+    ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${ico('phone')}<span>${esc(nx)}</span></div>` : ''}</div>
 </div>`;
 }
 const isUrg = r => ['ano', '1', 'true', 'x', 'urgent', 'urgentne'].includes(norm(V(r, 'urgent')));
@@ -803,7 +832,7 @@ function callBtns(r) {
   const ps = phones(r);
   const next = V(r, 'dalsi');
   const urg = isUrg(r);
-  const nextHtml = next ? `<div class="nextRow"><div class="nextCall ${urg ? 'urg' : ''}">${ico('phone')}<span>${esc(next)}</span></div><button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span><span class="bang">!</span></button></div>` : '';
+  const nextHtml = next ? `<div class="nextRow"><div class="nextCall ${urg ? 'urg' : ''}">${ico('phone')}<span>${esc(next)}</span></div><button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button></div>` : '';
   if (!ps.length) return nextHtml + '<div class="empty">Žiadne telefónne číslo.</div>';
   return nextHtml + `<div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
     const main = p.k === 'tel', extra = [p.label, p.note].filter(Boolean).join(' · ');
@@ -1056,7 +1085,7 @@ async function clearHist() {
     const f = norm(V(r, 'firma')), o = norm(V(r, 'osoba'));
     S.data.activities.rows = S.data.activities.rows.filter(a => !(norm(a.v[ACT_H.firma]) === f && (!o || !norm(a.v[ACT_H.kontakt]) || norm(a.v[ACT_H.kontakt]) === o)));
     persist(); renderDetail(); toast('História vymazaná');
-  } catch (e) { toast(e.message, true); }
+  } catch (e) { toast(/Neznáma akcia/.test(e.message) ? 'Server ešte nemá novú verziu CRM API – vlož CRM_API.gs do Apps Scriptu a nasaď novú verziu.' : e.message, true); }
 }
 async function saveNote(btn) {
   const r = rowBy(S.sel); if (!r) return;
