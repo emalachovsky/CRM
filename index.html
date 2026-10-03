@@ -517,7 +517,7 @@ html[data-theme="light"] .card.over{background:color-mix(in srgb,#dc2626 11%,var
 /* aktivita Stretnutie / Telefonát – zlato-žlté podfarbenie */
 .card.act,.card.act:hover{background:color-mix(in srgb,#e0a800 27%,var(--panel));border-left-color:#f5c518}
 html[data-theme="light"] .card.act,html[data-theme="light"] .card.act:hover{background:color-mix(in srgb,#f5c518 30%,var(--panel))}
-.calsaved{display:block;margin:.25rem 0 0;font-size:.72rem;line-height:1.2;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.calsaved{display:block;margin:.25rem 0 0;font-size:.72rem;line-height:1.2;font-weight:400;text-transform:none;letter-spacing:normal;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* hlavička zoznamu (hľadanie + filtre) – nižšia */
 .lhead{padding-top:calc(env(safe-area-inset-top) + .3rem);padding-bottom:.3rem}
 @media(min-width:900px){.lhead{padding-top:.5rem;padding-bottom:.3rem}}
@@ -899,11 +899,10 @@ function card(r) {
   const p = phones(r).find(x => x.num);
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = ['stretnutie', 'telefonat'].includes(norm(V(r, 'pozicia')));
-  const saved = act && S.m.pozicia && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend');
   return `<div class="card ${c} ${act ? 'act' : ''} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
     <div class="c-left ${c}"><div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
-    <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b><span class="c-stcol">${badge(st)}${saved ? '<span class="badge b-grey">Uložené do kalendára</span>' : ''}</span></div>
-    <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${badge(V(r, 'pozicia'))}</div>
+    <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b><span class="c-stcol">${badge(st)}${act ? badge(V(r, 'pozicia')) : ''}</span></div>
+    <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
 </div>`;
 }
