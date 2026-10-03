@@ -454,6 +454,20 @@ html[data-theme="light"] .urgSw.on .trk{border-color:var(--text);background:rgba
 .miss{margin:.4rem 0 1rem;padding:.7rem .9rem;border-radius:12px;background:var(--gas-bg);border:1px solid var(--gas-bd);font-size:.88rem}
 .miss ul{margin:.3rem 0 .6rem;padding-left:1.1rem}
 .miss.okm{background:var(--ok-bg);border-color:var(--ok-bd)}
+/* ===== v11 ===== */
+/* Nasleduje – jemné svetlé pozadie, tmavšia červená pre urgent */
+:root{--nx-bg:#dfe9f4;--nx-bd:#c6d6e8;--nx-tx:#0b0f14;--urg-bg:#f4edcb;--urg-bd:#e0d49a;--urg-tx:#8f1620;
+  --ur-on:#c4303a;--ur-on-bg:rgba(160,24,36,.55);--ur-on-bd:#e5535c}
+html[data-theme="light"]{--nx-bg:#e9f0f8;--nx-bd:#cfdcec;--urg-bg:#f8f2d6;--urg-bd:#e6dba8;--urg-tx:#8f1620;
+  --ur-on:#8f1620;--ur-on-bg:rgba(143,22,32,.16);--ur-on-bd:#8f1620}
+/* Urgent prepínač zapnutý – tmavočervený, čitateľný na tmavom podklade */
+.urgSw.on,.urgSw.on .ico{color:var(--ur-on-bd)}
+.urgSw.on .trk{border-color:var(--ur-on-bd);background:var(--ur-on-bg);opacity:1}
+.urgSw.on .knob{background:var(--ur-on-bd);opacity:1}
+html[data-theme="light"] .urgSw.on,html[data-theme="light"] .urgSw.on .ico{color:var(--ur-on)}
+html[data-theme="light"] .urgSw.on .trk{border-color:var(--ur-on-bd);background:var(--ur-on-bg)}
+html[data-theme="light"] .urgSw.on .knob{background:var(--ur-on)}
+.ph2>div{min-width:0}
 </style>
 </head>
 <body>
@@ -564,7 +578,7 @@ const FIELDS = [
   {k:'pl_druh', label:'PL Druh', pats:['pl druh','druh pl','druh plyn']},
   {k:'el_druh', label:'EE Druh', pats:['ee druh','druh ee','druh el','druh elektriny','druh']},
   {k:'urgent', label:'Urgent', pats:['urgent','urgentne','nalieha']},
-  {k:'obch',   label:'Firma (obchodný názov)', pats:['firma']},
+  {k:'obch',   label:'Odberateľ', pats:['firma', 'odberatel']},
   {k:'an_ok', label:'Analýza načítaná', pats:['analyza nacitana']},
   {k:'el_dod', label:'EE Dodávateľ', pats:['ee dodavatel','dodavatel ee','dodavatel el','dodavatel elektriny','ee dod']},
   {k:'pl_dod', label:'PL Dodávateľ', pats:['pl dodavatel','dodavatel pl','dodavatel plyn','pl dod']}
@@ -811,7 +825,7 @@ async function toggleUrgent() {
   const r = rowBy(S.sel); if (!r) return;
   const on = !isUrg(r);
   try {
-    const vals = await materializeNewCols({[fieldHeader('urgent')]: on ? 'Áno' : ''});
+    const vals = await materializeNewCols({[fieldHeader('urgent')]: on});
     await api('update', {sheet: 'contacts', row: r.r, values: vals, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     applyLocal(r, vals); persist(); renderListBody(); renderDetail();
   } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
@@ -914,7 +928,8 @@ function notesHtml(r) { return V(r, 'pozn') ? `<div class="gtitle" style="margin
 function tabHovor(r) {
   const {d, t} = DT(r), A = k => esc(S.m[k]);
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
-  const phs = ['tel', 'tel2'].filter(k => S.m[k]).map(k => `<label>${k === 'tel' ? 'Telefón' : 'Telefón 2'}<input type="tel" data-h="${A(k)}" value="${esc(r.v[S.m[k]] ?? '')}"></label>`).join('');
+  const phs = ['tel', 'tel2'].filter(k => S.m[k]).map(k => `<div><label>${k === 'tel' ? 'Telefón' : 'Telefón 2'}<input type="tel" data-h="${A(k)}" value="${esc(r.v[S.m[k]] ?? '')}"></label>
+    <label>Poznámka k číslu<input type="text" data-note="${A(k)}" value="${esc((r.n && r.n[S.m[k]]) || '')}" placeholder="napr. riaditeľ, volať po 14:00"></label></div>`).join('');
   const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : '';
   const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
@@ -959,7 +974,7 @@ function tabAll(r) {
 }
 
 /* ---------- firma / analýza ---------- */
-const CGROUP_LABELS = {obch:'Firma (obchodný názov)', ico:'IČO', web:'Web', email:'E-mail', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', odvetvie:'Odvetvie', an_ok:'Analýza načítaná (dátum)',
+const CGROUP_LABELS = {obch:'Odberateľ (obchodný názov)', ico:'IČO', web:'Web', email:'E-mail', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', odvetvie:'Odvetvie', an_ok:'Analýza načítaná (dátum)',
   el_dod:'Dodávateľ', pl_dod:'Dodávateľ', el_druh:'Druh (Fix / Spot)', pl_druh:'Druh (Fix / Spot)',
   el_sp:'Spotreba (MWh/rok)', el_cs:'Cena súčasná (€/MWh)', el_kon:'Viazanosť / koniec zmluvy',
   pl_sp:'Spotreba (MWh/rok)', pl_cs:'Cena súčasná (€/MWh)', pl_kon:'Viazanosť / koniec zmluvy'};
@@ -1090,16 +1105,34 @@ function actFor(r, typ, note, vals) {
   const d = isoDate(g('datum')), t = isoTime(g('cas'));
   return {typ, firma: V(r, 'firma'), kontakt: V(r, 'osoba'), stav: g('stav'), pozn: note, dalsi: g('dalsi'), dalsiKontakt: d ? (fmtD(d) + (t ? ' ' + t : '')) : ''};
 }
+/* poznámky k bunkám s telefónom (Google Sheets „Vložiť poznámku“) */
+function collectNotes(form, r) {
+  const o = {};
+  form.querySelectorAll('[data-note]').forEach(el => {
+    const h = el.dataset.note, v = el.value.trim();
+    if (v !== String((r.n && r.n[h]) || '').trim()) o[h] = v;
+  });
+  return o;
+}
+function applyNotes(r, notes) {
+  r.n = r.n || {};
+  for (const h in notes) { if (notes[h]) r.n[h] = notes[h]; else delete r.n[h]; }
+}
 async function saveCall(form) {
   const r = rowBy(S.sel); if (!r) return;
   const all = collect(form), note = $('#callNote').value.trim();
   const vals = changedOnly(r, all);
   if (note && S.m.pozn) { const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = V(r, 'pozn'); vals[S.m.pozn] = old ? line + '\n' + old : line; }
-  if (!Object.keys(vals).length && !note) { saveMsg('Nič na uloženie'); return; }
+  const notes = collectNotes(form, r);
+  if (!Object.keys(vals).length && !note && !Object.keys(notes).length) { saveMsg('Nič na uloženie'); return; }
   const act = actFor(r, changeTyp(vals, note), note, vals);
   busy(form, true);
   try {
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    const j = await api('update', {sheet: 'contacts', row: r.r, values: vals, notes, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    if (Object.keys(notes).length) {
+      if (j.ver) applyNotes(r, notes);
+      else toast('Server je na starej verzii API – poznámka k číslu sa neuložila. Nasaď novú verziu CRM_API.gs.', true);
+    }
     setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); S.dirty = false;
     renderChips(); renderListBody(); renderDetail(); saveMsg('Uložené ✔');
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
