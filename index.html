@@ -328,6 +328,20 @@ input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0
 .seg button{flex:1;border:0;background:none;color:var(--muted);padding:.5rem;border-radius:9px;font-weight:700;cursor:pointer;font-family:inherit}
 .seg button.on{background:linear-gradient(135deg,var(--acc),var(--acc-d));color:#fff}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--raise);border-radius:8px}::-webkit-scrollbar-track{background:transparent}
+/* ===== v6 doladenie ===== */
+:root{--ibd:#3b475b;--firma:#f0a84f;--datum:#aab3c0;--pur:#c9a8ff;--pur-bg:rgba(188,140,255,.14);--pur-bd:rgba(188,140,255,.45)}
+html[data-theme="light"]{--ibd:#8f9bb8;--firma:#b86a00;--datum:#566074;--pur:#5a30a8;--pur-bg:rgba(90,48,168,.08);--pur-bd:rgba(90,48,168,.4)}
+input,select,textarea{border:1.5px solid var(--ibd)}
+.c-firma,.firma,.dhead h2{color:var(--firma)}
+.when.over{color:var(--red);font-weight:700}
+.card.over{border-left-color:var(--red);background:color-mix(in srgb,var(--red) 7%,var(--panel))}
+.dgrp.over{color:var(--red)}
+.card.today{background:linear-gradient(135deg,rgba(240,168,79,.20),rgba(245,208,74,.07));border-color:rgba(240,168,79,.5);border-left-color:#f0a84f}
+.dgrp.today{background:linear-gradient(90deg,#f0a84f,#f5d04a);color:#2a1a00}
+.nextCall{background:var(--pur-bg);border-color:var(--pur-bd);color:var(--pur)}
+.c-next,.hl .c-next{color:var(--pur);opacity:1}
+.anok{background:rgba(139,148,158,.12);border-color:rgba(139,148,158,.3);color:var(--muted);font-size:.72rem;font-weight:500;padding:.22rem .6rem}
+.dtSmall,input[type=date],select.dtSmall,.hist .h-top>span:first-child{color:var(--datum)}
 </style>
 </head>
 <body>
@@ -416,6 +430,8 @@ const FIELDS = [
   {k:'pl_sp',  label:'PL Spotreba', pats:['pl spotreba','spotreba plyn']},
   {k:'pl_cs',  label:'PL Cena súčasná', pats:['pl cena sucasna','cena plyn sucasna','pl cena']},
   {k:'pl_kon', label:'PL Viazanosť / koniec', pats:['pl viazanost','koniec zmluvy plyn','pl koniec']},
+  {k:'pl_druh', label:'PL Druh', pats:['pl druh','druh pl','druh plyn']},
+  {k:'el_druh', label:'EE Druh', pats:['ee druh','druh ee','druh el','druh elektriny','druh']},
   {k:'obch',   label:'Firma (obchodný názov)', pats:['firma']},
   {k:'an_ok', label:'Analýza načítaná', pats:['analyza nacitana']},
   {k:'el_dod', label:'EE Dodávateľ', pats:['ee dodavatel','dodavatel ee','dodavatel el','dodavatel elektriny','ee dod']},
@@ -424,8 +440,8 @@ const FIELDS = [
 const ACT_H = {dt:'Dátum a čas', firma:'Firma', kontakt:'Kontakt', typ:'Typ', stav:'Stav', pozn:'Poznámka', dalsi:'Ďalší krok', dalsiK:'Ďalší kontakt'};
 const CGROUPS = [
   ['Základné údaje', ['obch', 'ico', 'web', 'email', 'ulica', 'psc', 'mesto', 'odvetvie', 'an_ok']],
-  ['Elektrina', ['el_dod', 'el_sp', 'el_cs', 'el_kon']],
-  ['Plyn', ['pl_dod', 'pl_sp', 'pl_cs', 'pl_kon']]
+  ['Elektrina', ['el_dod', 'el_druh', 'el_sp', 'el_cs', 'el_kon']],
+  ['Plyn', ['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']]
 ];
 const QUICK_NOTES = ['Čakám na FA', 'Dohodnúť stretnutie', 'Pripraviť ponuku'];
 const SEP = '────────────────';
@@ -793,7 +809,7 @@ function tabAll(r) {
 
 /* ---------- firma / analýza ---------- */
 const CGROUP_LABELS = {obch:'Firma (obchodný názov)', ico:'IČO', web:'Web', email:'E-mail', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', odvetvie:'Odvetvie', an_ok:'Analýza načítaná (dátum)',
-  el_dod:'Dodávateľ', pl_dod:'Dodávateľ',
+  el_dod:'Dodávateľ', pl_dod:'Dodávateľ', el_druh:'Druh (Fix / Spot)', pl_druh:'Druh (Fix / Spot)',
   el_sp:'Spotreba (MWh/rok)', el_cs:'Cena súčasná (€/MWh)', el_kon:'Viazanosť / koniec zmluvy',
   pl_sp:'Spotreba (MWh/rok)', pl_cs:'Cena súčasná (€/MWh)', pl_kon:'Viazanosť / koniec zmluvy'};
 function cInput(k, h, val) {
@@ -801,6 +817,8 @@ function cInput(k, h, val) {
   if (/_kon$/.test(k) && val && !isoDate(val)) return `<input type="text" ${a} value="${esc(val)}">`;
   if (/_kon$/.test(k) || k === 'an_ok') return `<input type="date" ${a} data-t="d" value="${esc(isoDate(val))}">`;
   if (/_sp$|_cs$|_cp$|^uspora$/.test(k)) return `<input type="text" inputmode="decimal" ${a} value="${esc(val)}">`;
+  if (/_druh$/.test(k)) { const o = ['Fix', 'Spot', 'Kombi']; const cur = String(val || '').trim(); const m = o.find(x => norm(x) === norm(cur)); const opts = ['', ...o, ...(cur && !m ? [cur] : [])];
+    return `<select ${a}>${opts.map(x => `<option value="${esc(x)}" ${(x === (m || cur)) ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`; }
   if (k === 'pozn_an') return `<textarea ${a} rows="3">${esc(val)}</textarea>`;
   if (k === 'web') return `<input type="url" ${a} value="${esc(val)}">`;
   return `<input type="text" ${a} value="${esc(val)}">`;
@@ -814,7 +832,7 @@ function fieldHeader(k) {
 function companyBlock(r) {
   let html = `<form id="fComp" class="win pad" autocomplete="off">`;
   for (const [g, keys] of CGROUPS) {
-    const list = keys.filter(k => k === 'email' || FIELDS.some(f => f.k === k));
+    const list = keys.filter(k => (k === 'email' || FIELDS.some(f => f.k === k)) && (k !== 'pl_druh' || S.m.pl_druh));
     if (!list.length) continue;
     html += `<div class="cg ${g === 'Elektrina' ? 'el' : g === 'Plyn' ? 'gas' : ''}"><div class="gtitle">${g === 'Elektrina' ? '<span class="gi">⚡</span>' : g === 'Plyn' ? '<span class="gi">🔥</span>' : ''}${g}</div>` +
       list.map(k => { const h = k === 'email' ? S.m.email : fieldHeader(k); if (!h) return ''; return `<label>${esc(CGROUP_LABELS[k] || k)}${k === 'email' ? `<input type="email" data-h="${esc(h)}" value="${esc(V(r, 'email'))}">` : cInput(k, h, V(r, k))}</label>`; }).join('');
@@ -967,6 +985,10 @@ async function saveFirma(form) {
     const raw = collect(form);
     const vals = changedOnly(r, await materializeNewCols(raw));
     if (!Object.keys(vals).length) { busy(form, false); saveMsg('Nič na uloženie'); return; }
+    if (S.m.ico && vals[S.m.ico] !== undefined) {
+      const ic = specVal(vals[S.m.ico]), d = findDupIco(ic, r.r, norm(V(r, 'firma')));
+      if (d && !confirm(`⚠️ IČO ${ic} už má aj firma „${V(d, 'firma')}“.\nUložiť napriek tomu?`)) { busy(form, false); return; }
+    }
     await api('update', {sheet: 'contacts', row: r.r, values: vals, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, vals); applyLocal(r, vals); persist(); S.dirty = false;
     renderDetail(); saveMsg('Firma uložená ✔');
@@ -981,10 +1003,23 @@ function openNewContact() {
       return `<label>${esc(h)}${S.m.firma === h ? inp.replace('<input ', '<input list="dlFirmy" ') : inp}</label>`;
     }).join('')}<button class="cta" type="submit">Pridať kontakt</button></form>`);
 }
+const icoNorm = x => String(x || '').replace(/\D/g, '');
+function findDupIco(ico, exceptRow, ownFirma) {
+  const n = icoNorm(ico); if (n.length < 6 || !S.m.ico) return null;
+  return S.data.contacts.rows.find(r => r.r !== exceptRow && icoNorm(r.v[S.m.ico]) === n && (!ownFirma || norm(V(r, 'firma')) !== ownFirma)) || null;
+}
+function findDupName(name) {
+  const n = norm(name); if (!n || !S.m.firma) return null;
+  return S.data.contacts.rows.find(r => norm(V(r, 'firma')) === n) || null;
+}
 async function saveNew(form) {
   const vals = collect(form);
   for (const h in vals) if (vals[h] === '' || (vals[h] && vals[h].v === '')) delete vals[h];
   if (!Object.keys(vals).length) { toast('Vyplň aspoň jedno pole', true); return; }
+  const nm = S.m.firma && vals[S.m.firma] ? specVal(vals[S.m.firma]) : '';
+  if (findDupName(nm)) { toast(`Firma „${nm}“ už v zozname existuje – nový záznam som nezapísal.`, true); return; }
+  const ic = S.m.ico && vals[S.m.ico] ? specVal(vals[S.m.ico]) : '';
+  const d2 = findDupIco(ic, 0, ''); if (d2 && !confirm(`⚠️ IČO ${ic} už má firma „${V(d2, 'firma')}“.\nNaozaj pridať nový kontakt?`)) return;
   busy(form, true);
   try {
     const tmp = {v: Object.fromEntries(Object.entries(vals).map(([h, s]) => [h, specVal(s)]))};
@@ -1203,7 +1238,8 @@ function parseAnalysis(wb) {
     const dod = [...new Set(data.map(r => txt(r[cD])).filter(Boolean))].join(', ');
     const kons = data.map(r => xd(r[cV])).filter(Boolean).sort();
     const kon = kons[0] || (data.some(r => /neurcit/.test(norm(r[cV]))) ? 'neurčitá' : '');
-    out[kind] = {dod, sp, cs: price, kon, oms: data.length};
+    const druh = [...new Set(data.map(r => { const t = norm(r[cK]); return t.includes('fix') ? 'Fix' : t.includes('spot') ? 'Spot' : t.includes('kombi') ? 'Kombi' : txt(r[cK]); }).filter(Boolean))].join('/');
+    out[kind] = {dod, druh, sp, cs: price, kon, oms: data.length};
   });
   if (!out.el && !out.pl) throw new Error('V súbore som nenašiel údaje o odberných miestach');
   return out;
@@ -1221,16 +1257,19 @@ async function importAnalysis(file) {
     const a = norm(A.cust.odb), b = norm(V(r, 'firma'));
     if (a && b && !a.includes(b) && !b.includes(a) && a.split(' ')[0] !== b.split(' ')[0] &&
         !confirm(`Analýza je pre „${A.cust.odb}“, ale otvorená firma je „${V(r, 'firma')}“.\nPokračovať a zapísať údaje?`)) return;
+    const dup = findDupIco(A.cust.ico, r.r, norm(V(r, 'firma')));
+    if (dup && !confirm(`⚠️ IČO ${A.cust.ico} z analýzy už má aj firma „${V(dup, 'firma')}“.\nPokračovať a zapísať údaje?`)) return;
     const vals = {};
     const put = (k, v, onlyEmpty) => {
       if (v === '' || v == null || (typeof v === 'number' && !isFinite(v))) return;
       if (onlyEmpty && String(V(r, k)).trim()) return;
+      if (k === 'pl_druh' && !S.m.pl_druh) return;
       const h = fieldHeader(k); if (h) vals[h] = v;
     };
     put('obch', A.cust.odb); put('ico', A.cust.ico, true); put('ulica', A.cust.ulica, true); put('psc', A.cust.psc, true); put('mesto', A.cust.mesto, true);
     for (const g of ['el', 'pl']) {
       const x = A[g]; if (!x) continue;
-      put(g + '_dod', x.dod); put(g + '_sp', isFinite(x.sp) ? r3(x.sp) : null); put(g + '_cs', isFinite(x.cs) ? r3(x.cs) : null);
+      put(g + '_dod', x.dod); put(g + '_druh', x.druh); put(g + '_sp', isFinite(x.sp) ? r3(x.sp) : null); put(g + '_cs', isFinite(x.cs) ? r3(x.cs) : null);
       if (x.kon) put(g + '_kon', x.kon === 'neurčitá' ? 'neurčitá' : {t: 'd', v: x.kon});
     }
     put('an_ok', {t: 'd', v: todayISO()});
