@@ -514,9 +514,9 @@ html[data-theme="light"] .card.fut{background:color-mix(in srgb,#2563eb 6%,var(-
 .card.over.sel{border-color:#b91c1c;box-shadow:0 0 0 1px #b91c1c}
 html[data-theme="light"] .card.over{background:color-mix(in srgb,#dc2626 11%,var(--panel))}
 .card.over .c-left .c-time,.card.over .c-left .c-date,.c-left.over .c-time,.c-left.over .c-date{color:var(--red);opacity:1}
-/* aktivita Stretnutie / Telefonát – zlato-žlté podfarbenie */
-.card.act,.card.act:hover{background:color-mix(in srgb,#e0a800 27%,var(--panel));border-left-color:#f5c518}
-html[data-theme="light"] .card.act,html[data-theme="light"] .card.act:hover{background:color-mix(in srgb,#f5c518 30%,var(--panel))}
+/* aktivita Stretnutie / Telefonát – tmavé zlaté podfarbenie */
+.card.act,.card.act:hover{background:color-mix(in srgb,#8a6a00 42%,var(--panel));border-left-color:#f5c518}
+html[data-theme="light"] .card.act,html[data-theme="light"] .card.act:hover{background:color-mix(in srgb,#e0b000 40%,var(--panel))}
 .calsaved{display:block;margin:.25rem 0 0;font-size:.72rem;line-height:1.2;font-weight:400;text-transform:none;letter-spacing:normal;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* hlavička zoznamu (hľadanie + filtre) – nižšia */
 .lhead{padding-top:calc(env(safe-area-inset-top) + .3rem);padding-bottom:.3rem}
@@ -543,6 +543,13 @@ html .card.sel.fut{border-left-color:#3b82f6!important}
 html .card.sel.today{border-left-color:var(--ok)!important}
 html .card.sel.over{border-left-color:#b91c1c!important}
 html .card.sel.act{border-left-color:#f5c518!important}
+/* štítky Stav + oznam v kartách rovnako široké */
+.c-stcol .badge{min-width:var(--stw,0);box-sizing:border-box;text-align:center}
+/* „Nasleduje“ v karte – tmavosivé pozadie, svetlosivé písmo */
+html .card .c-next:not(.urg){background:#3a4150;border-color:#4a5263;color:#d5dae3}
+/* Aktivita Telefonát / Stretnutie v detaile – dizajn ako tlačidlo Načítať analýzu, bez bold */
+.actsel.actbtn{background:var(--btn-bg)!important;color:var(--btn-tx)!important;border:1px solid var(--btn-bd)!important;box-shadow:var(--btn-sh);border-radius:10px;font-weight:400}
+.actsel.actbtn option{font-weight:400}
 </style>
 </head>
 <body>
@@ -957,8 +964,23 @@ function companyNames() {
   S.extraCo.forEach(add);
   return [...m.values()].sort((a, b) => a.localeCompare(b, 'sk'));
 }
+/* všetky štítky Stav a oznam Telefonát/Stretnutie v kartách majú šírku podľa najdlhšieho stavu */
+let _stwKey = '';
+function setStateW() {
+  const names = statuses().concat(['Telefonát', 'Stretnutie']).map(x => String(x));
+  const longest = names.reduce((a, b) => (b.length > a.length ? b : a), '');
+  if (!longest || longest === _stwKey) return;
+  const m = document.createElement('span');
+  m.className = 'badge'; m.textContent = longest;
+  m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
+  document.body.appendChild(m);
+  const w = Math.ceil(m.getBoundingClientRect().width) + 2; m.remove();
+  _stwKey = longest;
+  document.documentElement.style.setProperty('--stw', w + 'px');
+}
 function renderListBody() {
   const el = $('#listBody'); if (!el) return;
+  setStateW();
   let html = '', n = 0;
   if (S.view === 'contacts') {
     const rows = filtered(); n = rows.length;
@@ -1052,7 +1074,7 @@ function tabHovor(r) {
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
   const phs = ['tel', 'tel2'].filter(k => S.m[k]).map(k => `<div><label>${k === 'tel' ? 'Telefón' : 'Telefón 2'}<input type="tel" data-h="${A(k)}" value="${esc(r.v[S.m[k]] ?? '')}"></label>
     <label>Poznámka k číslu<input type="text" data-note="${A(k)}" value="${esc((r.n && r.n[S.m[k]]) || '')}" placeholder="napr. riaditeľ, volať po 14:00"></label></div>`).join('');
-  const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>${['stretnutie', 'telefonat'].includes(norm(ak)) && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend') ? '<span class="calsaved">Uložené do kalendára</span>' : ''}</label>` : '';
+  const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel${['stretnutie', 'telefonat'].includes(norm(ak)) ? ' actbtn' : ''}" data-h="${A('pozicia')}" style="${['stretnutie', 'telefonat'].includes(norm(ak)) ? '' : palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>${['stretnutie', 'telefonat'].includes(norm(ak)) && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend') ? '<span class="calsaved">Uložené do kalendára</span>' : ''}</label>` : '';
   const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
       <label class="dtD">Dátum<input type="date" class="dtSmall" data-h="${A('datum')}" data-t="d" value="${d}"></label>
