@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CRM">
-<meta name="theme-color" content="#0b1d3a">
+<meta name="theme-color" content="#06080d">
 <title>CRM</title>
 <style>
 :root{
@@ -230,6 +230,69 @@ input[readonly]{opacity:.7}
 .btn-an{border:0;border-radius:12px;padding:.5rem 1rem;font-weight:750;font-size:.9rem;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc-d));color:var(--acc-tx)}
 .btn-an:disabled{opacity:.6}
 .anok{display:inline-flex;align-items:center;gap:.3rem;font-weight:750;font-size:.88rem;color:#b9f5dc;background:rgba(111,211,176,.18);border:1px solid #6fd3b0;border-radius:12px;padding:.4rem .75rem;box-shadow:0 0 12px rgba(111,211,176,.45)}
+
+/* ===== TMAVÝ MOTÍV v3 – grafit + modrá (elektrina) + žltá (plyn) ===== */
+:root{
+  color-scheme:dark;
+  --bg:#06080d; --panel:#0c111b; --panel2:#101726; --field:#070a11;
+  --line:rgba(255,255,255,.08); --text:#e9edf5; --muted:#7d889c;
+  --blue:#3b9eff; --blue-d:#3b9eff; --acc:#4aa8ff; --acc-d:#2f86e6; --acc-tx:#031a33;
+  --teal:#4aa8ff; --teal-d:#2f86e6;
+  --orange:#ff8a5c; --red:#ff5d6c; --green:#34d3a1;
+  --gas:#f2c230; --ok:#34d3a1; --card:#0e1421; --raise:#151d2e;
+}
+body{background:radial-gradient(900px 520px at 92% -12%,rgba(59,158,255,.10),transparent 70%),radial-gradient(700px 420px at -10% 110%,rgba(52,211,161,.05),transparent 70%),var(--bg)}
+@media(min-width:900px){
+  #main{grid-template-columns:minmax(21rem,26rem) 1fr;gap:.8rem;padding:.8rem}
+  #listPane,#detailPane{border-radius:16px;border:1px solid var(--line);border-top:1px solid var(--line);background:var(--panel);box-shadow:0 18px 50px rgba(0,0,0,.55)}
+  .lhead,.dhead{background:var(--panel);border-radius:16px 16px 0 0}
+}
+.lhead,.dhead{border-bottom:1px solid var(--line)}
+.ib,.back{background:var(--card);border:1px solid var(--line)}
+.ib.add{background:linear-gradient(135deg,var(--acc),var(--acc-d));border:0;color:var(--acc-tx)}
+.chip{background:var(--card);border-color:var(--line)}
+.chip.on{background:#3b9eff;border-color:#3b9eff;color:#031a33}
+.chip.due{border-color:rgba(255,93,108,.55);color:#ff8a94}
+.chip.due.on{background:rgba(255,93,108,.2);color:#ffb0b7}
+.chips select,.chips .chip{background:var(--card)}
+.chips .stbtn.sel,.chips select.on{border-color:var(--ok);color:var(--ok)}
+.stpop{background:var(--raise);border-color:var(--line)}
+.card{background:var(--card);border:1px solid var(--line);border-left:3px solid #2a3550;transition:background .15s,border-color .15s}
+.card:hover{background:var(--raise)}
+.card.over{border-left-color:var(--orange)}
+.card.today{background:linear-gradient(180deg,rgba(52,211,161,.12),rgba(52,211,161,.04));border-color:rgba(52,211,161,.45);border-left-color:var(--ok)}
+.card.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.c-firma,.firma,.dhead h2{color:#5db0ff}
+.c-sub{color:var(--muted)}
+.when.today{color:var(--ok)} .when.fut{color:#8fb4e8}
+.dgrp.today{background:var(--ok);color:#04251b}
+.qcall,.call.main{background:linear-gradient(135deg,var(--acc),var(--acc-d));color:var(--acc-tx);box-shadow:0 8px 22px rgba(59,158,255,.25)}
+.call.alt{background:var(--card);border:1px solid var(--line);color:#cfd8e8}
+.nextCall{background:rgba(52,211,161,.10);border-color:rgba(52,211,161,.4);color:var(--ok)}
+.lnk{background:var(--card);color:#8fc3ff}
+.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+.win{background:var(--panel2);border:1px solid var(--line);border-top:1px solid var(--line);box-shadow:0 12px 34px rgba(0,0,0,.4)}
+input,select,textarea{background:var(--field);border-color:rgba(255,255,255,.1)}
+input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(74,168,255,.2)}
+.cta,.btn-sm,.btn-an{background:linear-gradient(135deg,var(--acc),var(--acc-d));color:var(--acc-tx);box-shadow:0 8px 22px rgba(59,158,255,.22)}
+.cta.ghost{background:var(--card);color:var(--text);border:1px solid var(--line);box-shadow:none}
+.cta.stick{box-shadow:0 0 0 .5rem rgba(6,8,13,.92),0 8px 22px rgba(59,158,255,.28)}
+.vtabs{background:var(--card)} .vt.on{background:#3b9eff;color:#031a33} .nb.on{color:var(--acc)}
+.hist{background:var(--card);border:1px solid var(--line)}
+.hl{background:rgba(59,158,255,.12);border-color:rgba(59,158,255,.35)}
+.notes{color:#c5cfdf}
+.stsel,.actsel{background:#1a2438}
+.qn .chip.sm,.qd .chip.sm{background:rgba(52,211,161,.12);border-color:rgba(52,211,161,.45);color:#8fe9c9}
+/* elektrina = modrá, plyn = žltá */
+.cg{border-left-width:4px}
+.cg.el{background:rgba(59,158,255,.08);border-color:rgba(59,158,255,.35);border-left-color:#3b9eff} .cg.el .gtitle{color:#5db0ff}
+.cg.gas{background:rgba(242,194,48,.07);border-color:rgba(242,194,48,.35);border-left-color:var(--gas)} .cg.gas .gtitle{color:var(--gas)}
+.addcols{background:rgba(242,194,48,.08);border-color:rgba(242,194,48,.35)}
+.saveOut{background:rgba(255,93,108,.1);border-color:rgba(255,93,108,.4);color:#ff8a94}
+#toast{background:var(--raise);border-color:var(--acc)} #toast.err{background:#2a1015;border-color:var(--red)}
+.ovl{background:rgba(2,4,8,.78)}
+.anok{background:rgba(52,211,161,.14);border-color:var(--ok);color:#9ff0d3;box-shadow:0 0 12px rgba(52,211,161,.3)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#1e2738;border-radius:8px}::-webkit-scrollbar-track{background:transparent}
 </style>
 </head>
 <body>
@@ -1142,7 +1205,7 @@ async function importAnalysis(file) {
 /* ---------- ikona pre plochu iOS ---------- */
 (function () {
   const c = document.createElement('canvas'); c.width = c.height = 180; const x = c.getContext('2d');
-  const g = x.createLinearGradient(0, 0, 180, 180); g.addColorStop(0, '#f2c76a'); g.addColorStop(1, '#c99a35');
+  const g = x.createLinearGradient(0, 0, 180, 180); g.addColorStop(0, '#5db4ff'); g.addColorStop(1, '#2f86e6');
   x.fillStyle = g; x.fillRect(0, 0, 180, 180); x.fillStyle = '#071018'; x.font = '800 62px -apple-system,Helvetica,Arial';
   x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('CRM', 90, 94);
   const l = document.createElement('link'); l.rel = 'apple-touch-icon'; l.href = c.toDataURL('image/png'); document.head.appendChild(l);
