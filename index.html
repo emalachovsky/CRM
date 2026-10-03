@@ -468,6 +468,21 @@ html[data-theme="light"] .urgSw.on,html[data-theme="light"] .urgSw.on .ico{color
 html[data-theme="light"] .urgSw.on .trk{border-color:var(--ur-on-bd);background:var(--ur-on-bg)}
 html[data-theme="light"] .urgSw.on .knob{background:var(--ur-on)}
 .ph2>div{min-width:0}
+/* ===== v12 ===== */
+/* Nasleduje – úplne jemné pozadie */
+:root{--nx-bg:#eef3f9;--nx-bd:#dfe8f2;--urg-bg:#faf5dd;--urg-bd:#eadfaa;--dt-yel:#f6e9a6}
+html[data-theme="light"]{--nx-bg:#f4f8fc;--nx-bd:#e1eaf3;--urg-bg:#fcf8e4;--urg-bd:#ece2b4;--dt-yel:#8a6c00}
+/* dátum a čas – svetložltý obsah */
+.dtSmall,input[type=date].dtSmall,select.dtSmall,.dtNarrow label input,.dtNarrow label select{color:var(--dt-yel)}
+/* náhľad poznámky pod „Nasleduje“ */
+.notePrev{margin:.2rem 0 .8rem;padding:.55rem .75rem;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+.npl{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.2rem}
+.npt{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem;max-height:7.5rem;overflow-y:auto;color:var(--text);opacity:.9}
+.notesLb textarea{min-height:9rem}
+/* neuložené zmeny – červené pulzujúce tlačidlo Uložiť */
+body.dirty .cta.stick{background:linear-gradient(135deg,#e5484d,#a1141c);color:#fff;box-shadow:0 0 0 .5rem var(--panel),0 6px 18px rgba(229,72,77,.5);animation:dirtyGlow 1.6s ease-in-out infinite}
+body.dirty .cta.stick::before{content:"● "}
+@keyframes dirtyGlow{50%{filter:brightness(1.22)}}
 </style>
 </head>
 <body>
@@ -544,6 +559,11 @@ const S = {
   view: 'contacts', q: '', chip: 'all', sel: null, tab: 'hovor',
   dirty: false, stSet: new Set(JSON.parse(LS.getItem('crm.stfilter') || '[]')), stOpen: false, msg: null, sy: {st: 'ok'}, limit: 150, lastLoad: 0, extraCo: new Set(), undo: null
 };
+/* neuložené zmeny → tlačidlo „Uložiť“ sa zvýrazní (body.dirty) */
+(function () {
+  let d = false;
+  Object.defineProperty(S, 'dirty', {get: () => d, set: v => { d = !!v; if (document.body) document.body.classList.toggle('dirty', d); }, enumerable: true, configurable: true});
+})();
 if (location.hash.startsWith('#cfg=')) {
   try { S.cfg = JSON.parse(atob(location.hash.slice(5))); LS.setItem('crm.cfg', JSON.stringify(S.cfg)); } catch (e) {}
   history.replaceState(null, '', location.pathname + location.search);
@@ -883,8 +903,10 @@ function callBtns(r) {
   const next = V(r, 'dalsi');
   const urg = isUrg(r);
   const nextHtml = next ? `<div class="nextRow"><div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div><button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button></div>` : '';
-  if (!ps.length) return nextHtml + '<div class="empty">Žiadne telefónne číslo.</div>';
-  return nextHtml + `<div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
+  const pz = String(V(r, 'pozn') || '').trim();
+  const noteHtml = pz ? `<div class="notePrev"><div class="npl">Poznámka</div><div class="npt">${esc(pz)}</div></div>` : '';
+  if (!ps.length) return nextHtml + noteHtml + '<div class="empty">Žiadne telefónne číslo.</div>';
+  return nextHtml + noteHtml + `<div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
     const main = p.k === 'tel', extra = [p.label, p.note].filter(Boolean).join(' · ');
     const inner = `${ico('phone')}<span>${esc(p.shown || p.label)}</span>`;
     return `<div>${p.num ? `<a class="call ${main ? 'main' : 'alt'}" href="tel:${esc(p.num)}">${inner}</a>` : `<div class="call alt">${inner}</div>`}
@@ -894,7 +916,7 @@ function callBtns(r) {
 function stSelect(st) {
   if (!S.m.stav) return '';
   const L = statuses(); if (st && !L.some(x => norm(x) === norm(st))) L.unshift(st);
-  return `<select class="stsel" data-stsel style="${palStyle(st)}"><option value="">Stav</option>${L.map(x => `<option value="${esc(x)}" ${x === st ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
+  return `<select class="stsel" data-stsel style="${palStyle(st)}"><option value="">Stav</option>${L.map(x => `<option value="${esc(x)}" ${norm(x) === norm(st) ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
 }
 const TIMES = (() => { const a = []; for (let m = 480; m <= 1080; m += 15) a.push(pad(Math.floor(m / 60)) + ':' + pad(m % 60)); return a; })();
 function timeSelect(a, val) {
@@ -924,7 +946,7 @@ function tabBody(r) {
   }
   return tabAll(r);
 }
-function notesHtml(r) { return V(r, 'pozn') ? `<div class="gtitle" style="margin-top:.4rem">Poznámky</div><pre class="notes" style="margin-top:0">${esc(V(r, 'pozn'))}</pre>` : ''; }
+function notesHtml(r) { return S.m.pozn ? `<label class="notesLb" style="margin-top:.8rem">Poznámky<textarea id="notesTa" rows="8" data-h="${esc(S.m.pozn)}">${esc(V(r, 'pozn'))}</textarea></label>` : ''; }
 function tabHovor(r) {
   const {d, t} = DT(r), A = k => esc(S.m[k]);
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
@@ -1122,7 +1144,7 @@ async function saveCall(form) {
   const r = rowBy(S.sel); if (!r) return;
   const all = collect(form), note = $('#callNote').value.trim();
   const vals = changedOnly(r, all);
-  if (note && S.m.pozn) { const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = V(r, 'pozn'); vals[S.m.pozn] = old ? line + '\n' + old : line; }
+  if (note && S.m.pozn) { const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = $('#notesTa') ? $('#notesTa').value.trim() : V(r, 'pozn'); vals[S.m.pozn] = old ? line + '\n' + old : line; }
   const notes = collectNotes(form, r);
   if (!Object.keys(vals).length && !note && !Object.keys(notes).length) { saveMsg('Nič na uloženie'); return; }
   const act = actFor(r, changeTyp(vals, note), note, vals);
@@ -1143,7 +1165,7 @@ async function saveStav(sel) {
   sel.setAttribute('style', palStyle(sel.value));
   try {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-    setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); saveMsg('Stav uložený ✔'); renderChips(); renderListBody();
+    setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); saveMsg('Stav uložený ✔'); toast('Stav uložený do sheetu ✔'); renderChips(); renderListBody();
   } catch (e) { sel.value = V(r, 'stav'); sel.setAttribute('style', palStyle(V(r, 'stav'))); toast(e.message, true); if (e.conflict) load(true); }
 }
 async function clearHist() {
@@ -1167,13 +1189,14 @@ async function saveNote(btn) {
   const ta = $('#callNote'), note = ta.value.trim();
   if (!note) { toast('Najprv napíš poznámku'); return; }
   if (!S.m.pozn) { toast('Chýba stĺpec Poznámka – pozri Nastavenia', true); return; }
-  const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = V(r, 'pozn'), vals = {[S.m.pozn]: old ? line + '\n' + old : line};
+  const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = $('#notesTa') ? $('#notesTa').value.trim() : V(r, 'pozn'), vals = {[S.m.pozn]: old ? line + '\n' + old : line};
   const act = actFor(r, 'Poznámka', note, null);
   btn.disabled = true;
   try {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); ta.value = '';
     const nb = $('#notesBox'); if (nb) nb.innerHTML = notesHtml(r);
+    const np = $('.notePrev .npt'); if (np) np.textContent = V(r, 'pozn');
     saveMsg('Poznámka uložená ✔');
   } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
   finally { btn.disabled = false; }
