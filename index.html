@@ -510,11 +510,17 @@ html[data-theme="light"] .card.fut{background:color-mix(in srgb,#2563eb 6%,var(-
 /* po termíne – červený je len dátum a čas, karta zostáva bežná */
 .card.over{background:color-mix(in srgb,#b91c1c 20%,var(--panel));border-left-color:#b91c1c}
 .card.over:hover{background:color-mix(in srgb,#b91c1c 27%,var(--raise))}
+.card.over,.card.over.sel{border-color:color-mix(in srgb,#b91c1c 55%,var(--line))}
+.card.over.sel{border-color:#b91c1c;box-shadow:0 0 0 1px #b91c1c}
 html[data-theme="light"] .card.over{background:color-mix(in srgb,#dc2626 11%,var(--panel))}
 .card.over .c-left .c-time,.card.over .c-left .c-date,.c-left.over .c-time,.c-left.over .c-date{color:var(--red);opacity:1}
-/* urgent zapnutý – zlatisté podfarbenie a pásik; po vypnutí je karta ako ostatné */
-.card.urgent,.card.urgent:hover{background:color-mix(in srgb,#d4a017 24%,var(--panel));border-left-color:#e3b023}
-html[data-theme="light"] .card.urgent,html[data-theme="light"] .card.urgent:hover{background:color-mix(in srgb,#d4a017 20%,var(--panel));border-left-color:#d19a00}
+/* aktivita Stretnutie / Telefonát – tmavooranžové podfarbenie */
+.card.act,.card.act:hover{background:color-mix(in srgb,#c2410c 32%,var(--panel));border-left-color:#ea580c}
+html[data-theme="light"] .card.act,html[data-theme="light"] .card.act:hover{background:color-mix(in srgb,#ea580c 17%,var(--panel))}
+.calsaved{display:inline-block;margin-left:.4rem;font-size:.78rem;color:var(--ok);white-space:nowrap}
+/* urgent zapnutý – zlatý pásik a tmavé hnedozlaté podfarbenie; po vypnutí je karta ako ostatné */
+.card.urgent,.card.urgent:hover{background:color-mix(in srgb,#7c4a05 58%,var(--panel));border-left-color:#e3b023}
+html[data-theme="light"] .card.urgent,html[data-theme="light"] .card.urgent:hover{background:color-mix(in srgb,#a16207 30%,var(--panel));border-left-color:#d19a00}
 /* hlavička zoznamu (hľadanie + filtre) – nižšia */
 .lhead{padding-top:calc(env(safe-area-inset-top) + .3rem);padding-bottom:.3rem}
 @media(min-width:900px){.lhead{padding-top:.5rem;padding-bottom:.3rem}}
@@ -881,10 +887,12 @@ function card(r) {
   const {d, t} = DT(r), c = dueClass(d), st = V(r, 'stav');
   const p = phones(r).find(x => x.num);
   const urg = isUrg(r), nx = V(r, 'dalsi');
-  return `<div class="card ${c} ${urg ? 'urgent' : ''} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
+  const act = ['stretnutie', 'telefonat'].includes(norm(V(r, 'pozicia')));
+  const saved = act && S.m.pozicia && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend');
+  return `<div class="card ${c} ${act ? 'act' : ''} ${urg ? 'urgent' : ''} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
     <div class="c-left ${c}"><div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b>${badge(st)}</div>
-    <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${badge(V(r, 'pozicia'))}</div>
+    <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${badge(V(r, 'pozicia'))}${saved ? '<span class="calsaved">📅 Uložené do kalendára</span>' : ''}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
 </div>`;
 }
@@ -1185,7 +1193,8 @@ async function undoLast() {
   const r = rowBy(S.undo.row); if (!r) { S.undo = null; return; }
   const vals = S.undo.prev, undo = S.undo; S.undo = null;
   try {
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actFor(r, 'Späť (zrušenie úpravy)', '', vals), check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    const j = await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actFor(r, 'Späť (zrušenie úpravy)', '', vals), check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    if (j && j.calNote !== undefined && S.m.pozicia) applyNotes(r, {[S.m.pozicia]: j.calNote});
     applyLocal(r, vals); pushActivity(actFor(r, 'Späť (zrušenie úpravy)', '', vals)); persist();
     renderChips(); renderListBody(); renderDetail(); saveMsg('Vrátené späť ✔');
   } catch (e) { S.undo = undo; toast(e.message, true); if (e.conflict) load(true); }
