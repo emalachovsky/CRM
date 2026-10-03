@@ -1151,6 +1151,12 @@ function actFor(r, typ, note, vals) {
   const d = isoDate(g('datum')), t = isoTime(g('cas'));
   return {typ, firma: V(r, 'firma'), kontakt: V(r, 'osoba'), stav: g('stav'), pozn: note, dalsi: g('dalsi'), dalsiKontakt: d ? (fmtD(d) + (t ? ' ' + t : '')) : ''};
 }
+/* hlásenie o zápise do kalendára (Aktivita = Stretnutie / Telefonát) */
+function calToast(j) {
+  if (!j || !j.cal) return;
+  if (j.cal.ok) toast(j.cal.dup ? '📅 Udalosť už v kalendári je' : '📅 Udalosť v kalendári: ' + j.cal.title);
+  else toast('⚠️ ' + j.cal.error, true);
+}
 /* poznámky k bunkám s telefónom (Google Sheets „Vložiť poznámku“) */
 function collectNotes(form, r) {
   const o = {};
@@ -1179,6 +1185,7 @@ async function saveCall(form) {
       if (j.ver) applyNotes(r, notes);
       else toast('Server je na starej verzii API – poznámka k číslu sa neuložila. Nasaď novú verziu CRM_API.gs.', true);
     }
+    calToast(j);
     setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); S.dirty = false;
     renderChips(); renderListBody(); renderDetail(); saveMsg('Uložené ✔');
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
@@ -1230,7 +1237,8 @@ async function saveAll(form) {
   if (!Object.keys(vals).length) { saveMsg('Nič na uloženie'); return; }
   busy(form, true);
   try {
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actFor(r, changeTyp(vals, ''), '', vals), check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    const j = await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actFor(r, changeTyp(vals, ''), '', vals), check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    calToast(j);
     setUndo(r, vals); applyLocal(r, vals); pushActivity(actFor(r, changeTyp(vals, ''), '', vals)); persist(); S.dirty = false;
     renderChips(); renderListBody(); renderDetail(); saveMsg('Uložené ✔');
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
