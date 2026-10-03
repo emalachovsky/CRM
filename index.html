@@ -547,12 +547,21 @@ html .card.sel.act{border-left-color:#f5c518!important}
 .c-stcol .badge{min-width:var(--stw,0);box-sizing:border-box;text-align:center}
 /* „Nasleduje“ v karte – tmavosivé pozadie, svetlosivé písmo */
 html .card .c-next:not(.urg){background:#3a4150;border-color:#4a5263;color:#d5dae3}
-/* oznam Telefonát / Stretnutie v karte – farba podľa Aktivity, s ikonkou */
-.c-stcol .badge.actnote{display:inline-flex;align-items:center;justify-content:center;gap:.3rem;font-weight:400;box-shadow:none}
-.c-stcol .badge.actnote .ico{width:.95em;height:.95em;flex:none}
-/* Stretnutie nad časom v okne kontaktu – dizajn ako tlačidlo Načítať analýzu */
-.actTag{display:inline-flex;align-items:center;gap:.3rem;align-self:flex-start;margin-bottom:.35rem;padding:.2rem .6rem;border-radius:10px;font-size:.76rem;font-weight:400;line-height:1.2;background:var(--btn-bg);border:1px solid var(--btn-bd);color:var(--btn-tx);box-shadow:var(--btn-sh)}
+/* oznam Telefonát / Stretnutie v karte – nad časom vľavo hore, farba podľa Aktivity */
+.c-left{min-width:6.4rem}
+.c-left .badge.actnote{display:flex;align-items:center;justify-content:center;gap:.25rem;margin:0 .3rem .3rem 0;padding:.08rem .45rem;font-size:.7rem;font-weight:400;box-shadow:none;white-space:nowrap}
+.c-left .badge.actnote .ico{width:.95em;height:.95em;flex:none}
+/* štítok nad časom v okne kontaktu */
+.actTag{display:inline-flex;align-items:center;gap:.3rem;align-self:flex-start;margin-bottom:.35rem;padding:.15rem .6rem;border-radius:10px;font-size:.76rem;font-weight:400;line-height:1.2;border:1px solid transparent}
 .actTag .ico{width:1em;height:1em;flex:none}
+/* záložka Firma – základné údaje v 2 stĺpcoch, Elektrina a Plyn vedľa seba */
+.cg.basic{display:grid;grid-template-columns:1fr 1fr;column-gap:.8rem}
+.cg.basic .gtitle{grid-column:1/-1}
+.cg.basic label{min-width:0}
+.cgpair{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;align-items:start}
+.cgpair .cg{margin:.7rem 0;min-width:0}
+.cgpair .cg label{min-width:0}
+@media(max-width:380px){.cg.basic,.cgpair{grid-template-columns:1fr}}
 /* tlačidlá telefónu – obe rovnako široké (podľa dlhšieho čísla s ikonkou), doľava, obe zelené */
 .calls,.calls.two{display:grid;width:max-content;max-width:100%;grid-template-columns:max-content;grid-auto-flow:row;justify-content:start;gap:.5rem;margin:.3rem 0 .8rem}
 @media(min-width:600px){.calls,.calls.two{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:1fr;gap:.6rem}}
@@ -560,6 +569,8 @@ html .card .c-next:not(.urg){background:#3a4150;border-color:#4a5263;color:#d5da
 .calls .callnote{width:0;min-width:100%}
 html .call,html .call.main,html .call.alt{min-height:2.5rem;padding:.2rem 1rem;border-radius:14px;font-size:1.1rem;justify-content:center;white-space:nowrap}
 /* Nasleduje nad číslom – nižšie okienko */
+/* Telefón 2 – svetlosivé písmo (tmavá téma) */
+html:not([data-theme="light"]) .call.alt{color:#cfd5de}
 html .nextCall{padding:.25rem .7rem;min-height:0;font-size:.95rem}
 html .urgBtn{padding-top:0;padding-bottom:0}
 /* Aktivita vpravo – písmo bez bold */
@@ -762,7 +773,7 @@ function stCol(s) {
 const PAL = {
   osloveny:['#f5e642','#2b2b2b'], 'posle pdf':['#6b3a12','#ffffff'], mailom:['#6d9eeb','#10223f'], analyza:['#b6f0b6','#12301a'],
   klient:['#2e6b4a','#d3f5de'], lost:['#eaa5a5','#4a1616'], odlozeny:['#6b6b6b','#8fe040'], rozhoduje:['#5b2d86','#e3d2f5'],
-  telefonat:['#1f7a3a','#e9fff0'], stretnutie:['#d9740f','#fff4e5'], email:['#1f4fa8','#d6e6ff'], mail:['#1f4fa8','#d6e6ff'], uloha:['#a82018','#ffd0cc']
+  telefonat:['#14532d','#e9fff0'], stretnutie:['#a4510a','#fff4e5'], email:['#1f4fa8','#d6e6ff'], mail:['#1f4fa8','#d6e6ff'], uloha:['#a82018','#ffd0cc']
 };
 const ACTIVITIES = ['Telefonát', 'Stretnutie', 'Email', 'Úloha'];
 const STAVY = ['Oslovený', 'Pošle PDF', 'Mailom', 'Analýza', 'Klient', 'Lost', 'Odložený', 'Rozhoduje'];
@@ -922,8 +933,8 @@ function card(r) {
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = ['stretnutie', 'telefonat'].includes(norm(V(r, 'pozicia')));
   return `<div class="card ${c} ${act ? 'act' : ''} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
-    <div class="c-left ${c}"><div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
-    <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b><span class="c-stcol">${badge(st)}${act ? `<span class="badge actnote" style="${palStyle(V(r, 'pozicia'))}">${ico(norm(V(r, 'pozicia')) === 'telefonat' ? 'phone' : 'user')}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}</span></div>
+    <div class="c-left ${c}">${act ? `<span class="badge actnote" style="${palStyle(V(r, 'pozicia'))}">${ico(norm(V(r, 'pozicia')) === 'telefonat' ? 'phone' : 'user')}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
+    <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b><span class="c-stcol">${badge(st)}</span></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
 </div>`;
@@ -1093,7 +1104,7 @@ function tabHovor(r) {
   const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
       <label class="dtD">Dátum<input type="date" class="dtSmall" data-h="${A('datum')}" data-t="d" value="${d}"></label>
-      ${S.m.cas ? `<label class="dtT">${norm(ak) === 'stretnutie' ? `<span class="actTag">${ico('user')}<span>Stretnutie</span></span>` : ''}Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
+      ${S.m.cas ? `<label class="dtT">${['stretnutie', 'telefonat'].includes(norm(ak)) ? `<span class="actTag" style="${palStyle(ak)}">${ico(norm(ak) === 'telefonat' ? 'phone' : 'user')}<span>${esc(ak)}</span></span>` : ''}Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
       ${qd}
     </div>
     ${actBlock}</div>` : (actBlock ? `<div class="dtRow dtRowSingle">${actBlock}</div>` : '');
@@ -1156,15 +1167,16 @@ function fieldHeader(k) {
   return f ? '__new__' + f.label : '';
 }
 function companyBlock(r) {
-  let html = `<form id="fComp" class="win pad" autocomplete="off">`;
+  let basic = '', pair = '';
   for (const [g, keys] of CGROUPS) {
     const list = keys.filter(k => (k === 'email' || FIELDS.some(f => f.k === k)) && (k !== 'pl_druh' || S.m.pl_druh));
     if (!list.length) continue;
-    html += `<div class="cg ${g === 'Elektrina' ? 'el' : g === 'Plyn' ? 'gas' : ''}"><div class="gtitle">${g === 'Elektrina' ? '<span class="gi">⚡</span>' : g === 'Plyn' ? '<span class="gi">🔥</span>' : ''}${g}</div>` +
-      list.map(k => { const h = k === 'email' ? S.m.email : fieldHeader(k); if (!h) return ''; return `<label>${esc(CGROUP_LABELS[k] || k)}${k === 'email' ? `<input type="email" data-h="${esc(h)}" value="${esc(V(r, 'email'))}">` : cInput(k, h, V(r, k))}</label>`; }).join('');
-    html += '</div>';
+    const cls = g === 'Elektrina' ? 'el' : g === 'Plyn' ? 'gas' : 'basic';
+    const blk = `<div class="cg ${cls}"><div class="gtitle">${g === 'Elektrina' ? '<span class="gi">⚡</span>' : g === 'Plyn' ? '<span class="gi">🔥</span>' : ''}${g}</div>` +
+      list.map(k => { const h = k === 'email' ? S.m.email : fieldHeader(k); if (!h) return ''; return `<label>${esc(CGROUP_LABELS[k] || k)}${k === 'email' ? `<input type="email" data-h="${esc(h)}" value="${esc(V(r, 'email'))}">` : cInput(k, h, V(r, k))}</label>`; }).join('') + '</div>';
+    if (cls === 'basic') basic += blk; else pair += blk;
   }
-  return html + `${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}<button class="cta stick" type="submit">Uložiť firmu</button></div></form>`;
+  return `<form id="fComp" class="win pad" autocomplete="off">${basic}${pair ? `<div class="cgpair">${pair}</div>` : ''}${savemsgHtml()}<div class="saveRow">${undoBtnHtml()}<button class="cta stick" type="submit">Uložiť firmu</button></div></form>`;
 }
 /* ---------- ukladanie ---------- */
 function collect(form) {
