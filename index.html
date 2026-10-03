@@ -336,8 +336,9 @@ input,select,textarea{border:1.5px solid var(--ibd)}
 .when.over{color:var(--red);font-weight:700}
 .card.over{border-left-color:var(--red);background:color-mix(in srgb,var(--red) 7%,var(--panel))}
 .dgrp.over{color:var(--red)}
-.card.today{background:linear-gradient(135deg,rgba(240,168,79,.20),rgba(245,208,74,.07));border-color:rgba(240,168,79,.5);border-left-color:#f0a84f}
-.dgrp.today{background:linear-gradient(90deg,#f0a84f,#f5d04a);color:#2a1a00}
+.card.today{background:linear-gradient(135deg,rgba(63,185,80,.26),rgba(63,185,80,.09));border-color:var(--ok-bd);border-left-color:var(--ok)}
+html[data-theme="light"] .card.today{background:linear-gradient(135deg,rgba(30,122,60,.18),rgba(30,122,60,.06))}
+.dgrp.today{background:var(--ok);color:#fff}
 .nextCall{background:var(--pur-bg);border-color:var(--pur-bd);color:var(--pur)}
 .c-next,.hl .c-next{color:var(--pur);opacity:1}
 .anok{background:rgba(139,148,158,.12);border-color:rgba(139,148,158,.3);color:var(--muted);font-size:.72rem;font-weight:500;padding:.22rem .6rem}
@@ -501,14 +502,6 @@ input[data-note]{color:var(--muted)}
 :root{--call-bg:linear-gradient(135deg,#2f8f4e 0%,#1c5a33 55%,#143d27 100%);--call-bd:#4cc774;--call-tx:#e9fff0;--call-sh:inset 0 1px 0 rgba(200,255,220,.25),0 5px 14px rgba(0,0,0,.45)}
 html[data-theme="light"]{--call-bg:linear-gradient(135deg,#bfeccd 0%,#e3f7ea 60%,#f2fbf5 100%);--call-bd:#6fbf8a;--call-tx:#145a2e;--call-sh:inset 0 1px 0 #fff,0 4px 10px rgba(30,120,60,.18)}
 .qcall,.call.main,.call.alt{background:var(--call-bg);border:1px solid var(--call-bd);color:var(--call-tx);box-shadow:var(--call-sh)}
-/* ===== v15 ===== */
-.calOk{display:block;margin-top:.35rem;font-size:.75rem;line-height:1.2;color:var(--ok);font-weight:600;text-transform:none;letter-spacing:normal}
-.stcnt{margin-left:auto;color:var(--muted);font-size:.8rem}
-/* urgent – oranžové okno kontaktu (karta v zozname aj hlavička detailu) */
-:root{--or:#ff8c1a}
-.card.urgc{background:linear-gradient(135deg,rgba(255,140,26,.36),rgba(255,140,26,.14));border-color:rgba(255,140,26,.7);border-left:5px solid var(--or)}
-.dhead.urgc{background:linear-gradient(90deg,var(--blue),var(--ok) 50%,var(--gas-tx)) top/100% 3px no-repeat,linear-gradient(135deg,rgba(255,140,26,.38),rgba(255,140,26,.14)),var(--panel)}
-html[data-theme="light"] .card.urgc{background:linear-gradient(135deg,rgba(255,140,26,.30),rgba(255,140,26,.12));border-color:rgba(214,110,0,.6);border-left-color:#e07a00}
 </style>
 </head>
 <body>
@@ -582,7 +575,7 @@ const S = {
   cfg: (() => { const c = JSON.parse(LS.getItem('crm.cfg') || '{}'); return {url: CRM_URL || c.url || '', token: ''}; })(),
   map: JSON.parse(LS.getItem('crm.map') || '{}'),
   data: null, m: {}, auto: {},
-  view: 'contacts', q: '', chip: (LS.getItem('crm.chip') === 'due' ? 'due' : 'all'), sel: null, tab: 'hovor',
+  view: 'contacts', q: '', chip: 'all', sel: null, tab: 'hovor',
   dirty: false, stSet: new Set(JSON.parse(LS.getItem('crm.stfilter') || '[]')), stOpen: false, msg: null, sy: {st: 'ok'}, limit: 150, lastLoad: 0, extraCo: new Set(), undo: null
 };
 /* neuložené zmeny → tlačidlo „Uložiť“ sa zvýrazní (body.dirty) */
@@ -636,7 +629,7 @@ const CGROUPS = [
   ['Plyn', ['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']]
 ];
 const QUICK_NOTES = ['Čakám na FA', 'Dohodnúť stretnutie', 'Pripraviť ponuku'];
-const SEP = '────────────────────';
+const SEP = '────────────────────────';
 
 function buildMap() {
   if (!S.data) return;
@@ -843,17 +836,16 @@ function renderList() {
 function renderChips() {
   const el = $('#chips'); if (!el) return;
   const n = S.stSet.size;
-  const cnt = {}; S.data.contacts.rows.forEach(r => { const k = norm(V(r, 'stav')); cnt[k] = (cnt[k] || 0) + 1; });
   el.innerHTML = `<button class="chip ${S.chip === 'due' ? 'on' : ''}" data-chip="due">Dnes</button>
-    <button class="chip ${S.chip === 'all' ? 'on' : ''}" data-chip="all">Všetky</button>
+    <button class="chip ${S.chip === 'all' && !n ? 'on' : ''}" data-chip="all">Všetky</button>
     <button class="chip stbtn ${n ? 'sel' : ''}" data-stpop>${n ? 'Stav (' + n + ')' : 'Stav'} ▾</button>
-    ${S.stOpen ? `<div class="stpop"><div class="stitem" data-stall><span class="ck">${n ? '' : '✓'}</span>Všetko</div>${statuses().map(x => `<div class="stitem" data-stitem="${esc(x)}"><span class="ck">${S.stSet.has(x) ? '✓' : ''}</span>${badge(x) || esc(x)}<span class="stcnt">${cnt[norm(x)] || 0}</span></div>`).join('')}</div>` : ''}`;
+    ${S.stOpen ? `<div class="stpop"><div class="stitem" data-stall><span class="ck">${n ? '' : '✓'}</span>Všetko</div>${statuses().map(x => `<div class="stitem" data-stitem="${esc(x)}"><span class="ck">${S.stSet.has(x) ? '✓' : ''}</span>${badge(x) || esc(x)}</div>`).join('')}</div>` : ''}`;
 }
 function filtered() {
-  const q = norm(S.q), T = todayISO(), sn = new Set([...S.stSet].map(norm));
+  const q = norm(S.q), T = todayISO();
   const rows = S.data.contacts.rows.filter(r => {
     if (S.chip === 'due') { const d = DT(r).d; if (!d || d > T) return false; }
-    if (sn.size && !sn.has(norm(V(r, 'stav')))) return false;
+    if (S.stSet.size && !S.stSet.has(V(r, 'stav'))) return false;
     if (q) { if (!(r._s || (r._s = norm(Object.values(r.v).join(' ')))).includes(q)) return false; }
     return true;
   });
@@ -865,7 +857,7 @@ function card(r) {
   const {d, t} = DT(r), c = dueClass(d), st = V(r, 'stav');
   const p = phones(r).find(x => x.num);
   const urg = isUrg(r), nx = V(r, 'dalsi');
-  return `<div class="card ${c} ${urg ? 'urgc' : ''} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
+  return `<div class="card ${c} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
     <div class="c-left ${c}"><div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b>${badge(st)}</div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${badge(V(r, 'pozicia'))}</div>
@@ -873,14 +865,24 @@ function card(r) {
 </div>`;
 }
 const isUrg = r => ['ano', '1', 'true', 'x', 'urgent', 'urgentne'].includes(norm(V(r, 'urgent')));
+let urgBusy = false;
 async function toggleUrgent() {
-  const r = rowBy(S.sel); if (!r) return;
+  const r = rowBy(S.sel); if (!r || urgBusy) return;
   const on = !isUrg(r);
+  urgBusy = true;
+  /* okamžitá odozva – prepínač sa prepne hneď, zápis do Sheetu beží na pozadí */
+  document.querySelectorAll('[data-urgent]').forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
+  document.querySelectorAll('.nextCall,.c-next').forEach(e => e.classList.toggle('urg', on));
   try {
     const vals = await materializeNewCols({[fieldHeader('urgent')]: on});
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     applyLocal(r, vals); persist(); renderListBody(); renderDetail();
-  } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
+    await api('update', {sheet: 'contacts', row: r.r, values: vals, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+  } catch (e) {
+    const vals = {[fieldHeader('urgent')]: !on};
+    if (S.m.urgent) { applyLocal(r, vals); persist(); }
+    renderListBody(); renderDetail();
+    toast(e.message, true); if (e.conflict) load(true);
+  } finally { urgBusy = false; }
 }
 function companyNames() {
   const m = new Map();
@@ -958,7 +960,7 @@ function timeSelect(a, val) {
 function contactDetail(r) {
   const em = V(r, 'email'), web = String(V(r, 'web') || '').trim(), webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
   const tabs = [['hovor', 'Hovor'], ['firma', 'Firma'], ['hist', 'História'], ['udaje', 'Všetky údaje']];
-  return `<div class="dhead ${isUrg(r) ? 'urgc' : ''}"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
+  return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
     <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div>${stSelect(V(r, 'stav'))}</div>
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
@@ -984,7 +986,7 @@ function tabHovor(r) {
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
   const phs = ['tel', 'tel2'].filter(k => S.m[k]).map(k => `<div><label>${k === 'tel' ? 'Telefón' : 'Telefón 2'}<input type="tel" data-h="${A(k)}" value="${esc(r.v[S.m[k]] ?? '')}"></label>
     <label>Poznámka k číslu<input type="text" data-note="${A(k)}" value="${esc((r.n && r.n[S.m[k]]) || '')}" placeholder="napr. riaditeľ, volať po 14:00"></label></div>`).join('');
-  const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>${S.calRow === r.r ? '<span class="calOk">✔ Uložené do kalendára</span>' : ''}</label>` : '';
+  const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : '';
   const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
       <label class="dtD">Dátum<input type="date" class="dtSmall" data-h="${A('datum')}" data-t="d" value="${d}"></label>
@@ -1162,9 +1164,9 @@ function actFor(r, typ, note, vals) {
 }
 /* hlásenie o zápise do kalendára (Aktivita = Stretnutie / Telefonát) */
 function calToast(j) {
-  S.calRow = null;
-  if (!j || !j.cal) return;
-  S.calRow = j.cal.ok ? S.sel : null;
+  if (!j) return;
+  if (j.calNote !== undefined && S.m.pozicia) { const r = rowBy(S.sel); if (r) applyNotes(r, {[S.m.pozicia]: j.calNote}); }
+  if (!j.cal) return;
   if (j.cal.ok) toast(j.cal.dup ? '📅 Udalosť už v kalendári je' : '📅 Udalosť v kalendári: ' + j.cal.title);
   else toast('⚠️ ' + j.cal.error, true);
 }
@@ -1311,7 +1313,7 @@ async function saveNew(form) {
 
 /* ---------- navigácia ---------- */
 function openSel(id) {
-  S.sel = id; S.tab = 'hovor'; S.dirty = false; S.msg = null; S.undo = null; S.calRow = null;
+  S.sel = id; S.tab = 'hovor'; S.dirty = false; S.msg = null; S.undo = null;
   if (innerWidth < 900) history.pushState({d: 1}, '');
   render(); $('#detailPane').scrollTop = 0;
 }
@@ -1372,7 +1374,7 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-stpop]'))) { S.stOpen = !S.stOpen; renderChips(); return; }
   if ((el = t.closest('[data-stall]'))) { S.stSet.clear(); saveStFilter(); S.limit = 150; renderChips(); renderListBody(); return; }
   if ((el = t.closest('[data-stitem]'))) { const v = el.dataset.stitem; S.stSet.has(v) ? S.stSet.delete(v) : S.stSet.add(v); saveStFilter(); S.limit = 150; renderChips(); renderListBody(); return; }
-  if ((el = t.closest('[data-chip]'))) { S.chip = (el.dataset.chip === 'due' && S.chip === 'due') ? 'all' : el.dataset.chip; S.stOpen = false; try { LS.setItem('crm.chip', S.chip); } catch (e) {} S.limit = 150; renderChips(); renderListBody(); return; }
+  if ((el = t.closest('[data-chip]'))) { S.chip = el.dataset.chip; S.stOpen = false; if (S.chip === 'all') { S.stSet.clear(); saveStFilter(); } S.limit = 150; renderChips(); renderListBody(); return; }
   if ((el = t.closest('[data-open]'))) { openSel(Number(el.dataset.open)); return; }
   if ((el = t.closest('[data-gotoact]'))) {
     const [f, o] = el.dataset.gotoact.split('|');
