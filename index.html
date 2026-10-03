@@ -502,6 +502,26 @@ input[data-note]{color:var(--muted)}
 :root{--call-bg:linear-gradient(135deg,#2f8f4e 0%,#1c5a33 55%,#143d27 100%);--call-bd:#4cc774;--call-tx:#e9fff0;--call-sh:inset 0 1px 0 rgba(200,255,220,.25),0 5px 14px rgba(0,0,0,.45)}
 html[data-theme="light"]{--call-bg:linear-gradient(135deg,#bfeccd 0%,#e3f7ea 60%,#f2fbf5 100%);--call-bd:#6fbf8a;--call-tx:#145a2e;--call-sh:inset 0 1px 0 #fff,0 4px 10px rgba(30,120,60,.18)}
 .qcall,.call.main,.call.alt{background:var(--call-bg);border:1px solid var(--call-bd);color:var(--call-tx);box-shadow:var(--call-sh)}
+/* ===== v12 ===== */
+/* budúce termíny – jemne tmavomodré podfarbenie */
+.card.fut{background:color-mix(in srgb,#2563eb 13%,var(--panel));border-left-color:color-mix(in srgb,#3b82f6 55%,var(--line))}
+.card.fut:hover{background:color-mix(in srgb,#2563eb 19%,var(--raise))}
+html[data-theme="light"] .card.fut{background:color-mix(in srgb,#2563eb 6%,var(--panel))}
+/* po termíne – červený je len dátum a čas, karta zostáva bežná */
+.card.over{background:var(--panel);border-left-color:var(--line)}
+.card.over:hover{background:var(--raise)}
+.card.over .c-left .c-time,.card.over .c-left .c-date,.c-left.over .c-time,.c-left.over .c-date{color:var(--red);opacity:1}
+/* hlavička zoznamu (hľadanie + filtre) – nižšia */
+.lhead{padding-top:calc(env(safe-area-inset-top) + .3rem);padding-bottom:.3rem}
+@media(min-width:900px){.lhead{padding-top:.5rem;padding-bottom:.3rem}}
+.ltitle{margin-bottom:.3rem;gap:.5rem}
+.ltitle h1{font-size:1.1rem}
+.lhead .ib{width:2rem;height:2rem;border-radius:11px}
+.lhead .ib svg,.lhead .ib .ico{width:1.05rem;height:1.05rem}
+.qrow{gap:.4rem}
+.qrow input{height:2.1rem;min-height:0;padding:.15rem .7rem;font-size:.9rem}
+.chips{padding:.3rem 0 .05rem;gap:.3rem}
+.chips .chip,.chips select{padding:.28rem .3rem;font-size:.82rem}
 </style>
 </head>
 <body>
@@ -884,6 +904,30 @@ async function toggleUrgent() {
     toast(e.message, true); if (e.conflict) load(true);
   } finally { urgBusy = false; }
 }
+/* okno s poznámkami – výška sa prispôsobí tak, aby bolo vidno posledných 5 záznamov (najnovšie sú hore) */
+function fitNotes() {
+  const ta = document.getElementById('notesTa');
+  if (!ta || !ta.offsetWidth) return;
+  const lines = ta.value.split('\n');
+  let cnt = 0, end = lines.length;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^[─\-_=]{8,}\s*$/.test(lines[i]) && ++cnt === 5) { end = i + 1; break; }
+  }
+  const c = ta.cloneNode(false);
+  c.removeAttribute('id'); c.removeAttribute('data-h'); c.removeAttribute('rows');
+  c.value = lines.slice(0, end).join('\n');
+  c.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;height:0;min-height:0;width:' + ta.offsetWidth + 'px';
+  ta.parentNode.appendChild(c);
+  const h = c.scrollHeight; c.remove();
+  ta.style.height = (h + (ta.offsetHeight - ta.clientHeight) + 6) + 'px';
+}
+(function () {
+  let raf = 0; const run = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(fitNotes); };
+  const pane = document.getElementById('detailPane');
+  if (pane) new MutationObserver(run).observe(pane, {childList: true, subtree: true});
+  addEventListener('resize', run);
+  document.addEventListener('input', e => { if (e.target && e.target.id === 'notesTa') run(); });
+})();
 function companyNames() {
   const m = new Map();
   const add = n => { n = String(n || '').trim(); if (n && !m.has(norm(n))) m.set(norm(n), n); };
