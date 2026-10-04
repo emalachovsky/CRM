@@ -726,7 +726,7 @@ html[data-theme="light"] body .card.card.fut{--cg:color-mix(in srgb,#2563eb 30%,
 /* po termíne – okno si nechá bežnú farbu, červený je len dátum a bočné pásiky */
 html body .card.card.over{--cg:color-mix(in srgb,#1a2a6c 42%,var(--panel))}
 html[data-theme="light"] body .card.card.over{--cg:color-mix(in srgb,#3b5bb5 30%,var(--panel))}
-html body .card.card.over:not(.sel){border:1px solid var(--line)!important;border-left:3px solid #e5484d!important;border-right:3px solid #e5484d!important}
+html body .card.card.over:not(.sel){border:1px solid var(--line)!important}
 /* dnes – bez rámčeka */
 html body .card.card.today:not(.sel){border-color:var(--line)!important}
 /* vybraný kontakt – pásiky po bokoch vo farbe okna */
@@ -753,15 +753,41 @@ html[data-theme="light"] body .card.card.over{--cg:color-mix(in srgb,#0ea5e9 30%
 .c-left .badge.actnote>span{color:#fff1a8!important}
 html[data-theme="light"] .c-left .badge.actnote>span{color:#8a6a00!important}
 /* analýza – kópia v Hovor formulári len na úzkych displejoch */
-.anboxM,.urgMob{display:none}
+.urgMob{display:none}
 @media(max-width:600px){
   .dhead .stCol .undoTop{flex:0 0 auto;padding:0 .55rem}
   .nextRow .urgCol{display:none}
   .callRow{display:flex;align-items:center;gap:.6rem}
   .callRow .calls{flex:0 1 auto}
   .urgMob{display:flex;margin-left:auto;flex:none}
-  .anboxM{display:flex;justify-content:flex-end;margin:.2rem 0 .7rem}
-  .tabsRow:has(+ #tabBody #fCall) .anbox{display:none}
+}
+/* ===== v-final 3 ===== */
+/* ostatné kontakty – tmavá sivomodrá (ako okno firmy, viac do modra) */
+html body .card.card{--cg:color-mix(in srgb,#2f4a73 38%,var(--panel))}
+html body .card.card.fut{--cg:color-mix(in srgb,#2f4a73 38%,var(--panel))}
+html[data-theme="light"] body .card.card{--cg:color-mix(in srgb,#5b7aa8 26%,var(--panel))}
+html[data-theme="light"] body .card.card.fut{--cg:color-mix(in srgb,#5b7aa8 26%,var(--panel))}
+html body .card.card.over{--cg:color-mix(in srgb,#0ea5e9 42%,var(--panel))}
+html[data-theme="light"] body .card.card.over{--cg:color-mix(in srgb,#0ea5e9 30%,var(--panel))}
+html body .card.card.today{--cg:color-mix(in srgb,#0ea5e9 42%,var(--panel))}
+html[data-theme="light"] body .card.card.today{--cg:color-mix(in srgb,#0ea5e9 30%,var(--panel))}
+html body .card.card.act{--cg:color-mix(in srgb,#8a6a00 62%,var(--panel))}
+html body .card.card.klient{--cg:color-mix(in srgb,#22a049 40%,var(--panel))}
+html[data-theme="light"] body .card.card.klient{--cg:color-mix(in srgb,#1e7a3c 28%,var(--panel))}
+html body .card.card.sel,html body .card.card.sel.fut{border-left-color:#5a7aa8!important;border-right-color:#5a7aa8!important}
+html body .card.card.sel.over{border-left-color:#e5484d!important;border-right-color:#e5484d!important}
+html body .card.card.sel.today{border-left-color:#0ea5e9!important;border-right-color:#0ea5e9!important}
+html body .card.card.sel.act{border-left-color:#f5c518!important;border-right-color:#f5c518!important}
+html body .card.card.sel.klient{border-left-color:#3fb950!important;border-right-color:#3fb950!important}
+#actSlot:empty{display:none}
+@media(max-width:600px){
+  #actSlot{flex:1 0 100%;display:flex;justify-content:flex-end}
+  #actSlot .dtAct{width:100%;max-width:11rem;min-width:0;margin:0}
+  #actSlot .dtAct .actsel{width:100%}
+  /* voľné miesto hore – pod stavovým riadkom iPhonu */
+  html body .lhead,html body .dhead{padding-top:calc(env(safe-area-inset-top) + 1.4rem)}
+  html body #listPane>.empty.big,html body .setupBox.big{padding-top:calc(env(safe-area-inset-top) + 3rem)}
+  .ovl{padding-top:calc(env(safe-area-inset-top) + 1.4rem)}
 }
 </style>
 </head>
@@ -1396,7 +1422,7 @@ function contactDetail(r) {
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
 </div>
-    <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div class="anbox">${anBadge(r)}<button type="button" class="btn-an" data-act="loadan">Načítať analýzu</button><input type="file" id="anFile" accept=".xlsx,.xls" style="display:none"></div></div>
+    <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div class="anbox"><div id="actSlot"></div>${anBadge(r)}<button type="button" class="btn-an" data-act="loadan">Načítať analýzu</button><input type="file" id="anFile" accept=".xlsx,.xls" style="display:none"></div></div>
     <div id="tabBody">${tabBody(r)}</div>`;
 }
 function tabBody(r) {
@@ -1427,7 +1453,6 @@ function tabHovor(r) {
     ${actBlock}</div>` : (actBlock ? `<div class="dtRow dtRowSingle">${actBlock}</div>` : '');
   return `<form id="fCall" class="win pad" autocomplete="off">
     ${dtBlock}
-    <div class="anbox anboxM">${anBadge(r)}<button type="button" class="btn-an" data-act="loadan">Načítať analýzu</button></div>
     ${phs ? `<div class="ph2">${phs}</div>` : ''}
     <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder="Čo sa riešilo…"></textarea></label>
     <button type="button" class="btn-sm" data-act="savenote">Vložiť poznámku</button>
@@ -1499,7 +1524,9 @@ function companyBlock(r) {
 /* ---------- ukladanie ---------- */
 function collect(form) {
   const o = {};
-  form.querySelectorAll('[data-h]').forEach(el => {
+  const els = new Set(form.querySelectorAll('[data-h]'));
+  if (form.id) document.querySelectorAll('[data-h][form="' + form.id + '"]').forEach(e => els.add(e));
+  els.forEach(el => {
     const t = el.dataset.t, h = el.dataset.h; o[h] = t ? {t, v: el.value} : ((h === S.m.tel || h === S.m.tel2) ? fmtPhone(el.value) : el.value.trim());
   });
   return o;
@@ -2049,6 +2076,32 @@ async function importAnalysis(file) {
   x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('CRM', 90, 94);
   const l = document.createElement('link'); l.rel = 'apple-touch-icon'; l.href = c.toDataURL('image/png'); document.head.appendChild(l);
 })();
+
+/* Aktivita na iPhone: z formulára Hovor do voľného miesta nad tlačidlom „Načítať analýzu“ */
+function placeAct() {
+  const pane = document.getElementById('detailPane'); if (!pane) return;
+  const slot = pane.querySelector('#actSlot'); if (!slot) return;
+  const form = pane.querySelector('#fCall');
+  const mob = matchMedia('(max-width:600px)').matches;
+  const moved = slot.querySelector('.dtAct');
+  if (!form) { if (moved) moved.remove(); return; }
+  const inForm = form.querySelector('.dtAct');
+  if (mob) {
+    if (inForm) {
+      if (moved) moved.remove();
+      const sel = inForm.querySelector('select'); if (sel) sel.setAttribute('form', 'fCall');
+      slot.appendChild(inForm);
+    }
+  } else if (moved) {
+    const row = form.querySelector('.dtRow');
+    const sel = moved.querySelector('select'); if (sel) sel.removeAttribute('form');
+    if (row) row.appendChild(moved); else moved.remove();
+  }
+}
+try {
+  new MutationObserver(placeAct).observe(document.getElementById('detailPane'), {childList: true, subtree: true});
+  matchMedia('(max-width:600px)').addEventListener('change', placeAct);
+} catch (e) {}
 
 /* ---------- štart ---------- */
 buildMap(); render();
