@@ -657,14 +657,11 @@ html .card.sel.today{border-right-color:var(--ok)!important}
 html .card.sel.over{border-right-color:#b91c1c!important}
 html .card.sel.act{border-right-color:#f5c518!important}
 /* Nasleduje v zozname kontaktov – jeden riadok, dlhší text sa odseká, čierne pozadie + svetlozelený text ako pole Telefón */
-html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){display:flex;flex-wrap:nowrap;align-items:center;gap:.35rem;width:100%;min-width:0;max-width:100%;box-sizing:border-box;background:#000;color:var(--tel-g);border:1.5px solid var(--ibd);border-radius:12px;font-weight:400}
+html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){display:flex;flex-wrap:nowrap;align-items:center;gap:.35rem;width:100%;min-width:0;max-width:100%;box-sizing:border-box;background:#000;color:#9fd8ff;border:1.5px solid var(--ibd);border-radius:12px;font-weight:300!important;font-family:'Avenir Next Condensed','Arial Narrow','Roboto Condensed','Helvetica Neue',sans-serif;font-stretch:condensed;letter-spacing:-.01em}
 html .card .c-next.urg{border-color:var(--urg-bd)}
 html .card .c-next .ico{flex:none}
 html .card .c-next>span{flex:1 1 auto;min-width:0;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .c-main{min-width:0}
-/* Klient – zelený rámik okolo kontaktu v zozname */
-html .card.klient,html .card.klient:not(.sel),html .card.klient.over:not(.sel){border:1.5px solid #3fb950!important}
-html .card.klient.sel{border:1.5px solid #3fb950!important;border-left:4px solid #3fb950!important;border-right:4px solid #3fb950!important}
 /* Vložiť poznámku – po stlačení krátko „Ukladám…“ */
 .btn-sm[data-act="savenote"].pressed{background:linear-gradient(135deg,#2fb860,#14803a)!important;color:#fff!important;border-color:#a5f0c0!important;transform:scale(.97);box-shadow:0 0 0 3px rgba(80,220,130,.4)!important}
 /* logo CRM v ľavom rohu vedľa „Kontakty“ */
@@ -676,8 +673,19 @@ html .card.klient.sel{border:1.5px solid #3fb950!important;border-left:4px solid
 /* dnešný termín – modré podfarbenie (iné ako budúce termíny) */
 html body .card.card.today{--cg:color-mix(in srgb,#0ea5e9 42%,var(--panel))}
 html[data-theme="light"] body .card.card.today{--cg:color-mix(in srgb,#0ea5e9 30%,var(--panel))}
-html .card.today:not(.sel):not(.klient){border-color:color-mix(in srgb,#0ea5e9 65%,var(--line))!important}
-html .card.sel.today:not(.klient){border-color:#0ea5e9!important;border-left-color:#0ea5e9!important;border-right-color:#0ea5e9!important}
+html .card.today:not(.sel){border-color:color-mix(in srgb,#0ea5e9 65%,var(--line))!important}
+html .card.sel.today{border-color:#0ea5e9!important;border-left-color:#0ea5e9!important;border-right-color:#0ea5e9!important}
+/* Uložené – vľavo vedľa tlačidla Späť v hlavičke */
+.dhead>.savemsg{align-self:flex-end;margin:0 .1rem 0 0;height:var(--sth);box-sizing:border-box;display:inline-flex;align-items:center;white-space:nowrap;font-size:.9rem;padding:0 .7rem}
+.dhead>.savemsg:empty{display:none}
+/* ostatné kontakty – o trochu tmavšia modrá */
+html body .card.card{--cg:color-mix(in srgb,#1e3a8a 38%,var(--panel))}
+html body .card.card.fut{--cg:color-mix(in srgb,#1d4ed8 42%,var(--panel))}
+html[data-theme="light"] body .card.card{--cg:color-mix(in srgb,#3b5bb5 26%,var(--panel))}
+html[data-theme="light"] body .card.card.fut{--cg:color-mix(in srgb,#2563eb 24%,var(--panel))}
+/* Klient – celé okno kontaktu v zozname do zelena (má prednosť pred ostatnými farbami) */
+html body .card.card.klient{--cg:color-mix(in srgb,#22a049 40%,var(--panel))}
+html[data-theme="light"] body .card.card.klient{--cg:color-mix(in srgb,#1e7a3c 28%,var(--panel))}
 </style>
 </head>
 <body>
@@ -1299,8 +1307,7 @@ function contactDetail(r) {
   const em = V(r, 'email'), web = String(V(r, 'web') || '').trim(), webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
   const tabs = [['hovor', 'Hovor'], ['firma', 'Firma'], ['hist', 'História'], ['udaje', 'Všetky údaje']];
   return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
-    <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div><div class="stCol">${stSelect(V(r, 'stav'))}${saveGrpHtml()}</div></div>
-    ${savemsgHtml()}
+    <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div>${savemsgHtml()}<div class="stCol">${stSelect(V(r, 'stav'))}${saveGrpHtml()}</div></div>
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
 </div>
