@@ -1053,6 +1053,12 @@ html:not([data-theme="light"]) #fAll .dwrap.has input[type=date],html:not([data-
   #detailPane{z-index:30}
   .show-detail #listPane .lhead{visibility:hidden}
 }
+
+/* Desktop / Mac: dlhá poznámka „Nasleduje“ roztiahla ľavú časť hlavičky a vytlačila Stav / Späť / Uložiť mimo okna */
+@media(min-width:601px){
+  html body .dhead>div[style*="flex:1"]{min-width:0}
+  html body .dhead .nxRow .callnote.nxnote{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+}
 </style>
 </head>
 <body>
