@@ -673,8 +673,6 @@ html .card .c-next>span{flex:1 1 auto;min-width:0;display:block;white-space:nowr
 /* dnešný termín – modré podfarbenie (iné ako budúce termíny) */
 html body .card.card.today{--cg:color-mix(in srgb,#0ea5e9 42%,var(--panel))}
 html[data-theme="light"] body .card.card.today{--cg:color-mix(in srgb,#0ea5e9 30%,var(--panel))}
-html .card.today:not(.sel){border-color:color-mix(in srgb,#0ea5e9 65%,var(--line))!important}
-html .card.sel.today{border-color:#0ea5e9!important;border-left-color:#0ea5e9!important;border-right-color:#0ea5e9!important}
 /* Uložené – vľavo vedľa tlačidla Späť v hlavičke */
 .dhead>.savemsg{align-self:flex-end;margin:0 .1rem 0 0;height:var(--sth);box-sizing:border-box;display:inline-flex;align-items:center;white-space:nowrap;font-size:.9rem;padding:0 .7rem}
 .dhead>.savemsg:empty{display:none}
@@ -719,6 +717,31 @@ html .card .c-next .ico{margin-top:.15em}
 html body .dgrp.today{background:none!important;border:0;padding:0;border-radius:0;color:#0ea5e9!important}
 html body .dgrp.over{color:#ff8f8f!important}
 html[data-theme="light"] body .dgrp.over{color:#e05252!important}
+/* ===== v-final: farby okien, pásiky, oddeľovač ===== */
+/* kontakty v iné dni – ešte tmavšia modrá */
+html body .card.card{--cg:color-mix(in srgb,#1a2a6c 42%,var(--panel))}
+html body .card.card.fut{--cg:color-mix(in srgb,#1b2f7a 50%,var(--panel))}
+html[data-theme="light"] body .card.card{--cg:color-mix(in srgb,#3b5bb5 30%,var(--panel))}
+html[data-theme="light"] body .card.card.fut{--cg:color-mix(in srgb,#2563eb 30%,var(--panel))}
+/* po termíne – okno si nechá bežnú farbu, červený je len dátum a bočné pásiky */
+html body .card.card.over{--cg:color-mix(in srgb,#1a2a6c 42%,var(--panel))}
+html[data-theme="light"] body .card.card.over{--cg:color-mix(in srgb,#3b5bb5 30%,var(--panel))}
+html body .card.card.over:not(.sel){border:1px solid var(--line)!important;border-left:3px solid #e5484d!important;border-right:3px solid #e5484d!important}
+/* dnes – bez rámčeka */
+html body .card.card.today:not(.sel){border-color:var(--line)!important}
+/* vybraný kontakt – pásiky po bokoch vo farbe okna */
+html body .card.card.sel{border-left-color:#4a6fb5!important;border-right-color:#4a6fb5!important}
+html body .card.card.sel.fut{border-left-color:#2f5bd0!important;border-right-color:#2f5bd0!important}
+html body .card.card.sel.over{border-left-color:#e5484d!important;border-right-color:#e5484d!important}
+html body .card.card.sel.today{border-left-color:#0ea5e9!important;border-right-color:#0ea5e9!important}
+html body .card.card.sel.act{border-left-color:#f5c518!important;border-right-color:#f5c518!important}
+html body .card.card.sel.klient{border-left-color:#3fb950!important;border-right-color:#3fb950!important}
+/* oddeľovač medzi dátumom a obsahom – svetlejší */
+html body .card .c-left{border-right:1.5px solid rgba(255,255,255,.5)}
+html[data-theme="light"] body .card .c-left{border-right-color:rgba(0,0,0,.35)}
+/* úvodná obrazovka bez pripojenia */
+.setupBox{padding:1rem .5rem;display:grid;gap:.6rem}
+.setupBox.big{padding-top:calc(env(safe-area-inset-top) + 3rem)}
 </style>
 </head>
 <body>
@@ -736,7 +759,7 @@ html[data-theme="light"] body .dgrp.over{color:#e05252!important}
    CRM – single-file app (GitHub Pages) + Apps Script API
    ========================================================= */
 /* ===== PRIPOJENIE – vlož sem URL z Apps Scriptu (…/exec), potom sa už nič nezadáva ===== */
-const CRM_URL = '';
+const CRM_URL = 'https://script.google.com/macros/s/AKfycbxzB8ANPyrB0DblCBzKpz4FPa4ufG13TOS7eU_MSLd_tcNUcxqII09p04iRrXCMKjvA/exec';
 const LS = localStorage;
 const $ = (s, e = document) => e.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1048,7 +1071,13 @@ function render() {
 
 function renderList() {
   const p = $('#listPane');
-  if (!S.data) { p.innerHTML = `<div class="empty big">${S.cfg.url ? 'Načítavam…' : 'Nastav pripojenie v Nastaveniach.'}</div>`; return; }
+  if (!S.data) {
+    const err = S.sy && S.sy.st === 'err' && S.sy.msg ? `<p class="rcP">${esc(S.sy.msg)}</p>` : '';
+    p.innerHTML = S.cfg.url
+      ? `<div class="empty big">Načítavam…</div><div class="setupBox">${err}<button type="button" class="cta" data-act="refresh">Skúsiť znova</button><button type="button" class="cta ghost" data-nav="settings">Nastavenia</button></div>`
+      : `<div class="setupBox big"><div class="gtitle">Pripojenie</div><p class="rcP">Vlož URL Apps Script web aplikácie (…/exec). Apka pridaná na plochu iPhonu si údaje z Safari neberie, preto ju treba zadať aj tu.</p><input type="url" id="sUrlQuick" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"><button type="button" class="cta" data-act="quickcfg">Uložiť a načítať</button></div>`;
+    return;
+  }
   p.innerHTML = `<div class="lhead"><div class="ltitle"><span class="logo">CRM</span><h1>Kontakty</h1><span class="cnt" id="cnt"></span><span class="sp"></span><div class="sync" id="sync"></div>
     <button class="ib" data-act="refresh" aria-label="Obnoviť">${ico('refresh')}</button>
     <button class="ib" data-nav="settings" aria-label="Nastavenia">${ico('gear')}</button></div>
@@ -1824,6 +1853,11 @@ document.addEventListener('click', e => {
     else if (a === 'selectallcols') {
       S.map = {}; for (const f of FIELDS) if (S.auto[f.k]) S.map[f.k] = S.auto[f.k];
       LS.setItem('crm.map', JSON.stringify(S.map)); buildMap(); render(); openSettings();
+    }
+    else if (a === 'quickcfg') {
+      const u = (($('#sUrlQuick') || {}).value || '').trim();
+      if (!/^https:\/\/script\.google\.com\//.test(u)) { toast('Vlož celú URL web aplikácie (…/exec)', true); return; }
+      S.cfg = {url: u, token: ''}; LS.setItem('crm.cfg', JSON.stringify(S.cfg)); render(); load();
     }
     else if (a === 'copycfg') {
       const link = location.origin + location.pathname + '#cfg=' + btoa(JSON.stringify(S.cfg));
