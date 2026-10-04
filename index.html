@@ -2426,8 +2426,44 @@ function loadXLSX() {
     document.head.appendChild(sc);
   });
 }
+/* vzorce bez uloženej hodnoty (súbor nebol otvorený v Exceli) – dopočítam jednoduché vzorce sám */
+function fillFormulas(ws) {
+  const cache = {};
+  const val = (a, d) => {
+    const c = ws[a]; if (!c) return 0;
+    if (a in cache) return cache[a];
+    if (c.f && (c.v === undefined || c.v === '' || (c.v === 0 && c.t !== 'n') || c.t === 'z')) {
+      let v = 0;
+      if (d < 8) { try { v = ev(c.f, d + 1); } catch (e) { v = 0; } }
+      cache[a] = v; return v;
+    }
+    return typeof c.v === 'number' ? c.v : (parseFloat(String(c.v).replace(',', '.')) || 0);
+  };
+  const cells = rg => { const R = XLSX.utils.decode_range(rg.includes(':') ? rg : rg + ':' + rg), o = [];
+    for (let r = R.s.r; r <= R.e.r; r++) for (let c = R.s.c; c <= R.e.c; c++) o.push(XLSX.utils.encode_cell({r, c})); return o; };
+  const ev = (f, d) => {
+    f = String(f).replace(/\$/g, '');
+    const R = '[A-Z]{1,2}\\d+(?::[A-Z]{1,2}\\d+)?';
+    let e = f.replace(new RegExp('SUMPRODUCT\\((' + R + '),(' + R + ')\\)', 'gi'), (m, a, b) => {
+      const A = cells(a), B = cells(b); return '(' + A.reduce((t, x, i) => t + val(x, d) * val(B[i], d), 0) + ')'; });
+    e = e.replace(new RegExp('SUM\\((' + R + ')\\)', 'gi'), (m, a) => '(' + cells(a).reduce((t, x) => t + val(x, d), 0) + ')');
+    e = e.replace(/\b[A-Z]{1,2}\d+\b/g, a => '(' + val(a, d) + ')');
+    if (!/^[0-9+\-*\/().eE\s]+$/.test(e)) return 0;
+    const v = Function('"use strict";return (' + e + ')')();
+    return isFinite(v) ? v : 0;
+  };
+  Object.keys(ws).forEach(a => {
+    if (a[0] === '!') return;
+    const c = ws[a];
+    if (c && c.f && (c.v === undefined || c.v === '' || c.v === 0 || c.t === 'z')) {
+      const v = val(a, 0);
+      if (typeof v === 'number' && v) { c.v = v; c.t = 'n'; }
+    }
+  });
+}
 function parseAnalysis(wb) {
   const name = wb.SheetNames.find(n => /analyz/.test(norm(n))) || wb.SheetNames[0];
+  fillFormulas(wb.Sheets[name]);
   const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], {header: 1, raw: true, defval: ''});
   const txt = x => String(x ?? '').trim();
   const nn = x => typeof x === 'number' ? x : num(x);
@@ -2485,7 +2521,7 @@ async function importAnalysis(file) {
   try {
     toast('Čítam analýzu…');
     await loadXLSX();
-    const wb = XLSX.read(await file.arrayBuffer(), {type: 'array'});
+    const wb = XLSX.read(await file.arrayBuffer(), {type: 'array', sheetStubs: true});
     const A = parseAnalysis(wb);
     const a = norm(A.cust.odb), b = norm(V(r, 'firma'));
     if (a && b && !a.includes(b) && !b.includes(a) && a.split(' ')[0] !== b.split(' ')[0] &&
