@@ -686,6 +686,27 @@ html[data-theme="light"] body .card.card.fut{--cg:color-mix(in srgb,#2563eb 24%,
 /* Klient – celé okno kontaktu v zozname do zelena (má prednosť pred ostatnými farbami) */
 html body .card.card.klient{--cg:color-mix(in srgb,#22a049 40%,var(--panel))}
 html[data-theme="light"] body .card.card.klient{--cg:color-mix(in srgb,#1e7a3c 28%,var(--panel))}
+/* po termíne – čas a dátum svetlejšou červenou */
+html body .card.over .c-left .c-time,html body .card.over .c-left .c-date,html body .c-left.over .c-time,html body .c-left.over .c-date{color:#ff8f8f!important;opacity:1}
+html[data-theme="light"] body .card.over .c-left .c-time,html[data-theme="light"] body .card.over .c-left .c-date,html[data-theme="light"] body .c-left.over .c-time,html[data-theme="light"] body .c-left.over .c-date{color:#e05252!important}
+/* ===== iPhone / úzke displeje ===== */
+@media(max-width:600px){
+  /* zoznam: vľavo hore čas a dátum, vedľa firma + stav, pod tým meno; Nasleduje na celú šírku dole */
+  .card{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"left top" "left sub" "next next";column-gap:.7rem;row-gap:.2rem;align-items:start;padding:.6rem .75rem}
+  .card .c-left{grid-area:left;align-self:stretch;min-width:0!important;padding-right:.7rem}
+  .card .c-main{display:contents}
+  .card .c-top{grid-area:top;min-width:0}
+  .card .c-sub{grid-area:sub;min-width:0;margin-top:0}
+  html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){grid-area:next;margin-top:.35rem;width:100%}
+  /* detail: firma, pod ňou meno, pod tým Stav + Späť + Uložiť vedľa seba */
+  .dhead{flex-wrap:wrap;align-items:center;row-gap:.45rem}
+  .dhead>div[style*="flex:1"]{flex:1 0 calc(100% - 3.4rem)!important;min-width:0}
+  .dhead>.savemsg{order:3;align-self:auto;height:auto;min-height:var(--sth);margin:0}
+  .dhead .stCol{order:4;display:flex;flex:1 0 100%;gap:.4rem;align-items:stretch}
+  .dhead .stCol .saveGrp{display:contents}
+  .dhead .stCol .stsel{grid-column:auto;grid-row:auto;flex:1.3 1 0;width:auto;min-width:0}
+  .dhead .stCol .undoTop,.dhead .stCol .saveTop{flex:1 1 0;width:auto;min-width:0;justify-content:center}
+}
 </style>
 </head>
 <body>
