@@ -707,6 +707,18 @@ html[data-theme="light"] body .card.over .c-left .c-time,html[data-theme="light"
   .dhead .stCol .stsel{grid-column:auto;grid-row:auto;flex:1.3 1 0;width:auto;min-width:0}
   .dhead .stCol .undoTop,.dhead .stCol .saveTop{flex:1 1 0;width:auto;min-width:0;justify-content:center}
 }
+/* Stav v ľavom stĺpci pod dátumom – menší */
+.card .c-left .c-st{margin-top:.3rem;text-align:center;align-self:center}
+.card .c-left .c-st .badge{font-size:.62rem;padding:.04rem .5rem;white-space:nowrap;min-width:0}
+/* Nasleduje v zozname – o veľkosť väčšie, zalamuje sa */
+html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){font-size:.95rem;line-height:1.25;align-items:flex-start}
+html .card .c-next>span{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+html .card .c-next .ico{margin-top:.15em}
+@media(max-width:600px){html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){font-size:1.05rem}}
+/* nadpisy skupín nad kontaktmi */
+html body .dgrp.today{background:none!important;border:0;padding:0;border-radius:0;color:#0ea5e9!important}
+html body .dgrp.over{color:#ff8f8f!important}
+html[data-theme="light"] body .dgrp.over{color:#e05252!important}
 </style>
 </head>
 <body>
@@ -1072,8 +1084,8 @@ function card(r) {
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = ['stretnutie', 'telefonat'].includes(norm(V(r, 'pozicia')));
   return `<div class="card ${c} ${S.sel === r.r ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
-    <div class="c-left ${c} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
-    <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b><span class="c-stcol">${badge(st)}</span></div>
+    <div class="c-left ${c} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
+    <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
 </div>`;
