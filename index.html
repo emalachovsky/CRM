@@ -789,6 +789,54 @@ html body .card.card.sel.klient{border-left-color:#3fb950!important;border-right
   html body #listPane>.empty.big,html body .setupBox.big{padding-top:calc(env(safe-area-inset-top) + 3rem)}
   .ovl{padding-top:calc(env(safe-area-inset-top) + 1.4rem)}
 }
+
+/* ===== v15: kôš, duplicity, placeholdery, po termíne, iPhone ===== */
+.urgCol{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem}
+.urgCol.urgMob{display:none}
+.nextRow{align-items:flex-start}
+.delSw{display:inline-flex;align-items:center;gap:.35rem;background:none;border:1.5px solid var(--ibd);border-radius:12px;color:var(--muted);cursor:pointer;padding:.25rem .6rem;font-size:.82rem;white-space:nowrap}
+.delSw .ico{width:1.1em;height:1.1em}
+.delSw:hover,.delSw:active{color:#e5484d;border-color:#e5484d}
+#undoBar{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom));transform:translate(-50%,150%);z-index:90;display:flex;gap:.8rem;align-items:center;max-width:92vw;
+  background:#f4f6fa;color:#1a2230;border:1px solid #cbd3e0;border-radius:14px;padding:.5rem .5rem .5rem 1rem;box-shadow:0 8px 28px rgba(0,0,0,.5);transition:transform .25s;pointer-events:none}
+#undoBar.show{transform:translate(-50%,0);pointer-events:auto}
+#undoBar button{display:inline-flex;align-items:center;gap:.3rem;border:0;border-radius:10px;padding:.45rem .9rem;background:#1a2230;color:#fff;cursor:pointer;font-size:1rem}
+#undoBar .ico{width:1em;height:1em}
+.dupBad,.dupWarn{margin:.6rem 0;padding:.6rem .8rem;border-radius:12px;font-size:.9rem}
+.dupBad{background:rgba(229,72,77,.14);border:1px solid #e5484d;color:#ff9a9d}
+html[data-theme="light"] .dupBad{color:#8f1620}
+.dupWarn{background:var(--gas-bg);border:1px solid var(--gas-bd)}
+.dupWarn ul{margin:.3rem 0 0;padding-left:1.1rem}
+.dupGrp{border:1px solid var(--line);border-radius:12px;padding:.4rem .5rem;margin:.4rem 0;background:var(--card)}
+.dupItem{cursor:pointer;padding:.4rem .5rem;border-radius:9px}
+.dupItem:hover{background:var(--raise)}
+.dupItem small,.dupGrp>small{color:var(--muted)}
+/* pomôcky (placeholdery) v prázdnych poliach – tmavosivé, nesvietia */
+input::placeholder,textarea::placeholder{color:#4a5260;opacity:1}
+html[data-theme="light"] input::placeholder,html[data-theme="light"] textarea::placeholder{color:#aab2c0}
+/* po termíne – tmavšia červená na čase, dátume aj pásikoch */
+html body .card.over .c-left .c-time,html body .card.over .c-left .c-date,html body .c-left.over .c-time,html body .c-left.over .c-date{color:#d6343b!important;opacity:1}
+html[data-theme="light"] body .card.over .c-left .c-time,html[data-theme="light"] body .card.over .c-left .c-date,html[data-theme="light"] body .c-left.over .c-time,html[data-theme="light"] body .c-left.over .c-date{color:#a8161d!important}
+html body .card.card.sel.over{border-left-color:#b01e26!important;border-right-color:#b01e26!important}
+html body .dgrp.over{color:#d6343b!important}
+html[data-theme="light"] body .dgrp.over{color:#a8161d!important}
+/* iPhone: tlačidlá (Aktivita, analýza) nad záložkami, všetko sa vojde */
+@media(max-width:600px){
+  .tabsRow{flex-direction:column;align-items:stretch;gap:.5rem}
+  .tabsRow .anbox{order:-1;margin:0;width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.4rem .5rem;align-items:end;justify-content:stretch}
+  .anbox #actSlot{grid-column:1;grid-row:1;display:block;flex:none}
+  .anbox #actSlot .dtAct{width:100%;max-width:none;margin:0}
+  .anbox .btn-an{grid-column:2;grid-row:1;white-space:nowrap;align-self:end;height:2.9rem;padding:0 .8rem;font-size:.85rem}
+  .anbox .anok{grid-column:1/-1;grid-row:2;justify-self:start;font-size:.7rem}
+  .tabsRow .tabs{flex-wrap:nowrap;gap:.2rem;width:100%}
+  .tabsRow .tab{flex:1 1 auto;padding:.45rem .3rem;font-size:.82rem;text-align:center;white-space:nowrap}
+  .links{gap:.4rem;margin-bottom:.5rem}
+  .lnk{font-size:.8rem;padding:.25rem .55rem}
+  .callRow{align-items:flex-start}
+  .urgCol.urgMob{display:flex;flex-direction:column;align-items:flex-end;gap:.35rem;margin-left:auto;flex:none}
+  .delSw span{display:none}
+  .delSw{padding:.35rem .5rem}
+}
 </style>
 </head>
 <body>
@@ -799,6 +847,7 @@ html body .card.card.sel.klient{border-left-color:#3fb950!important;border-right
   </div>
 </div>
 <div id="toast"></div>
+<div id="undoBar"></div>
 <div id="modal"></div>
 
 <script>
@@ -842,7 +891,8 @@ const ICONS = {
   chart:'<path d="M18 20V10M12 20V4M6 20v-6"/>',
   pen:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
-  arrow:'<path d="M5 12h14M12 5l7 7-7 7"/>'
+  arrow:'<path d="M5 12h14M12 5l7 7-7 7"/>',
+  trash:'<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/>'
 };
 /* ikona v okienku „Nasleduje“ podľa textu */
 function nextIco(t) {
@@ -1140,13 +1190,13 @@ function renderChips() {
   el.innerHTML = `<button class="chip ${S.chip === 'due' ? 'on' : ''}" data-chip="due">Dnes</button>
     <button class="chip ${S.chip === 'all' && !n ? 'on' : ''}" data-chip="all">Všetky</button>
     <button class="chip stbtn ${n ? 'sel' : ''}" data-stpop>${n ? 'Stav (' + n + ')' : 'Stav'} ▾</button>
-    ${S.stOpen ? `<div class="stpop"><div class="stitem" data-stall><span class="ck">${n ? '' : '✓'}</span>Všetko</div>${statuses().map(x => `<div class="stitem" data-stitem="${esc(x)}"><span class="ck">${S.stSet.has(x) ? '✓' : ''}</span>${badge(x) || esc(x)}</div>`).join('')}</div>` : ''}`;
+    ${S.stOpen ? `<div class="stpop"><div class="stitem" data-stall><span class="ck">${n ? '' : '✓'}</span>Všetko</div><div class="stitem" data-stitem="__none"><span class="ck">${S.stSet.has('__none') ? '✓' : ''}</span>Žiadny</div>${statuses().map(x => `<div class="stitem" data-stitem="${esc(x)}"><span class="ck">${S.stSet.has(x) ? '✓' : ''}</span>${badge(x) || esc(x)}</div>`).join('')}</div>` : ''}`;
 }
 function filtered() {
   const q = norm(S.q), T = todayISO();
   const rows = S.data.contacts.rows.filter(r => {
     if (S.chip === 'due') { const d = DT(r).d; if (!d || d > T) return false; }
-    if (S.stSet.size && !S.stSet.has(V(r, 'stav'))) return false;
+    if (S.stSet.size) { const sv = String(V(r, 'stav')).trim(); if (sv ? !S.stSet.has(V(r, 'stav')) : !S.stSet.has('__none')) return false; }
     if (q) { if (!(r._s || (r._s = norm(Object.values(r.v).join(' ')))).includes(q)) return false; }
     return true;
   });
@@ -1390,8 +1440,9 @@ function callBtns(r) {
   const next = V(r, 'dalsi');
   const urg = isUrg(r);
   const urgBtn = next ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : '';
-  const urgMob = `<div class="urgCol urgMob">${urgBtn}</div>`;
-  const nextHtml = `<div class="nextRow">${next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '<div style="flex:1"></div>'}<div class="urgCol">${urgBtn}</div></div>`;
+  const delBtn = `<button type="button" class="delSw" data-act="delcontact" aria-label="Vymazať celý kontakt" title="Vymazať celý kontakt">${ico('trash')}<span>Vymazať kontakt</span></button>`;
+  const urgMob = `<div class="urgCol urgMob">${urgBtn}${delBtn}</div>`;
+  const nextHtml = `<div class="nextRow">${next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '<div style="flex:1"></div>'}<div class="urgCol">${urgBtn}${delBtn}</div></div>`;
   const nn = String((r.n && S.m.dalsi && r.n[S.m.dalsi]) || '').trim();
   const noteHtml = nn ? `<div class="callnote nxnote">${esc(nn)}</div>` : '';
   if (!ps.length) return nextHtml + noteHtml + `<div class="callRow"><div class="empty" style="margin:0">Žiadne telefónne číslo.</div>${urgMob}</div>`;
@@ -1748,7 +1799,33 @@ function openNewContact() {
     <form id="fNew" autocomplete="off">${hs.map(h => {
       const inp = fieldInput(h, S.m.datum === h ? todayISO() : '');
       return `<label>${esc(h)}${S.m.firma === h ? inp.replace('<input ', '<input list="dlFirmy" ') : inp}</label>`;
-    }).join('')}<button class="cta" type="submit">Pridať kontakt</button></form>`);
+    }).join('')}<div id="dupBox"></div><button class="cta" type="submit">Pridať kontakt</button></form>`);
+}
+function textHits(name) {
+  const n = norm(name); if (n.length < 3 || !S.data) return [];
+  const needle = ' ' + n + ' ', out = [];
+  for (const r of S.data.contacts.rows) {
+    const f = norm(V(r, 'firma')), o = norm(V(r, 'obch')); let why = '';
+    if (f && f === n) why = 'rovnaký názov';
+    else if (f && ((' ' + f + ' ').includes(needle) || (f.length >= 4 && needle.includes(' ' + f + ' ')))) why = 'podobný názov firmy';
+    else if (o && (' ' + o + ' ').includes(needle)) why = 'v názve odberateľa';
+    else if (n.length >= 4 && (' ' + (r._s || (r._s = norm(Object.values(r.v).join(' ')))) + ' ').includes(needle)) why = 'nájdené v texte kontaktu';
+    if (why) out.push({r, why});
+  }
+  return out;
+}
+function newDupCheck(form) {
+  const box = form.querySelector('#dupBox'); if (!box) return {block: false, hits: []};
+  const val = h => { const e = h && form.querySelector('[data-h="' + CSS.escape(h) + '"]'); return e ? e.value.trim() : ''; };
+  const nm = val(S.m.firma), ic = val(S.m.ico);
+  let html = '', block = false;
+  const d = ic ? findDupIco(ic, 0, '') : null;
+  if (d) { block = true; html += `<div class="dupBad">⛔ IČO ${esc(ic)} už má firma „${esc(V(d, 'firma'))}“. Takýto kontakt sa nedá pridať.</div>`; }
+  const hits = nm ? textHits(nm) : [];
+  if (hits.length) html += `<div class="dupWarn">⚠️ „${esc(nm)}“ sa už v CRM vyskytuje:<ul>${hits.slice(0, 6).map(h => `<li>${esc(V(h.r, 'firma') || '(bez firmy)')} <small>– ${h.why}</small></li>`).join('')}</ul>${hits.length > 6 ? '<small>…a ďalšie</small>' : ''}</div>`;
+  box.innerHTML = html;
+  const b = form.querySelector('button[type=submit]'); if (b) b.disabled = block;
+  return {block, hits};
 }
 const icoNorm = x => String(x || '').replace(/\D/g, '');
 function findDupIco(ico, exceptRow, ownFirma) {
@@ -1766,7 +1843,9 @@ async function saveNew(form) {
   const nm = S.m.firma && vals[S.m.firma] ? specVal(vals[S.m.firma]) : '';
   if (findDupName(nm)) { toast(`Firma „${nm}“ už v zozname existuje – nový záznam som nezapísal.`, true); return; }
   const ic = S.m.ico && vals[S.m.ico] ? specVal(vals[S.m.ico]) : '';
-  const d2 = findDupIco(ic, 0, ''); if (d2 && !confirm(`⚠️ IČO ${ic} už má firma „${V(d2, 'firma')}“.\nNaozaj pridať nový kontakt?`)) return;
+  const d2 = findDupIco(ic, 0, ''); if (d2) { toast(`IČO ${ic} už má firma „${V(d2, 'firma')}“ – nedá sa pridať.`, true); newDupCheck(form); return; }
+  const hits = textHits(nm);
+  if (hits.length && !confirm(`⚠️ „${nm}“ sa už v CRM vyskytuje:\n\n` + hits.slice(0, 6).map(h => '• ' + (V(h.r, 'firma') || '(bez firmy)') + ' – ' + h.why).join('\n') + `\n\nNaozaj pridať ako nový kontakt?`)) return;
   busy(form, true);
   try {
     const tmp = {v: Object.fromEntries(Object.entries(vals).map(([h, s]) => [h, specVal(s)]))};
@@ -1777,6 +1856,70 @@ async function saveNew(form) {
     S.data.contacts.rows.push(row); pushActivity(act); persist(); closeModal();
     toast('Kontakt pridaný ✔'); S.view = 'contacts'; S.q = ''; S.chip = 'all'; openSel(row.r);
   } catch (e) { busy(form, false); toast(e.message, true); }
+}
+
+/* ---------- vymazanie kontaktu + späť ---------- */
+let undoBarT;
+function showUndoBar(msg) {
+  const b = $('#undoBar'); if (!b) return;
+  b.innerHTML = `<span>${esc(msg)}</span><button type="button" data-act="undodel">${ico('back')}Späť</button>`;
+  b.classList.add('show'); clearTimeout(undoBarT); undoBarT = setTimeout(hideUndoBar, 30000);
+}
+function hideUndoBar() { const b = $('#undoBar'); if (b) b.classList.remove('show'); }
+async function deleteContact() {
+  const r = rowBy(S.sel); if (!r) return;
+  const nm = V(r, 'firma') || '(bez firmy)', os = V(r, 'osoba');
+  if (!confirm(`Naozaj vymazať celý kontakt „${nm}“${os ? ' (' + os + ')' : ''}?\nVymaže sa aj zo Sheetu. Tlačidlom „Späť“ ho vrátiš.`)) return;
+  try {
+    const act = actFor(r, 'Vymazaný kontakt', '', null);
+    const j = await api('delete', {sheet: 'contacts', row: r.r, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    const rows = S.data.contacts.rows; rows.splice(rows.indexOf(r), 1);
+    rows.forEach(x => { if (x.r > r.r) x.r--; });
+    pushActivity(act); S.delUndo = {id: j.trashId, name: nm};
+    S.sel = null; S.dirty = false; S.undo = null; persist();
+    if (history.state && history.state.d) history.back();
+    render(); showUndoBar('Kontakt „' + nm + '“ bol vymazaný');
+  } catch (e) {
+    toast(/Neznáma akcia/.test(e.message) ? 'Server beží na starej verzii API. V Apps Scripte vlož nový CRM_API.gs a nasaď Novú verziu.' : e.message, true);
+    if (e.conflict) load(true);
+  }
+}
+async function undoDelete() {
+  const u = S.delUndo; if (!u) return;
+  hideUndoBar();
+  try {
+    const j = await api('restore', {sheet: 'contacts', id: u.id, activity: {typ: 'Kontakt obnovený', firma: u.name}});
+    S.delUndo = null;
+    loading = false; await load(true);
+    const r = S.data && S.data.contacts.rows.find(x => x.r === j.row);
+    if (r) openSel(r.r);
+    toast('Kontakt vrátený späť ✔');
+  } catch (e) { toast(e.message, true); showUndoBar('Vrátenie sa nepodarilo – skús znova'); }
+}
+/* ---------- kontrola duplicity ---------- */
+function dupReport() {
+  const rows = S.data.contacts.rows.filter(r => !r.fd);
+  const byIco = new Map(), byName = new Map();
+  rows.forEach(r => {
+    const i = icoNorm(V(r, 'ico')); if (i.length >= 6) { if (!byIco.has(i)) byIco.set(i, []); byIco.get(i).push(r); }
+    const n = norm(V(r, 'firma')); if (n) { if (!byName.has(n)) byName.set(n, []); byName.get(n).push(r); }
+  });
+  const key = g => g.map(r => r.r).sort((a, b) => a - b).join(',');
+  const nameGroups = [...byName.values()].filter(g => g.length > 1), nameKeys = new Set(nameGroups.map(key));
+  const icoGroups = [...byIco.entries()].filter(([, g]) => g.length > 1 && !nameKeys.has(key(g)));
+  const names = [...byName.keys()].filter(n => n.length >= 5), sim = [];
+  for (let i = 0; i < names.length && sim.length < 200; i++) for (let j = 0; j < names.length; j++) {
+    if (i === j) continue;
+    if (names[i].length < names[j].length || (names[i].length === names[j].length && i > j)) continue;
+    if ((' ' + names[i] + ' ').includes(' ' + names[j] + ' ')) { sim.push([names[i], names[j]]); if (sim.length >= 200) break; }
+  }
+  const item = r => `<div class="dupItem" data-gorow="${r.r}"><b class="firma">${esc(V(r, 'firma') || '(bez firmy)')}</b> <small>${esc(V(r, 'osoba'))}${V(r, 'ico') ? ' · IČO ' + esc(V(r, 'ico')) : ''} · riadok ${r.r}</small></div>`;
+  let html = '';
+  if (icoGroups.length) html += `<div class="gtitle">Rovnaké IČO (${icoGroups.length})</div>` + icoGroups.map(([i, g]) => `<div class="dupGrp"><small>IČO ${esc(i)}</small>${g.map(item).join('')}</div>`).join('');
+  if (nameGroups.length) html += `<div class="gtitle">Rovnaký názov (${nameGroups.length})</div>` + nameGroups.map(g => `<div class="dupGrp">${g.map(item).join('')}</div>`).join('');
+  if (sim.length) html += `<div class="gtitle">Podobné názvy (${sim.length})</div>` + sim.map(([a, b]) => `<div class="dupGrp"><small>„${esc(b)}“ je súčasťou „${esc(a)}“</small>${[byName.get(a)[0], byName.get(b)[0]].map(item).join('')}</div>`).join('');
+  if (!html) html = '<div class="miss okm">✔ Žiadne duplicity – IČO ani názvy sa nezhodujú.</div>';
+  modal(`<div class="mhead"><h2>Kontrola duplicity</h2><button class="ib" data-act="close">${ico('x')}</button></div><p class="rcP">Skontrolovaných ${rows.length} kontaktov. Klikni na kontakt a otvorí sa.</p>${html}`);
 }
 
 /* ---------- navigácia ---------- */
@@ -1823,6 +1966,7 @@ function openSettings() {
       <button class="cta ghost" type="button" data-act="copycfg" style="margin-top:.6rem">Skopírovať odkaz pre iné zariadenie</button>
     </form>
     ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Zoznamy Stav a Aktivita</div>
+      <button class="cta ghost" type="button" data-act="dupcheck" style="margin-bottom:.6rem">Kontrola duplicity (IČO a názvy)</button>
       <button class="cta ghost" type="button" data-act="reconcile">Zosúladiť Stav a Aktivitu so zoznamami</button>
       <p class="rcP">Hodnoty v kontaktoch (aj ich veľkosť písmen) sa nahradia hodnotami zo zoznamov v Sheete. Zmeny sa zapíšu aj do Sheetu.</p>` : ''}
     ${hs.length ? unmappedHtml(hs) : ''}
@@ -1847,6 +1991,7 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-stitem]'))) { const v = el.dataset.stitem; S.stSet.has(v) ? S.stSet.delete(v) : S.stSet.add(v); saveStFilter(); S.limit = 150; renderChips(); renderListBody(); return; }
   if ((el = t.closest('[data-chip]'))) { S.chip = el.dataset.chip; S.stOpen = false; if (S.chip === 'all') { S.stSet.clear(); saveStFilter(); } S.limit = 150; renderChips(); renderListBody(); return; }
   if ((el = t.closest('[data-open]'))) { openSel(Number(el.dataset.open)); return; }
+  if ((el = t.closest('[data-gorow]'))) { closeModal(); S.view = 'contacts'; S.q = ''; S.chip = 'all'; S.stSet.clear(); saveStFilter(); openSel(Number(el.dataset.gorow)); return; }
   if ((el = t.closest('[data-gotoact]'))) {
     const [f, o] = el.dataset.gotoact.split('|');
     const r = S.data.contacts.rows.find(r => norm(V(r, 'firma')) === norm(f) && (!o || norm(V(r, 'osoba')) === norm(o))) || S.data.contacts.rows.find(r => norm(V(r, 'firma')) === norm(f));
@@ -1876,6 +2021,9 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-act]'))) {
     const a = el.dataset.act;
     if (a === 'back') closeSel();
+    else if (a === 'delcontact') deleteContact();
+    else if (a === 'undodel') undoDelete();
+    else if (a === 'dupcheck') dupReport();
     else if (a === 'undo') undoLast();
     else if (a === 'refresh') load();
     else if (a === 'savenote') saveNote(el);
@@ -1928,6 +2076,7 @@ document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'anFile') return;
   if (t.id === 'q') { S.q = t.value; S.limit = 150; renderListBody(); return; }
+  if (t.closest('#fNew')) { newDupCheck(t.closest('#fNew')); return; }
   if (t.closest('#detailPane') && t.dataset.stsel === undefined) markDirty();
 });
 document.addEventListener('change', e => {
