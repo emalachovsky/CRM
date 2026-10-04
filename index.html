@@ -1538,6 +1538,15 @@ function listMismatches(exact) {
   });
   return out;
 }
+function colorsInfoText() {
+  const c = S.data && S.data.contacts && S.data.contacts.colors;
+  if (c === undefined) return 'Farby zo Sheetu: Apps Script ich ešte neposiela – nasaď novú verziu CRM_API.gs (Nasadiť → Spravovať nasadenia → ✎ → Nová verzia → Nasadiť) a načítaj dáta znova.';
+  const n = k => { const h = S.m[k]; return h && c[h] ? Object.keys(c[h]).length : 0; };
+  const a = n('pozicia'), st = n('stav');
+  const i = (S.data.contacts.colorsInfo) || {};
+  const dbg = i.error ? ' Chyba v skripte: ' + i.error : (i.rules !== undefined ? ' (pravidiel podmieneného formátovania v záložke: ' + i.rules + ', z toho prečítaných: ' + i.parsed + ')' : '');
+  return 'Farby zo Sheetu – Aktivita: ' + a + ', Stav: ' + st + '.' + dbg;
+}
 function checkLists(force) {
   if (!S.data || !S.data.contacts || document.querySelector('#modal .ovl')) return;
   const mm = listMismatches(!!force);
@@ -2256,7 +2265,8 @@ function openSettings() {
     ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Zoznamy Stav a Aktivita</div>
       <button class="cta ghost" type="button" data-act="dupcheck" style="margin-bottom:.6rem">Kontrola duplicity (IČO a názvy)</button>
       <button class="cta ghost" type="button" data-act="reconcile">Zosúladiť Stav a Aktivitu so zoznamami</button>
-      <p class="rcP">Hodnoty v kontaktoch (aj ich veľkosť písmen) sa nahradia hodnotami zo zoznamov v Sheete. Zmeny sa zapíšu aj do Sheetu.</p>` : ''}
+      <p class="rcP">Hodnoty v kontaktoch (aj ich veľkosť písmen) sa nahradia hodnotami zo zoznamov v Sheete. Zmeny sa zapíšu aj do Sheetu.</p>
+      <p class="rcP">${esc(colorsInfoText())}</p>` : ''}
     ${hs.length ? unmappedHtml(hs) : ''}
     ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Spárovanie stĺpcov (${hs.length})</div>
       <button class="cta ghost" type="button" data-act="reloadcols" style="margin-bottom:.5rem">Znovu načítať stĺpce zo Sheetu</button>
