@@ -916,6 +916,38 @@ html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){font-fami
   .anbox .anok{position:absolute;right:0;bottom:0;grid-column:auto;grid-row:auto;background:none;border:0;box-shadow:none;padding:0;font-size:.85rem;color:#6fd3b0;gap:.35rem}
   .anbox .anok .antxt{display:none}
 }
+
+/* ===== v18 ===== */
+:root{--note-gr:#c3cad5}
+html[data-theme="light"]{--note-gr:#6b7585}
+
+/* 1) Stav v okne kontaktu (zoznam) – väčší a tučný */
+html body .card .c-left .c-st .badge{font-size:.82rem;font-weight:700!important;padding:.08rem .45rem;line-height:1.25}
+
+/* 2) Hovor – dátum vycentrovaný v okienku, zástupný dátum rovnakou farbou ako dátum */
+#fCall input[type=date]{text-align:center}
+#fCall input[type=date]::-webkit-date-and-time-value{text-align:center}
+#fCall input[type=date]::-webkit-datetime-edit{text-align:center}
+#fCall .dwrap .dph,#fCall .dtNarrow .dwrap .dph{left:0;right:0;text-align:center;color:var(--dt-yel)}
+
+/* 3) Poznámka k Nasleduje – hneď pod oknom Nasleduje, svetlosivá, v jednom riadku s tlačidlom Vymazať kontakt */
+.nxRow{display:flex;align-items:center;gap:.6rem;margin:.1rem 0 .8rem}
+.nxRow .callnote.nxnote{flex:1 1 auto;min-width:0;margin:0;padding:0 .3rem;color:var(--note-gr);opacity:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nxRow .delSw{flex:none;margin-left:auto}
+@media(max-width:600px){.delSw span{display:inline}.delSw{padding:.25rem .6rem}}
+
+/* 4) Nasleduje v zozname kontaktov – späť Helvetica */
+html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:400!important;font-stretch:normal;letter-spacing:0}
+
+/* 5) iPhone – dátum načítania analýzy: sivý ako „Uložené do kalendára“, veľkosť ako dátum, 1 riadok, vycentrovaný pod tlačidlom */
+@media(max-width:600px){
+  .tabsRow .anbox{padding-bottom:1.6rem}
+  html body .anbox .anok{left:auto;right:0;bottom:0;width:calc(50% - .25rem);display:flex;justify-content:center;align-items:center;gap:.3rem;text-align:center;white-space:nowrap;font-size:1rem;line-height:1.2;color:var(--muted)}
+  html body .anbox .anok .anchk{color:var(--muted)}
+}
+
+/* 6) Nasleduje hore pod menom pri Urgent – tmavšia červená, svetlejšia žltá, tieňovanie ako v oknách */
+html .nextCall.urg{background:linear-gradient(90deg,#fffadc 0%,#f6edb4 55%,#e9dd9a 100%);border-color:#dccf84;color:#7a0e17}
 </style>
 </head>
 <body>
@@ -1532,10 +1564,10 @@ function callBtns(r) {
   const urg = isUrg(r);
   const urgBtn = next ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : '';
   const delBtn = `<button type="button" class="delSw" data-act="delcontact" aria-label="Vymazať celý kontakt" title="Vymazať celý kontakt">${ico('trash')}<span>Vymazať kontakt</span></button>`;
-  const urgMob = `<div class="urgCol urgMob">${urgBtn}${delBtn}</div>`;
-  const nextHtml = `<div class="nextRow">${next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '<div style="flex:1"></div>'}<div class="urgCol">${urgBtn}${delBtn}</div></div>`;
+  const urgMob = `<div class="urgCol urgMob">${urgBtn}</div>`;
+  const nextHtml = `<div class="nextRow">${next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '<div style="flex:1"></div>'}<div class="urgCol">${urgBtn}</div></div>`;
   const nn = String((r.n && S.m.dalsi && r.n[S.m.dalsi]) || '').trim();
-  const noteHtml = nn ? `<div class="callnote nxnote">${esc(nn)}</div>` : '';
+  const noteHtml = `<div class="nxRow"><div class="callnote nxnote">${esc(nn)}</div>${delBtn}</div>`;
   if (!ps.length) return nextHtml + noteHtml + `<div class="callRow"><div class="empty" style="margin:0">Žiadne telefónne číslo.</div>${urgMob}</div>`;
   return nextHtml + noteHtml + `<div class="callRow"><div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
     const main = p.k === 'tel', extra = [p.label, p.note].filter(Boolean).join(' · ');
