@@ -982,6 +982,40 @@ html[data-theme="light"] .tab.on{background:linear-gradient(180deg,color-mix(in 
 
 /* Všetky údaje – jemný rámček na nevyplnených Aktivita a Stav */
 select.pillSel:has(option[value=""]:checked){border:2px solid var(--ibd)}
+
+/* ===== v19 ===== */
+/* po termíne – čas a dátum svetločervené, hrubší tmavočervený obrys */
+html body .card.over .c-left .c-time,html body .card.over .c-left .c-date,html body .c-left.over .c-time,html body .c-left.over .c-date{color:#ff9a9a!important;opacity:1;-webkit-text-stroke:3px #7f1118;paint-order:stroke fill;text-shadow:none}
+html[data-theme="light"] body .card.over .c-left .c-time,html[data-theme="light"] body .card.over .c-left .c-date,html[data-theme="light"] body .c-left.over .c-time,html[data-theme="light"] body .c-left.over .c-date{color:#f08a8a!important;-webkit-text-stroke:3px #7a0f16;text-shadow:none}
+/* Načítať analýzu – tmavšia modrá, svetložltý text */
+html body .btn-an,html[data-theme="light"] body .btn-an{background:linear-gradient(135deg,#1f3f94,#13296b);background-clip:border-box;border:1.5px solid #3a5fc4;color:#fff1a8;box-shadow:none}
+/* prázdny dátum v Hovor – tmavosivý */
+#fCall .dwrap:not(.has) .dph,#fCall .dtNarrow .dwrap:not(.has) .dph{color:#4a5260}
+html[data-theme="light"] #fCall .dwrap:not(.has) .dph{color:#aab2c0}
+/* Urgent za riadkom „Čo nasleduje“, na iPhone pod ním */
+.nxIn{display:flex;align-items:flex-end;gap:.8rem;margin-top:.8rem}
+.nxIn>label{flex:1 1 auto;min-width:0;margin-top:0}
+.nxInUrg{flex:none;display:flex;align-items:center;height:2.6rem;margin-bottom:.8rem}
+.nxInUrg:empty{display:none}
+@media(max-width:600px){.nxIn{flex-direction:column;align-items:stretch;gap:0}.nxInUrg{height:auto;margin:-.2rem 0 .8rem}}
+.nxRow{margin:.35rem 0 .1rem}
+.nxRow:has(.nxnote:empty){display:none}
+/* Vymazať kontakt – dole do stredu pod všetkým */
+.delWrap{display:flex;justify-content:center;margin:1.6rem 0 .8rem}
+.delWrap .delSw,.delWrap .delSw span{display:inline-flex}
+.delWrap .delSw{padding:.45rem 1rem;font-size:.9rem}
+.delWrap .delSw span{display:inline!important}
+/* iPhone – hlavička s Stav / Späť / Uložiť čo najnižšia */
+@media(max-width:600px){
+  :root{--sth:2rem}
+  html body .dhead{padding-bottom:.35rem;row-gap:.3rem}
+  html body .dhead .stCol{gap:.35rem}
+  html body .dhead .stsel,html body .dhead .saveTop,html body .dhead .undoTop{font-size:.92rem!important;line-height:1}
+  html body .dhead .stCol .stsel{padding:0 1.9rem 0 .6rem!important;background-position:calc(100% - 1rem) 50%,calc(100% - .72rem) 50%!important}
+  html body .dhead .stCol .saveTop{padding:0 .4rem}
+  html body .dhead .back{width:2.1rem;height:2.1rem}
+  html body .dhead>.savemsg{min-height:0;padding:.1rem .6rem;font-size:.85rem}
+}
 </style>
 </head>
 <body>
@@ -1345,7 +1379,7 @@ function renderChips() {
   const el = $('#chips'); if (!el) return;
   const n = S.stSet.size;
   el.innerHTML = `<button class="chip ${S.chip === 'due' ? 'on' : ''}" data-chip="due">Dnes</button>
-    <button class="chip ${S.chip === 'all' && !n ? 'on' : ''}" data-chip="all">Všetky</button>
+    <button class="chip ${S.chip === 'all' ? 'on' : ''}" data-chip="all">Všetky</button>
     <button class="chip stbtn ${n ? 'sel' : ''}" data-stpop>${n ? 'Stav (' + n + ')' : 'Stav'} ▾</button>
     ${S.stOpen ? `<div class="stpop"><div class="stitem" data-stall><span class="ck">${n ? '' : '✓'}</span>Všetko</div><div class="stitem" data-stitem="__none"><span class="ck">${S.stSet.has('__none') ? '✓' : ''}</span>Žiadny</div>${statuses().map(x => `<div class="stitem" data-stitem="${esc(x)}"><span class="ck">${S.stSet.has(x) ? '✓' : ''}</span>${badge(x) || esc(x)}</div>`).join('')}</div>` : ''}`;
 }
@@ -1592,18 +1626,18 @@ function renderDetail() {
   const r = rowBy(S.sel);
   p.innerHTML = r ? contactDetail(r) : '<div class="ph">Kontakt sa nenašiel.</div>';
 }
-const urgBtnHtml = r => { const urg = isUrg(r); return V(r, 'dalsi') ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : ''; };
+const urgBtnHtml = r => { const urg = isUrg(r); return S.m.dalsi ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : ''; };
 const delBtnHtml = () => `<button type="button" class="delSw" data-act="delcontact" aria-label="Vymazať celý kontakt" title="Vymazať celý kontakt">${ico('trash')}<span>Vymazať kontakt</span></button>`;
 /* Nasleduje pod menom v hlavičke + pod ním poznámka k Nasleduje v jednom riadku s tlačidlom Vymazať kontakt */
 function nextHeadHtml(r) {
   const next = V(r, 'dalsi'), urg = isUrg(r);
   const nn = String((r.n && S.m.dalsi && r.n[S.m.dalsi]) || '').trim();
   return (next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '') +
-    `<div class="nxRow"><div class="callnote nxnote">${esc(nn)}</div><span class="nxUrg">${urgBtnHtml(r)}</span>${delBtnHtml()}</div>`;
+    `<div class="nxRow"><div class="callnote nxnote">${esc(nn)}</div></div>`;
 }
 function callBtns(r) {
   const ps = phones(r);
-  const urgMob = `<div class="urgCol urgMob">${urgBtnHtml(r)}</div>`;
+  const urgMob = '';
   if (!ps.length) return `<div class="callRow"><div class="empty" style="margin:0">Žiadne telefónne číslo.</div>${urgMob}</div>`;
   return `<div class="callRow"><div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
     const main = p.k === 'tel', extra = [p.label, p.note].filter(Boolean).join(' · ');
@@ -1636,6 +1670,10 @@ function contactDetail(r) {
     <div id="tabBody">${tabBody(r)}</div>`;
 }
 function tabBody(r) {
+  const h = tabBodyInner(r);
+  return S.tab === 'hist' ? h : h + `<div class="delWrap">${delBtnHtml()}</div>`;
+}
+function tabBodyInner(r) {
   if (S.tab === 'hovor') return tabHovor(r);
   if (S.tab === 'firma') return companyBlock(r);
   if (S.tab === 'hist') {
@@ -1666,7 +1704,7 @@ function tabHovor(r) {
     ${phs ? `<div class="ph2">${phs}</div>` : ''}
     <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder=" "></textarea></label>
     <button type="button" class="btn-sm" data-act="savenote">Vložiť poznámku</button>
-    ${S.m.dalsi ? `<label style="margin-top:.8rem">Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label>
+    ${S.m.dalsi ? `<div class="nxIn"><label>Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label><div class="nxInUrg">${urgBtnHtml(r)}</div></div>
       <label>Poznámka k Nasleduje<input type="text" data-note="${A('dalsi')}" value="${esc((r.n && r.n[S.m.dalsi]) || '')}"></label>
       <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qnx="${esc(x)}">${x}</button>`).join('')}</div>` : ''}
     <div id="notesBox">${notesHtml(r)}</div>
@@ -2186,7 +2224,7 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-stpop]'))) { S.stOpen = !S.stOpen; renderChips(); return; }
   if ((el = t.closest('[data-stall]'))) { S.stSet.clear(); saveStFilter(); S.limit = 150; renderChips(); renderListBody(); return; }
   if ((el = t.closest('[data-stitem]'))) { const v = el.dataset.stitem; S.stSet.has(v) ? S.stSet.delete(v) : S.stSet.add(v); saveStFilter(); S.limit = 150; renderChips(); renderListBody(); return; }
-  if ((el = t.closest('[data-chip]'))) { S.chip = el.dataset.chip; S.stOpen = false; if (S.chip === 'all') { S.stSet.clear(); saveStFilter(); } S.limit = 150; renderChips(); renderListBody(); return; }
+  if ((el = t.closest('[data-chip]'))) { S.chip = el.dataset.chip; S.stOpen = false; S.limit = 150; renderChips(); renderListBody(); return; }
   if ((el = t.closest('[data-open]'))) { openSel(Number(el.dataset.open)); return; }
   if ((el = t.closest('[data-gorow]'))) { closeModal(); S.view = 'contacts'; S.q = ''; S.chip = 'all'; S.stSet.clear(); saveStFilter(); openSel(Number(el.dataset.gorow)); return; }
   if ((el = t.closest('[data-gotoact]'))) {
