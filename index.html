@@ -1148,7 +1148,18 @@ async function applyLists() {
       const g = mm[gi], map = {};
       g.items.forEach((it, ii) => { const sel = document.querySelector(`[data-rc="${gi}:${ii}"]`); if (sel && sel.value) map[it.v] = sel.value; });
       if (!Object.keys(map).length) continue;
-      await api('bulkrep', {header: g.h, map});
+      try { await api('bulkrep', {header: g.h, map}); }
+      catch (e) {
+        if (!/Neznáma akcia/i.test(e.message)) throw e;
+        /* starší nasadený skript bez 'bulkrep' – zápis po riadkoch cez 'update' */
+        const nm0 = {}; Object.keys(map).forEach(k => nm0[norm(k)] = map[k]);
+        const todo = S.data.contacts.rows.filter(r => { const v = norm(r.v[g.h] ?? ''); return v && nm0[v] !== undefined; });
+        let i = 0;
+        for (const r of todo) {
+          i++; if (btn) btn.textContent = 'Zapisujem ' + i + '/' + todo.length + '…';
+          await api('update', {sheet: 'contacts', row: r.r, values: {[g.h]: nm0[norm(r.v[g.h])]}});
+        }
+      }
       const nm = {}; Object.keys(map).forEach(k => nm[norm(k)] = map[k]);
       S.data.contacts.rows.forEach(r => { const v = norm(r.v[g.h] ?? ''); if (v && nm[v] !== undefined) { r.v[g.h] = nm[v]; total++; } });
     }
