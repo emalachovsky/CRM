@@ -574,14 +574,15 @@ html .call,html .call.main,html .call.alt{min-height:2.5rem;padding:.2rem 1rem;b
 /* Telefón 2 – sivé písmo */
 html .call.alt{color:#aeb6c2}
 html[data-theme="light"] .call.alt{color:#5b6472}
-/* Uložiť + Späť pod Stav v hlavičke, rovnaká veľkosť ako Stav */
-.stCol{display:grid;grid-template-columns:max-content;justify-items:end;gap:.4rem;flex:none}
-.stCol .stsel{min-width:calc(var(--stw,6rem) + 2.2rem)}
-.stCol .saveGrp{width:0;min-width:100%;display:grid;grid-template-columns:1fr 1fr;gap:.3rem;margin:0}
-.saveTop,.undoTop{width:auto;min-height:2.9rem;margin:0;padding:.2rem .3rem;border-radius:999px;font-size:1rem;display:flex;align-items:center;justify-content:center;gap:.3rem;white-space:nowrap;cursor:pointer;min-width:0;overflow:hidden}
-.saveTop{border:2px solid #fff;box-shadow:0 0 0 2px rgba(255,255,255,.18)}
-html[data-theme="light"] .saveTop{border-color:#1f2937;box-shadow:0 0 0 2px rgba(31,41,55,.15)}
-body.dirty .saveTop{background:linear-gradient(135deg,#e5484d,#a1141c);color:#fff}
+/* Uložiť pod Stav – rovnaký tvar a veľkosť ako Stav, Späť naľavo od neho */
+.stCol{display:grid;grid-template-columns:auto max-content;justify-items:stretch;align-items:stretch;gap:.4rem;flex:none}
+.stCol .stsel{grid-column:2;grid-row:1;min-width:calc(var(--stw,6rem) + 2.2rem)}
+.stCol .saveGrp{display:contents}
+.saveTop,.undoTop{width:auto;min-height:2.9rem;margin:0;padding:.4rem .9rem;border-radius:999px;font-size:1rem;display:flex;align-items:center;justify-content:center;gap:.3rem;white-space:nowrap;cursor:pointer;min-width:0;box-sizing:border-box}
+.undoTop{grid-column:1;grid-row:2}
+.saveTop{grid-column:2;grid-row:2;width:100%;background:#2b313c;color:#7d8795;border:2px solid #3a4250;box-shadow:none}
+html[data-theme="light"] .saveTop{background:#d5d9e0;color:#8a93a1;border-color:#c3c9d3}
+body.dirty .saveTop,html[data-theme="light"] body.dirty .saveTop{background:linear-gradient(135deg,#e5484d,#a1141c);color:#fff;border-color:#ff8a8f}
 .undoTop{background:#2b313c;color:#7d8795;border:1px solid #3a4250;pointer-events:none}
 .undoTop .ico{width:1em;height:1em;flex:none}
 .undoTop.can{background:#fff;color:#111;border-color:#fff;pointer-events:auto}
@@ -614,6 +615,13 @@ button,.cta,.btn-sm,.btn-an,.chip,.tab,.undoTop,.saveTop,#toast,.savemsg,.actsel
 .calGr .cd.sel{background:var(--acc);color:var(--acc-tx,#fff)}
 .calFt{display:flex;justify-content:space-between;gap:.5rem;margin-top:.8rem}
 .calFt button{flex:1;min-height:3rem;border-radius:14px;border:1px solid var(--line);background:var(--card,#141821);color:var(--text);font-size:1.05rem;cursor:pointer}
+/* Nasleduje v karte – vždy jeden riadok, useknutý */
+.card .c-main{min-width:0}
+.card .c-next{display:flex;width:fit-content;max-width:100%;min-width:0;overflow:hidden}
+.card .c-next span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Stav a Aktivita – veľké písmená všade */
+.stsel,.stsel option,.actsel,.actsel option,.badge,.actnote,.actTag,.pick button,.dtAct label,.cg label[data-st]{text-transform:uppercase}
+.stsel option[value=""],.actsel option[value=""]{text-transform:uppercase}
 </style>
 </head>
 <body>
