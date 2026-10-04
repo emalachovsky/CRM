@@ -754,6 +754,8 @@ html[data-theme="light"] body .card.card.over{--cg:color-mix(in srgb,#0ea5e9 30%
 /* aktivita v ľavom stĺpci – svetložltý text (rámček a pozadie ostávajú) */
 .c-left .badge.actnote>span{color:#fff1a8!important}
 html[data-theme="light"] .c-left .badge.actnote>span{color:#8a6a00!important}
+/* farby zo Sheetu: písmo podľa nastavenia zo Sheetu */
+.c-left .badge.actnote.sc>span,html[data-theme="light"] .c-left .badge.actnote.sc>span{color:inherit!important}
 /* analýza – kópia v Hovor formulári len na úzkych displejoch */
 .urgMob{display:none}
 @media(max-width:600px){
@@ -1229,16 +1231,26 @@ function stCol(s) {
 const PAL = {
   osloveny:['#f5e642','#2b2b2b'], oslovit:['#f0a84f','#2b1a00'], 'posle pdf':['#6b3a12','#ffffff'], 'posle fa':['#6b3a12','#ffffff'], mailom:['#6d9eeb','#10223f'], analyza:['#b6f0b6','#12301a'],
   klient:['#2e6b4a','#d3f5de'], lost:['#eaa5a5','#4a1616'], odlozeny:['#6b6b6b','#8fe040'], rozhoduje:['#5b2d86','#e3d2f5'],
-  telefonat:['#3a3315','#f2d34e'], stretnutie:['#3d2410','#ff9a4a'], email:['#12284a','#6fb0ff'], mail:['#12284a','#6fb0ff'], uloha:['#a82018','#ffd0cc']
+  telefonat:['#3a3315','#f2d34e'], stretnutie:['#3d2410','#ff9a4a'], email:['#12284a','#6fb0ff'], mail:['#12284a','#6fb0ff'], ponuka:['#0f3a36','#5fe0cf'], uloha:['#a82018','#ffd0cc']
 };
 const ACTIVITIES = ['Telefonát', 'Stretnutie', 'Email'];
 const STAVY = ['Oslovený', 'Pošle FA', 'Mailom', 'Analýza', 'Klient', 'Lost', 'Odložený', 'Rozhoduje', 'Osloviť'];
-const ACT_ST = {telefonat:['#3a3315','#b8962b','#f2d34e'], stretnutie:['#3d2410','#c2691f','#ff9a4a'], email:['#12284a','#2f6fc4','#6fb0ff'], mail:['#12284a','#2f6fc4','#6fb0ff']};
-const actStyle = s => { const a = ACT_ST[actKey(s)]; return a ? `background:${a[0]};border:1px solid ${a[1]};color:${a[2]}` : ''; };
-const actIcon = s => ico(actKey(s) === 'telefonat' ? 'phone' : actKey(s) === 'stretnutie' ? 'user' : 'mail');
-const actKey = s => { const n = norm(s); return /mail/.test(n) ? 'email' : n; };
-const isActLbl = s => ['telefonat', 'stretnutie', 'email'].includes(actKey(s));
-const palOf = s => PAL[norm(s)] || (/mail/.test(norm(s)) ? PAL.email : null);
+const ACT_ST = {telefonat:['#3a3315','#b8962b','#f2d34e'], stretnutie:['#3d2410','#c2691f','#ff9a4a'], email:['#12284a','#2f6fc4','#6fb0ff'], mail:['#12284a','#2f6fc4','#6fb0ff'], ponuka:['#0f3a36','#1f9d8f','#5fe0cf']};
+const actStyle = s => { const sc = sheetCol(s); if (sc) return `background:${sc[0]};border:1px solid ${sc[0]};color:${sc[1]}`; const a = ACT_ST[actKey(s)]; return a ? `background:${a[0]};border:1px solid ${a[1]};color:${a[2]}` : ''; };
+const actIcon = s => ico(actKey(s) === 'telefonat' ? 'phone' : actKey(s) === 'stretnutie' ? 'user' : actKey(s) === 'ponuka' ? 'file' : actKey(s) === 'email' ? 'mail' : 'activity');
+const actKey = s => { const n = norm(s); return /mail/.test(n) ? 'email' : /^ponuk/.test(n) ? 'ponuka' : n; };
+const isActLbl = s => !!s && (['telefonat', 'stretnutie', 'email', 'ponuka'].includes(actKey(s)) || (!!S.data && activitiesList().some(x => norm(x) === norm(s))));
+/* farby hodnôt Stav / Aktivita zo Sheetu (Apps Script ich posiela v contacts.colors) – majú prednosť pred zabudovanými */
+const textOn = bg => { const m = /^#?([0-9a-f]{6})$/i.exec(bg || ''); if (!m) return '#ffffff'; const n = parseInt(m[1], 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) > 150 ? '#1a1a1a' : '#ffffff'; };
+function sheetCols() {
+  const d = S.data; if (!d) return {};
+  if (S._scD === d && S._scM === S.m) return S._sc;
+  const o = {}, c = (d.contacts && d.contacts.colors) || {};
+  [S.m.stav, S.m.pozicia].forEach(h => { const m = h && c[h]; if (m) for (const v in m) o[norm(v)] = [m[v][0], m[v][1] || textOn(m[v][0])]; });
+  S._scD = d; S._scM = S.m; S._sc = o; return o;
+}
+const sheetCol = s => sheetCols()[norm(s)] || null;
+const palOf = s => sheetCol(s) || PAL[norm(s)] || (actKey(s) === 'ponuka' ? PAL.ponuka : null) || (/mail/.test(norm(s)) ? PAL.email : null);
 function palStyle(s) { const p = palOf(s); return p ? `background:${p[0]};color:${p[1]};border-color:${p[0]}` : ''; }
 const badge = s => s ? (palOf(s) ? `<span class="badge" style="${palStyle(s)}">${esc(s)}</span>` : `<span class="badge b-${stCol(s)}">${esc(s)}</span>`) : '';
 function pickList(h, cur, items) {
@@ -1411,9 +1423,9 @@ function card(r) {
   const {d, t} = DT(r), c = dueClass(d), st = V(r, 'stav');
   const p = phones(r).find(x => x.num);
   const urg = isUrg(r), nx = V(r, 'dalsi');
-  const act = ['stretnutie', 'telefonat'].includes(norm(V(r, 'pozicia')));
+  const act = isActLbl(V(r, 'pozicia'));
   return `<div class="card ${c} ${S.sel === r.r ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
-    <div class="c-left ${c} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
+    <div class="c-left ${c} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
@@ -1575,7 +1587,7 @@ function companyNames() {
 /* všetky štítky Stav a oznam Telefonát/Stretnutie v kartách majú šírku podľa najdlhšieho stavu */
 let _stwKey = '';
 function setStateW() {
-  const st = statuses().map(x => String(x)), ac = ['Telefonát', 'Stretnutie', 'Email'];
+  const st = statuses().map(x => String(x)), ac = activitiesList().map(x => String(x));
   const key = st.concat(ac).join('|') + (innerWidth <= 600 ? 'm' : 'd');
   if (key === _stwKey) return;
   let w = 0;
