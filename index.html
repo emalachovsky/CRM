@@ -667,6 +667,17 @@ html .card.klient,html .card.klient:not(.sel),html .card.klient.over:not(.sel){b
 html .card.klient.sel{border:1.5px solid #3fb950!important;border-left:4px solid #3fb950!important;border-right:4px solid #3fb950!important}
 /* Vložiť poznámku – po stlačení krátko „Ukladám…“ */
 .btn-sm[data-act="savenote"].pressed{background:linear-gradient(135deg,#2fb860,#14803a)!important;color:#fff!important;border-color:#a5f0c0!important;transform:scale(.97);box-shadow:0 0 0 3px rgba(80,220,130,.4)!important}
+/* logo CRM v ľavom rohu vedľa „Kontakty“ */
+.ltitle .logo{font-size:1.75rem;line-height:1;font-weight:800!important;letter-spacing:.06em;color:var(--firma,#f0a84f);margin-right:.2rem}
+/* menej prázdneho miesta nad Nasleduje / Urgent */
+.savemsg:empty{display:none}
+.dhead{margin-bottom:.1rem!important}
+.nextRow{margin-top:.2rem}
+/* dnešný termín – modré podfarbenie (iné ako budúce termíny) */
+html body .card.card.today{--cg:color-mix(in srgb,#0ea5e9 42%,var(--panel))}
+html[data-theme="light"] body .card.card.today{--cg:color-mix(in srgb,#0ea5e9 30%,var(--panel))}
+html .card.today:not(.sel):not(.klient){border-color:color-mix(in srgb,#0ea5e9 65%,var(--line))!important}
+html .card.sel.today:not(.klient){border-color:#0ea5e9!important;border-left-color:#0ea5e9!important;border-right-color:#0ea5e9!important}
 </style>
 </head>
 <body>
@@ -997,7 +1008,7 @@ function render() {
 function renderList() {
   const p = $('#listPane');
   if (!S.data) { p.innerHTML = `<div class="empty big">${S.cfg.url ? 'Načítavam…' : 'Nastav pripojenie v Nastaveniach.'}</div>`; return; }
-  p.innerHTML = `<div class="lhead"><div class="ltitle"><h1>Kontakty</h1><span class="cnt" id="cnt"></span><span class="sp"></span><div class="sync" id="sync"></div>
+  p.innerHTML = `<div class="lhead"><div class="ltitle"><span class="logo">CRM</span><h1>Kontakty</h1><span class="cnt" id="cnt"></span><span class="sp"></span><div class="sync" id="sync"></div>
     <button class="ib" data-act="refresh" aria-label="Obnoviť">${ico('refresh')}</button>
     <button class="ib" data-nav="settings" aria-label="Nastavenia">${ico('gear')}</button></div>
     <div class="qrow"><input id="q" type="search" placeholder="Hľadať…" value="${esc(S.q)}" autocomplete="off" style="margin:0">
