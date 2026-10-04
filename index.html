@@ -882,6 +882,40 @@ input[type=checkbox]{display:block;width:1.7rem;height:1.7rem;min-height:0!impor
   .tabsRow .anbox{grid-template-columns:1fr 1fr}
   .anbox .btn-an{width:100%;height:2.9rem;border-radius:999px;font-size:1rem;padding:0 .6rem;font-weight:400}
 }
+
+/* ===== v17 ===== */
+/* po termíne – biely obrys písma na čase a dátume */
+html body .card.over .c-left .c-time,html body .card.over .c-left .c-date,html body .c-left.over .c-time,html body .c-left.over .c-date{-webkit-text-stroke:.5px #fff;paint-order:stroke fill;text-shadow:0 0 1px rgba(255,255,255,.7)}
+/* šípky na Aktivita / Stav vo farbe textu */
+html body .stsel,html body .actsel,html body select.pillSel{-webkit-appearance:none!important;appearance:none!important;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%)!important;
+  background-position:calc(100% - 1.15rem) 50%,calc(100% - .85rem) 50%!important;background-size:.32rem .32rem,.32rem .32rem!important;background-repeat:no-repeat!important;padding-right:2.1rem!important}
+/* fajka (Urgent) – červená po zapnutí */
+input[type=checkbox]{-webkit-appearance:none;appearance:none;border:2px solid var(--ibd);border-radius:8px;background:var(--field);position:relative;cursor:pointer}
+input[type=checkbox]:checked{background:#e5484d;border-color:#e5484d}
+input[type=checkbox]:checked::after{content:'';position:absolute;left:.52rem;top:.14rem;width:.42rem;height:.85rem;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg)}
+/* dátum – prázdny ukazuje dnešný tmavosivo */
+.dwrap{position:relative;display:block;min-width:0}
+.dph{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:#4a5260;pointer-events:none;font-size:1rem;white-space:nowrap}
+html[data-theme="light"] .dph{color:#aab2c0}
+.dwrap.has .dph{display:none}
+.dwrap:not(.has) input[type=date]{color:transparent!important}
+.dwrap:not(.has) input[type=date]::-webkit-datetime-edit{opacity:0}
+.dtNarrow .dwrap .dph{left:.75rem}
+/* Nasleduje v zozname – o niečo hrubší a širší font */
+html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){font-family:'Avenir Next','Helvetica Neue',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:400!important;font-stretch:normal;letter-spacing:0}
+@media(max-width:600px){
+  /* oddeľovač v zozname stále na rovnakom mieste */
+  .card .c-left{width:calc(var(--stw,90px) + 1.1rem);min-width:calc(var(--stw,90px) + 1.1rem)!important;max-width:calc(var(--stw,90px) + 1.1rem);box-sizing:border-box}
+  /* Aktivita a Načítať analýzu rovnako vysoké; info o analýze = fajka + dátum pod tlačidlom */
+  .tabsRow .anbox{position:relative;padding-bottom:1.2rem;grid-template-columns:1fr 1fr;align-items:end}
+  .anbox #actSlot .dtAct{position:relative}
+  .anbox #actSlot .actsel{height:2.9rem;min-height:2.9rem}
+  html body .anbox .btn-an{height:2.9rem;min-height:2.9rem;box-sizing:border-box;border-radius:999px;font-size:1rem;width:100%}
+  .anbox .calsaved{position:absolute;left:.3rem;top:100%;margin:0}
+  .anbox .anok{position:absolute;right:0;bottom:0;grid-column:auto;grid-row:auto;background:none;border:0;box-shadow:none;padding:0;font-size:.85rem;color:#6fd3b0;gap:.35rem}
+  .anbox .anok .antxt{display:none}
+}
 </style>
 </head>
 <body>
@@ -1554,7 +1588,7 @@ function tabHovor(r) {
   const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${isActLbl(ak) ? actStyle(ak) : palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" style="${palStyle(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>${['stretnutie', 'telefonat'].includes(norm(ak)) && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend') ? '<span class="calsaved">Uložené do kalendára</span>' : ''}</label>` : '';
   const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
-      <label class="dtD">Dátum<input type="date" readonly class="dtSmall" data-h="${A('datum')}" data-t="d" value="${d}"></label>
+      <label class="dtD">Dátum${dateInp(`class="dtSmall" data-h="${A('datum')}"`, d)}</label>
       ${S.m.cas ? `<label class="dtT">Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
       ${qd}
     </div>
@@ -1573,7 +1607,7 @@ function tabHovor(r) {
 function fieldInput(h, val) {
   const k = Object.keys(S.m).find(x => S.m[x] === h), lists = S.data.contacts.lists[h], a = `data-h="${esc(h)}"`;
   if (/_kon$/.test(k || '') && val && !isoDate(val)) return `<input type="text" ${a} value="${esc(val)}">`;
-  if (k === 'datum' || k === 'an_ok' || /_kon$/.test(k || '')) return `<input type="date" readonly ${a} data-t="d" value="${esc(isoDate(val))}">`;
+  if (k === 'datum' || k === 'an_ok' || /_kon$/.test(k || '')) return dateInp(a, isoDate(val));
   if (k === 'cas') return timeSelect(a, isoTime(val));
   if (k === 'urgent') return `<input type="checkbox" ${a} ${['ano', '1', 'true', 'x', 'urgent', 'urgentne'].includes(norm(val)) ? 'checked' : ''}>`;
   if (k === 'firma') return `<input type="text" ${a} class="firmaInp" value="${esc(val)}">`;
@@ -1594,7 +1628,11 @@ function orderedHeaders() {
   return [...first, ...hs.filter(h => !first.includes(h) && norm(h) !== 'odvetvie')];   /* Odvetvie sa nezobrazuje */
 }
 function tabAll(r) {
-  return `<form id="fAll" class="win pad" autocomplete="off">${orderedHeaders().map(h => `<label>${esc(h)}${fieldInput(h, r.v[h] ?? '')}</label>`).join('')}
+  const grp = ks => ks.map(k => S.m[k]).filter(Boolean);
+  const el = grp(['el_dod', 'el_druh', 'el_sp', 'el_cs', 'el_kon']), pl = grp(['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']);
+  const lab = h => `<label>${esc(h)}${fieldInput(h, r.v[h] ?? '')}</label>`;
+  const box = (cls, title, list) => list.length ? `<div class="cg ${cls}"><div class="gtitle">${title}</div>${list.map(lab).join('')}</div>` : '';
+  return `<form id="fAll" class="win pad" autocomplete="off">${orderedHeaders().filter(h => !el.includes(h) && !pl.includes(h)).map(lab).join('')}${box('el', '<span class="gi">⚡</span>Elektrina', el)}${box('gas', '<span class="gi">🔥</span>Plyn', pl)}
     </form>`;
 }
 
@@ -1606,7 +1644,7 @@ const CGROUP_LABELS = {obch:'Odberateľ (obchodný názov)', ico:'IČO', web:'We
 function cInput(k, h, val) {
   const a = `data-h="${esc(h)}"`;
   if (/_kon$/.test(k) && val && !isoDate(val)) return `<input type="text" ${a} value="${esc(val)}">`;
-  if (/_kon$/.test(k) || k === 'an_ok') return `<input type="date" readonly ${a} data-t="d" value="${esc(isoDate(val))}">`;
+  if (/_kon$/.test(k) || k === 'an_ok') return dateInp(a, isoDate(val));
   if (/_sp$|_cs$|_cp$|^uspora$/.test(k)) return `<input type="text" inputmode="decimal" ${a} value="${esc(val)}">`;
   if (/_druh$/.test(k)) { const o = ['Fix', 'Spot', 'Kombi']; const cur = String(val || '').trim(); const m = o.find(x => norm(x) === norm(cur)); const opts = ['', ...o, ...(cur && !m ? [cur] : [])];
     return `<select ${a}>${opts.map(x => `<option value="${esc(x)}" ${(x === (m || cur)) ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`; }
@@ -1934,6 +1972,16 @@ async function saveNew(form) {
   } catch (e) { busy(form, false); toast(e.message, true); }
 }
 
+/* ---------- dátum: prázdny = dnešný, tmavosivý (len na zobrazenie) ---------- */
+function dateInp(attrs, val) {
+  const td = new Date().toLocaleDateString('sk-SK');
+  return `<span class="dwrap ${val ? 'has' : ''}"><input type="date" readonly ${attrs} data-t="d" value="${esc(val || '')}"><span class="dph">${esc(td)}</span></span>`;
+}
+function syncDates() { document.querySelectorAll('.dwrap').forEach(w => { const i = w.querySelector('input'); w.classList.toggle('has', !!(i && i.value)); }); }
+document.addEventListener('input', syncDates, true);
+document.addEventListener('change', syncDates, true);
+document.addEventListener('click', () => setTimeout(syncDates, 0), true);
+
 /* ---------- vymazanie kontaktu + späť ---------- */
 let undoBarT;
 function showUndoBar(msg) {
@@ -2186,7 +2234,7 @@ document.addEventListener('keydown', e => {
 /* ---------- načítanie analýzy z xlsx ---------- */
 function anBadge(r) {
   const col = isoDate(V(r, 'an_ok'));
-  if (col) return `<span class="anok">✔ Analýza načítaná ${col.split('-').reverse().join('.')}</span>`;
+  if (col) return `<span class="anok"><span class="anchk">✔</span><span class="antxt"> Analýza načítaná </span> ${col.split('-').reverse().join('.')}</span>`;
   const f = norm(V(r, 'firma')); if (!f) return '';
   let best = '';
   for (const a of S.data.activities.rows) {
@@ -2194,7 +2242,7 @@ function anBadge(r) {
     const d = isoDate(a.v[ACT_H.dt]); if (d > best) best = d;
   }
   if (!best) return '';
-  return `<span class="anok">✔ Analýza načítaná ${best.split('-').reverse().join('.')}</span>`;
+  return `<span class="anok"><span class="anchk">✔</span><span class="antxt"> Analýza načítaná </span> ${best.split('-').reverse().join('.')}</span>`;
 }
 function loadXLSX() {
   if (window.XLSX) return Promise.resolve();
