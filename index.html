@@ -601,27 +601,50 @@ button,.cta,.btn-sm,.btn-an,.chip,.tab,.undoTop,.saveTop,#toast,.savemsg,.actsel
 .chips .chip,.chips select{font-size:.9rem}
 #toast,.savemsg{font-size:1.02rem}
 .saveTop,.undoTop{font-size:1rem}
-/* veľký kalendár */
-.calOvl{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:1rem}
-.calBox{background:var(--panel2,#1b2230);color:var(--text);border:1px solid var(--line);border-radius:20px;padding:1rem;width:min(94vw,27rem);box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.calHd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;font-size:1.3rem}
-.calHd button{width:3.2rem;height:3.2rem;border-radius:14px;border:1px solid var(--line);background:var(--card,#141821);color:var(--text);font-size:1.8rem;line-height:1;cursor:pointer}
-.calWd,.calGr{display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem;text-align:center}
-.calWd{color:var(--muted);font-size:.95rem;margin-bottom:.3rem}
-.calGr button,.calGr span{height:3.2rem}
-.calGr .cd{border:1px solid transparent;border-radius:14px;background:transparent;color:var(--text);font-size:1.3rem;cursor:pointer}
+/* kalendár – popup pri poli, o niečo väčší ako natívny */
+.calOvl{position:fixed;inset:0;z-index:200;background:transparent}
+.calBox{position:fixed;background:var(--panel2,#1b2230);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:.7rem;width:19rem;max-width:94vw;box-shadow:0 12px 40px rgba(0,0,0,.55);box-sizing:border-box}
+.calHd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;font-size:1.1rem}
+.calHd button{width:2.4rem;height:2.4rem;border-radius:10px;border:1px solid var(--line);background:var(--card,#141821);color:var(--text);font-size:1.5rem;line-height:1;cursor:pointer}
+.calWd,.calGr{display:grid;grid-template-columns:repeat(7,1fr);gap:.2rem;text-align:center}
+.calWd{color:var(--muted);font-size:.85rem;margin-bottom:.2rem}
+.calGr button,.calGr span{height:2.4rem}
+.calGr .cd{border:1px solid transparent;border-radius:10px;background:transparent;color:var(--text);font-size:1.05rem;cursor:pointer;padding:0}
 .calGr .cd:hover{background:var(--raise,#242b3a)}
 .calGr .cd.td{border-color:var(--acc)}
 .calGr .cd.sel{background:var(--acc);color:var(--acc-tx,#fff)}
-.calFt{display:flex;justify-content:space-between;gap:.5rem;margin-top:.8rem}
-.calFt button{flex:1;min-height:3rem;border-radius:14px;border:1px solid var(--line);background:var(--card,#141821);color:var(--text);font-size:1.05rem;cursor:pointer}
-/* Nasleduje v karte – vždy jeden riadok, useknutý */
-.card .c-main{min-width:0}
-.card .c-next{display:flex;width:fit-content;max-width:100%;min-width:0;overflow:hidden}
-.card .c-next span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* Stav a Aktivita – veľké písmená všade */
-.stsel,.stsel option,.actsel,.actsel option,.badge,.actnote,.actTag,.pick button,.dtAct label,.cg label[data-st]{text-transform:uppercase}
-.stsel option[value=""],.actsel option[value=""]{text-transform:uppercase}
+.calFt{display:flex;justify-content:space-between;gap:.4rem;margin-top:.5rem}
+.calFt button{flex:1;min-height:2.3rem;border-radius:10px;border:1px solid var(--line);background:var(--card,#141821);color:var(--text);font-size:.95rem;cursor:pointer}
+/* pozadie kontaktov – tieňovanie zľava doprava ako tlačidlo volania */
+html body .card.card{--cg:color-mix(in srgb,#8da2c4 20%,var(--panel));background:linear-gradient(90deg,var(--cg) 0%,var(--panel) 100%)!important}
+html body .card.card:hover{background:linear-gradient(90deg,var(--cg) 0%,var(--raise) 100%)!important}
+html body .card.card.fut{--cg:color-mix(in srgb,#2563eb 30%,var(--panel))}
+html body .card.card.over{--cg:color-mix(in srgb,#b91c1c 42%,var(--panel))}
+html body .card.card.today{--cg:color-mix(in srgb,#22a049 34%,var(--panel))}
+html body .card.card.act{--cg:color-mix(in srgb,#8a6a00 62%,var(--panel))}
+html[data-theme="light"] body .card.card{--cg:color-mix(in srgb,#8da2c4 26%,var(--panel))}
+html[data-theme="light"] body .card.card.fut{--cg:color-mix(in srgb,#2563eb 18%,var(--panel))}
+html[data-theme="light"] body .card.card.over{--cg:color-mix(in srgb,#dc2626 26%,var(--panel))}
+html[data-theme="light"] body .card.card.today{--cg:color-mix(in srgb,#1e7a3c 24%,var(--panel))}
+html[data-theme="light"] body .card.card.act{--cg:color-mix(in srgb,#e0b000 55%,var(--panel))}
+/* Stav a Uložiť – užšie, rovnako vysoké, šírka podľa najdlhšieho stavu */
+:root{--sth:2.4rem}
+.stCol .stsel{width:var(--stselw,auto);min-width:0;height:var(--sth);min-height:var(--sth);padding:.1rem .6rem;font-size:1rem}
+.saveTop,.undoTop{height:var(--sth);min-height:var(--sth);padding:.1rem .8rem}
+.stCol .saveTop{width:100%;padding:.1rem .4rem}
+.saveTop:active{transform:scale(.94);filter:brightness(1.2)}
+.saveTop{transition:transform .08s,background .15s}
+.saveTop.pressed,body.dirty .saveTop.pressed{background:linear-gradient(135deg,#2fb860,#14803a)!important;color:#fff!important;border-color:#a5f0c0!important;transform:scale(.95);box-shadow:0 0 0 3px rgba(80,220,130,.4)}
+/* Vložiť poznámku – sivé / červené ako Uložiť */
+.btn-sm[data-act="savenote"]{background:#2b313c;color:#7d8795;border:1px solid #3a4250;box-shadow:none}
+html[data-theme="light"] .btn-sm[data-act="savenote"]{background:#d5d9e0;color:#8a93a1;border-color:#c3c9d3}
+body.dirty .btn-sm[data-act="savenote"],html[data-theme="light"] body.dirty .btn-sm[data-act="savenote"]{background:linear-gradient(135deg,#e5484d,#a1141c);color:#fff;border-color:#ff8a8f}
+/* oznamy – svetlé pozadie */
+#toast{background:#f4f6fa!important;color:#1a2230!important;border:1px solid #cbd3e0!important;box-shadow:0 6px 22px rgba(0,0,0,.4)}
+#toast.err{background:#ffe5e3!important;color:#8a1212!important;border-color:#e5484d!important}
+.savemsg:not(:empty){display:inline-block;background:#f4f6fa;color:#1a2230;border:1px solid #cbd3e0;border-radius:10px;padding:.3rem .8rem}
+/* dátum a čas v Hovor – nižšie */
+html .dtNarrow label input,html .dtNarrow label select{height:2.4rem;min-height:2.4rem;padding:.15rem .7rem}
 </style>
 </head>
 <body>
@@ -938,7 +961,7 @@ async function load(silent) {
 let tt;
 function toast(msg, err) {
   const t = $('#toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
-  clearTimeout(tt); tt = setTimeout(() => t.className = '', err ? 4500 : 2200);
+  clearTimeout(tt); tt = setTimeout(() => t.className = '', 3000);
 }
 function modal(html) { $('#modal').innerHTML = `<div class="ovl"><div class="win modal">${html}</div></div>`; }
 function closeModal() { $('#modal').innerHTML = ''; }
@@ -1051,7 +1074,7 @@ function openCal(inp) {
   const esc = e => { if (e.key === 'Escape') close(); };
   document.addEventListener('keydown', esc);
   const setV = v => { inp.value = v; inp.dispatchEvent(new Event('input', {bubbles: true})); inp.dispatchEvent(new Event('change', {bubbles: true})); close(); };
-  const draw = () => {
+  let draw = () => {
     const first = new Date(vy, vm, 1), lead = (first.getDay() + 6) % 7, days = new Date(vy, vm + 1, 0).getDate();
     let cells = '';
     for (let i = 0; i < lead; i++) cells += '<span></span>';
@@ -1064,6 +1087,16 @@ function openCal(inp) {
       <div class="calGr">${cells}</div>
       <div class="calFt"><button type="button" data-today>Dnes</button><button type="button" data-clear>Vymazať</button><button type="button" data-close>Zavrieť</button></div></div></div>`;
   };
+  const place = () => {
+    const cb = box.querySelector('.calBox'); if (!cb) return;
+    if (!place.pos) {
+      const r = inp.getBoundingClientRect(), bw = cb.offsetWidth, bh = cb.offsetHeight;
+      let top = r.bottom + 6; if (top + bh > innerHeight - 8) top = Math.max(8, r.top - bh - 6);
+      place.pos = {left: Math.min(Math.max(8, r.left), Math.max(8, innerWidth - bw - 8)), top};
+    }
+    cb.style.left = place.pos.left + 'px'; cb.style.top = place.pos.top + 'px';
+  };
+  const _draw = draw; draw = () => { _draw(); place(); };
   box.addEventListener('click', e => {
     const t = e.target;
     if (t.dataset.nav) { vm += +t.dataset.nav; if (vm < 0) { vm = 11; vy--; } if (vm > 11) { vm = 0; vy++; } draw(); }
@@ -1101,6 +1134,13 @@ function setStateW() {
   });
   _stwKey = key;
   document.documentElement.style.setProperty('--stw', w + 'px');
+  let sw = 0;
+  st.forEach(t => {
+    const m = document.createElement('span');
+    m.textContent = t.toUpperCase(); m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-size:1rem';
+    document.body.appendChild(m); sw = Math.max(sw, m.getBoundingClientRect().width); m.remove();
+  });
+  document.documentElement.style.setProperty('--stselw', Math.ceil(sw + 48) + 'px');
 }
 function renderListBody() {
   const el = $('#listBody'); if (!el) return;
@@ -1164,13 +1204,14 @@ function stSelect(st) {
   const L = statuses(); if (st && !L.some(x => norm(x) === norm(st))) L.unshift(st);
   return `<select class="stsel" data-stsel style="${palStyle(st)}"><option value="">Stav</option>${L.map(x => `<option value="${esc(x)}" ${norm(x) === norm(st) ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
 }
-const saveGrpHtml = () => `<div class="saveGrp"><button type="button" class="undoTop ${undoAvailable() ? 'can' : ''}" data-act="undo">${ico('back')}Späť</button><button type="button" class="cta saveTop" data-act="savetop">Uložiť</button></div>`;
+const saveGrpHtml = () => `<div class="saveGrp"><button type="button" class="undoTop ${undoAvailable() ? 'can' : ''}" data-act="undo">${ico('back')}Späť</button><button type="button" class="cta saveTop ${Date.now() < (S.pressUntil || 0) ? 'pressed' : ''}" data-act="savetop">${Date.now() < (S.pressUntil || 0) ? 'Ukladám…' : 'Uložiť'}</button></div>`;
 const TIMES = (() => { const a = []; for (let m = 480; m <= 1080; m += 15) a.push(pad(Math.floor(m / 60)) + ':' + pad(m % 60)); return a; })();
 function timeSelect(a, val) {
   const L = TIMES.slice(); if (val && !L.includes(val)) { L.push(val); L.sort(); }
   return `<select ${a} data-t="t"><option value=""></option>${L.map(x => `<option value="${x}" ${x === val ? 'selected' : ''}>${x}</option>`).join('')}</select>`;
 }
 function contactDetail(r) {
+  setStateW();
   const em = V(r, 'email'), web = String(V(r, 'web') || '').trim(), webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
   const tabs = [['hovor', 'Hovor'], ['firma', 'Firma'], ['hist', 'História'], ['udaje', 'Všetky údaje']];
   return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
@@ -1315,7 +1356,11 @@ function differs(cur, spec) {
 function changedOnly(row, vals) {
   const o = {}; for (const h in vals) if (differs(row.v[h], vals[h])) o[h] = vals[h]; return o;
 }
-function saveMsg(t) { S.msg = {row: S.sel, t}; document.querySelectorAll('.savemsg').forEach(e => e.textContent = t); }
+let smt;
+function saveMsg(t) {
+  S.msg = {row: S.sel, t}; document.querySelectorAll('.savemsg').forEach(e => e.textContent = t);
+  clearTimeout(smt); if (t) smt = setTimeout(() => { S.msg = null; document.querySelectorAll('.savemsg').forEach(e => e.textContent = ''); }, 3000);
+}
 const savemsgHtml = () => `<div class="savemsg">${esc(S.msg && S.msg.row === S.sel ? S.msg.t : '')}</div>`;
 function busy(form, on, txt) {
   const b = form.querySelector('.cta'); if (!b) return;
@@ -1627,7 +1672,13 @@ document.addEventListener('click', e => {
     else if (a === 'undo') undoLast();
     else if (a === 'refresh') load();
     else if (a === 'savenote') saveNote(el);
-    else if (a === 'savetop') { const f = document.querySelector('#tabBody form'); if (f) f.requestSubmit(); }
+    else if (a === 'savetop') {
+      const f = document.querySelector('#tabBody form');
+      S.pressUntil = Date.now() + 1100;
+      document.querySelectorAll('.saveTop').forEach(b => { b.classList.add('pressed'); b.textContent = 'Ukladám…'; });
+      setTimeout(() => document.querySelectorAll('.saveTop').forEach(b => { b.classList.remove('pressed'); b.textContent = 'Uložiť'; }), 1100);
+      if (f) f.requestSubmit();
+    }
     else if (a === 'clearhist') clearHist();
     else if (a === 'loadan') { const fi = $('#anFile'); if (fi) fi.click(); }
     else if (a === 'more') { S.limit += 150; renderListBody(); }
