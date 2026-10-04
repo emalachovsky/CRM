@@ -1030,6 +1030,24 @@ html .dhead .nextCall:not(.urg){background:linear-gradient(90deg,#e9edf3,#d3dae5
 /* dátum v ostatných záložkách – po doplnení biely (v Hovore ostáva žltý) */
 html:not([data-theme="light"]) #fAll .dwrap.has input[type=date],html:not([data-theme="light"]) #fComp .dwrap.has input[type=date],html:not([data-theme="light"]) #fNew .dwrap.has input[type=date]{color:#fff!important;-webkit-text-fill-color:#fff}
 .dupWarn{margin:.2rem 0 .8rem}
+
+/* ===== iPad / tablet (dotykové zariadenia nad 600px): hlavička detailu ako na iPhone ===== */
+@media(min-width:601px) and (pointer:coarse){
+  /* priestor pod stavovým riadkom iPadu, aby hlavička nebola schovaná */
+  #main{padding-top:calc(env(safe-area-inset-top,0px) + 10px)}
+  /* tlačidlo Späť je vždy vidieť (na desktope s myšou ostáva skryté) */
+  html body .dhead .back{display:grid!important;width:2.5rem;height:2.5rem;flex:none}
+  /* nepohyblivá hlavička: firma + meno vedľa Späť, pod tým Stav / Späť / Uložiť */
+  html body .dhead{position:sticky;top:0;z-index:20;flex-wrap:wrap;align-items:center;row-gap:.45rem;
+    padding-top:calc(env(safe-area-inset-top,0px) + .7rem);padding-bottom:.5rem;background:var(--panel,var(--bg))}
+  html body .dhead>div[style*="flex:1"]{flex:1 0 calc(100% - 3.4rem)!important;min-width:0}
+  html body .dhead>.savemsg{order:3;align-self:auto;height:auto;min-height:var(--sth);margin:0}
+  html body .dhead .stCol{order:4;display:flex;flex:1 0 100%;gap:.5rem;align-items:stretch}
+  html body .dhead .stCol .saveGrp{display:contents}
+  html body .dhead .stCol .stsel{flex:0 0 auto;width:var(--stselw,auto);min-width:0}
+  html body .dhead .stCol .undoTop,html body .dhead .stCol .saveTop{flex:0 0 auto;min-width:7rem;justify-content:center}
+  html body .dhead h2{font-size:1.5rem}
+}
 </style>
 </head>
 <body>
