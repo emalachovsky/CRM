@@ -1014,7 +1014,7 @@ function card(r) {
   const p = phones(r).find(x => x.num);
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = ['stretnutie', 'telefonat'].includes(norm(V(r, 'pozicia')));
-  return `<div class="card ${c} ${act ? 'act' : ''} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
+  return `<div class="card ${c} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
     <div class="c-left ${c} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b><span class="c-stcol">${badge(st)}</span></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
@@ -1117,25 +1117,26 @@ document.addEventListener('click', e => {
   if (i) { e.preventDefault(); i.blur(); openCal(i); }
 });
 /* zoznamy Stav / Aktivita v Sheete sa zmenili → nahradenie starých hodnôt v kontaktoch (aj v Sheete) */
-function listMismatches() {
+function listMismatches(exact) {
   const out = [];
   [['stav', 'Stav'], ['pozicia', 'Aktivita']].forEach(([k, label]) => {
     const h = S.m[k], list = h && S.data.contacts.lists[h];
     if (!h || !list || !list.length) return;
-    const ok = new Set(list.map(norm)), cnt = new Map();
-    S.data.contacts.rows.forEach(r => { const v = String(r.v[h] ?? '').trim(); if (v && !ok.has(norm(v))) cnt.set(v, (cnt.get(v) || 0) + 1); });
+    const ok = new Set(exact ? list.map(x => String(x).trim()) : list.map(norm)), cnt = new Map();
+    S.data.contacts.rows.forEach(r => { const v = String(r.v[h] ?? '').trim(); if (v && !ok.has(exact ? v : norm(v))) cnt.set(v, (cnt.get(v) || 0) + 1); });
     if (cnt.size) out.push({k, label, h, list: list.slice(), items: [...cnt].map(([v, n]) => ({v, n}))});
   });
   return out;
 }
 function checkLists(force) {
   if (!S.data || !S.data.contacts || document.querySelector('#modal .ovl')) return;
-  const mm = listMismatches(); if (!mm.length) return;
+  const mm = listMismatches(!!force);
+  if (!mm.length) { if (force) toast('Stav a Aktivita sú zhodné so zoznamami ✔'); return; }
   const sig = JSON.stringify(mm.map(g => g.items.map(i => i.v)));
   if (!force && sessionStorage.getItem('crm.rcskip') === sig) return;
   S.mm = mm; S.mmSig = sig;
   const body = mm.map((g, gi) => `<div class="rcGrp"><b>${esc(g.label)}</b>${g.items.map((it, ii) => {
-    const nv = norm(it.v), tok = nv.split(' ')[0], sug = g.list.find(x => norm(x).includes(nv) || nv.includes(norm(x))) || (tok.length > 3 ? g.list.find(x => norm(x).split(' ')[0] === tok) : '') || '';
+    const nv = norm(it.v), tok = nv.split(' ')[0], sug = g.list.find(x => norm(x) === nv) || g.list.find(x => norm(x).includes(nv) || nv.includes(norm(x))) || (tok.length > 3 ? g.list.find(x => norm(x).split(' ')[0] === tok) : '') || '';
     return `<div class="rcRow"><span class="rcOld">${esc(it.v)} <small>(${it.n}×)</small></span><span>→</span><select data-rc="${gi}:${ii}"><option value="">ponechať</option>${g.list.map(x => `<option value="${esc(x)}" ${x === sug ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
   }).join('')}</div>`).join('');
   modal(`<h3>Zoznamy v Sheete sa zmenili</h3><p class="rcP">V kontaktoch sú hodnoty, ktoré v novom zozname už nie sú. Vyber, čím ich nahradiť – zapíšu sa aj do Sheetu.</p>${body}<div class="rcBtns"><button type="button" class="cta ghost" data-act="rcskip">Neskôr</button><button type="button" class="cta" data-act="rcapply">Aktualizovať kontakty</button></div>`);
@@ -1559,7 +1560,7 @@ async function saveNote(btn) {
   try {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); ta.value = '';
-    const nb = $('#notesBox'); if (nb) nb.innerHTML = notesHtml(r);    saveMsg('Poznámka uložená ✔');
+    const nb = $('#notesBox'); if (nb) nb.innerHTML = notesHtml(r);    saveMsg('Poznámka uložená ✔'); S.dirty = false;
   } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
   finally { btn.disabled = false; }
 }
@@ -1673,6 +1674,9 @@ function openSettings() {
             <button class="cta" type="submit">Uložiť a načítať</button>
       <button class="cta ghost" type="button" data-act="copycfg" style="margin-top:.6rem">Skopírovať odkaz pre iné zariadenie</button>
     </form>
+    ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Zoznamy Stav a Aktivita</div>
+      <button class="cta ghost" type="button" data-act="reconcile">Zosúladiť Stav a Aktivitu so zoznamami</button>
+      <p class="rcP">Hodnoty v kontaktoch (aj ich veľkosť písmen) sa nahradia hodnotami zo zoznamov v Sheete. Zmeny sa zapíšu aj do Sheetu.</p>` : ''}
     ${hs.length ? unmappedHtml(hs) : ''}
     ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Spárovanie stĺpcov (${hs.length})</div>
       <button class="cta ghost" type="button" data-act="reloadcols" style="margin-bottom:.5rem">Znovu načítať stĺpce zo Sheetu</button>
@@ -1729,6 +1733,7 @@ document.addEventListener('click', e => {
     else if (a === 'savenote') saveNote(el);
     else if (a === 'rcskip') { try { sessionStorage.setItem('crm.rcskip', S.mmSig || ''); } catch (e) {} closeModal(); }
     else if (a === 'rcapply') applyLists();
+    else if (a === 'reconcile') { closeModal(); checkLists(true); }
     else if (a === 'savetop') {
       const f = document.querySelector('#tabBody form');
       S.pressUntil = Date.now() + 1100;
