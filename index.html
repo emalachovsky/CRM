@@ -847,12 +847,12 @@ function stCol(s) {
   return ['blue', 'teal', 'orange', 'violet'][hash(n) % 4];
 }
 const PAL = {
-  osloveny:['#f5e642','#2b2b2b'], 'posle pdf':['#6b3a12','#ffffff'], mailom:['#6d9eeb','#10223f'], analyza:['#b6f0b6','#12301a'],
+  osloveny:['#f5e642','#2b2b2b'], oslovit:['#f0a84f','#2b1a00'], 'posle pdf':['#6b3a12','#ffffff'], 'posle fa':['#6b3a12','#ffffff'], mailom:['#6d9eeb','#10223f'], analyza:['#b6f0b6','#12301a'],
   klient:['#2e6b4a','#d3f5de'], lost:['#eaa5a5','#4a1616'], odlozeny:['#6b6b6b','#8fe040'], rozhoduje:['#5b2d86','#e3d2f5'],
   telefonat:['#3a3315','#f2d34e'], stretnutie:['#3d2410','#ff9a4a'], email:['#12284a','#6fb0ff'], mail:['#12284a','#6fb0ff'], uloha:['#a82018','#ffd0cc']
 };
-const ACTIVITIES = ['Telefonát', 'Stretnutie', 'Email', 'Úloha'];
-const STAVY = ['Oslovený', 'Pošle PDF', 'Mailom', 'Analýza', 'Klient', 'Lost', 'Odložený', 'Rozhoduje'];
+const ACTIVITIES = ['Telefonát', 'Stretnutie', 'Email'];
+const STAVY = ['Oslovený', 'Pošle FA', 'Mailom', 'Analýza', 'Klient', 'Lost', 'Odložený', 'Rozhoduje', 'Osloviť'];
 const ACT_ST = {telefonat:['#3a3315','#b8962b','#f2d34e'], stretnutie:['#3d2410','#c2691f','#ff9a4a'], email:['#12284a','#2f6fc4','#6fb0ff'], mail:['#12284a','#2f6fc4','#6fb0ff']};
 const actStyle = s => { const a = ACT_ST[actKey(s)]; return a ? `background:${a[0]};border:1px solid ${a[1]};color:${a[2]}` : ''; };
 const actIcon = s => ico(actKey(s) === 'telefonat' ? 'phone' : actKey(s) === 'stretnutie' ? 'user' : 'mail');
@@ -1135,7 +1135,7 @@ function checkLists(force) {
   if (!force && sessionStorage.getItem('crm.rcskip') === sig) return;
   S.mm = mm; S.mmSig = sig;
   const body = mm.map((g, gi) => `<div class="rcGrp"><b>${esc(g.label)}</b>${g.items.map((it, ii) => {
-    const nv = norm(it.v), sug = g.list.find(x => norm(x).includes(nv) || nv.includes(norm(x))) || '';
+    const nv = norm(it.v), tok = nv.split(' ')[0], sug = g.list.find(x => norm(x).includes(nv) || nv.includes(norm(x))) || (tok.length > 3 ? g.list.find(x => norm(x).split(' ')[0] === tok) : '') || '';
     return `<div class="rcRow"><span class="rcOld">${esc(it.v)} <small>(${it.n}×)</small></span><span>→</span><select data-rc="${gi}:${ii}"><option value="">ponechať</option>${g.list.map(x => `<option value="${esc(x)}" ${x === sug ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
   }).join('')}</div>`).join('');
   modal(`<h3>Zoznamy v Sheete sa zmenili</h3><p class="rcP">V kontaktoch sú hodnoty, ktoré v novom zozname už nie sú. Vyber, čím ich nahradiť – zapíšu sa aj do Sheetu.</p>${body}<div class="rcBtns"><button type="button" class="cta ghost" data-act="rcskip">Neskôr</button><button type="button" class="cta" data-act="rcapply">Aktualizovať kontakty</button></div>`);
@@ -1249,7 +1249,7 @@ function stSelect(st) {
   return `<select class="stsel" data-stsel style="${palStyle(st)}"><option value="">Stav</option>${L.map(x => `<option value="${esc(x)}" ${norm(x) === norm(st) ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
 }
 const saveGrpHtml = () => `<div class="saveGrp"><button type="button" class="undoTop ${undoAvailable() ? 'can' : ''}" data-act="undo">${ico('back')}Späť</button><button type="button" class="cta saveTop ${Date.now() < (S.pressUntil || 0) ? 'pressed' : ''}" data-act="savetop">${Date.now() < (S.pressUntil || 0) ? 'Ukladám…' : 'Uložiť'}</button></div>`;
-const TIMES = (() => { const a = []; for (let m = 480; m <= 1080; m += 15) a.push(pad(Math.floor(m / 60)) + ':' + pad(m % 60)); return a; })();
+const TIMES = (() => { const a = []; for (let m = 480; m <= 1200; m += 15) a.push(pad(Math.floor(m / 60)) + ':' + pad(m % 60)); return a; })();
 function timeSelect(a, val) {
   const L = TIMES.slice(); if (val && !L.includes(val)) { L.push(val); L.sort(); }
   return `<select ${a} data-t="t"><option value=""></option>${L.map(x => `<option value="${x}" ${x === val ? 'selected' : ''}>${x}</option>`).join('')}</select>`;
@@ -1322,7 +1322,7 @@ function fieldInput(h, val) {
 }
 function orderedHeaders() {
   const hs = S.data.contacts.headers, first = ['firma', 'osoba', 'pozicia', 'tel', 'tel2', 'email', 'stav', 'dalsi', 'datum', 'cas', 'pozn'].map(k => S.m[k]).filter(Boolean);
-  return [...first, ...hs.filter(h => !first.includes(h))];
+  return [...first, ...hs.filter(h => !first.includes(h) && norm(h) !== 'odvetvie')];   /* Odvetvie sa nezobrazuje */
 }
 function tabAll(r) {
   return `<form id="fAll" class="win pad" autocomplete="off">${orderedHeaders().map(h => `<label>${esc(h)}${fieldInput(h, r.v[h] ?? '')}</label>`).join('')}
