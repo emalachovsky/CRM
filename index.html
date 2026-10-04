@@ -742,6 +742,27 @@ html[data-theme="light"] body .card .c-left{border-right-color:rgba(0,0,0,.35)}
 /* úvodná obrazovka bez pripojenia */
 .setupBox{padding:1rem .5rem;display:grid;gap:.6rem}
 .setupBox.big{padding-top:calc(env(safe-area-inset-top) + 3rem)}
+/* ===== v-final 2 ===== */
+/* oddeľovač v zozname – jemnejší */
+html body .card .c-left{border-right:1px solid rgba(255,255,255,.26)}
+html[data-theme="light"] body .card .c-left{border-right-color:rgba(0,0,0,.2)}
+/* po termíne – okno v rovnakej farbe ako dnes */
+html body .card.card.over{--cg:color-mix(in srgb,#0ea5e9 42%,var(--panel))}
+html[data-theme="light"] body .card.card.over{--cg:color-mix(in srgb,#0ea5e9 30%,var(--panel))}
+/* aktivita v ľavom stĺpci – svetložltý text (rámček a pozadie ostávajú) */
+.c-left .badge.actnote>span{color:#fff1a8!important}
+html[data-theme="light"] .c-left .badge.actnote>span{color:#8a6a00!important}
+/* analýza – kópia v Hovor formulári len na úzkych displejoch */
+.anboxM,.urgMob{display:none}
+@media(max-width:600px){
+  .dhead .stCol .undoTop{flex:0 0 auto;padding:0 .55rem}
+  .nextRow .urgCol{display:none}
+  .callRow{display:flex;align-items:center;gap:.6rem}
+  .callRow .calls{flex:0 1 auto}
+  .urgMob{display:flex;margin-left:auto;flex:none}
+  .anboxM{display:flex;justify-content:flex-end;margin:.2rem 0 .7rem}
+  .tabsRow:has(+ #tabBody #fCall) .anbox{display:none}
+}
 </style>
 </head>
 <body>
@@ -1342,16 +1363,18 @@ function callBtns(r) {
   const ps = phones(r);
   const next = V(r, 'dalsi');
   const urg = isUrg(r);
-  const nextHtml = `<div class="nextRow">${next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '<div style="flex:1"></div>'}<div class="urgCol">${next ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : ''}</div></div>`;
+  const urgBtn = next ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : '';
+  const urgMob = `<div class="urgCol urgMob">${urgBtn}</div>`;
+  const nextHtml = `<div class="nextRow">${next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '<div style="flex:1"></div>'}<div class="urgCol">${urgBtn}</div></div>`;
   const nn = String((r.n && S.m.dalsi && r.n[S.m.dalsi]) || '').trim();
   const noteHtml = nn ? `<div class="callnote nxnote">${esc(nn)}</div>` : '';
-  if (!ps.length) return nextHtml + noteHtml + `<div class="callRow"><div class="empty" style="margin:0">Žiadne telefónne číslo.</div></div>`;
+  if (!ps.length) return nextHtml + noteHtml + `<div class="callRow"><div class="empty" style="margin:0">Žiadne telefónne číslo.</div>${urgMob}</div>`;
   return nextHtml + noteHtml + `<div class="callRow"><div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
     const main = p.k === 'tel', extra = [p.label, p.note].filter(Boolean).join(' · ');
     const inner = `${ico('phone')}<span>${esc(p.shown || p.label)}</span>`;
     return `<div>${p.num ? `<a class="call ${main ? 'main' : 'alt'}" href="tel:${esc(p.num)}">${inner}</a>` : `<div class="call alt">${inner}</div>`}
       ${extra ? `<div class="callnote">${esc(extra)}</div>` : ''}</div>`;
-  }).join('') + '</div></div>';
+  }).join('') + '</div>' + urgMob + '</div>';
 }
 function stSelect(st) {
   if (!S.m.stav) return '';
@@ -1404,6 +1427,7 @@ function tabHovor(r) {
     ${actBlock}</div>` : (actBlock ? `<div class="dtRow dtRowSingle">${actBlock}</div>` : '');
   return `<form id="fCall" class="win pad" autocomplete="off">
     ${dtBlock}
+    <div class="anbox anboxM">${anBadge(r)}<button type="button" class="btn-an" data-act="loadan">Načítať analýzu</button></div>
     ${phs ? `<div class="ph2">${phs}</div>` : ''}
     <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder="Čo sa riešilo…"></textarea></label>
     <button type="button" class="btn-sm" data-act="savenote">Vložiť poznámku</button>
@@ -1979,7 +2003,7 @@ const r3 = x => Math.round(x * 1000) / 1000;
 const fmtDec = x => String(r3(x)).replace('.', ',');
 async function importAnalysis(file) {
   const r = rowBy(S.sel); if (!r) return;
-  const btn = document.querySelector('.btn-an'); if (btn) btn.disabled = true;
+  document.querySelectorAll('.btn-an').forEach(b => b.disabled = true);
   try {
     toast('Čítam analýzu…');
     await loadXLSX();
@@ -2014,7 +2038,7 @@ async function importAnalysis(file) {
     const bits = []; if (A.el) bits.push(`elektrina ${fmtDec(A.el.sp)} MWh · ${fmtDec(A.el.cs)} €/MWh`); if (A.pl) bits.push(`plyn ${fmtDec(A.pl.sp)} MWh · ${fmtDec(A.pl.cs)} €/MWh`);
     toast('Analýza načítaná: ' + bits.join(' | '));
   } catch (e) { toast(e.message || String(e), true); if (e.conflict) load(true); }
-  finally { const b2 = document.querySelector('.btn-an'); if (b2) b2.disabled = false; }
+  finally { document.querySelectorAll('.btn-an').forEach(b => b.disabled = false); }
 }
 
 /* ---------- ikona pre plochu iOS ---------- */
