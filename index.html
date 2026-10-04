@@ -1016,6 +1016,11 @@ html[data-theme="light"] #fCall .dwrap:not(.has) .dph{color:#aab2c0}
   html body .dhead .back{width:2.1rem;height:2.1rem}
   html body .dhead>.savemsg{min-height:0;padding:.1rem .6rem;font-size:.85rem}
 }
+/* Nasleduje hore pod menom – svetlejšie modré okno, žltý text */
+html .dhead .nextCall:not(.urg){background:linear-gradient(90deg,#4a82d0,#3a69b0);border-color:#7fa8e6;color:#ffe97a}
+/* dátum v ostatných záložkách – po doplnení biely (v Hovore ostáva žltý) */
+html:not([data-theme="light"]) #fAll .dwrap.has input[type=date],html:not([data-theme="light"]) #fComp .dwrap.has input[type=date],html:not([data-theme="light"]) #fNew .dwrap.has input[type=date]{color:#fff!important;-webkit-text-fill-color:#fff}
+.dupWarn{margin:.2rem 0 .8rem}
 </style>
 </head>
 <body>
@@ -1671,7 +1676,8 @@ function contactDetail(r) {
 }
 function tabBody(r) {
   const h = tabBodyInner(r);
-  return S.tab === 'hist' ? h : h + `<div class="delWrap">${delBtnHtml()}</div>`;
+  const dup = (S.tab === 'firma' || S.tab === 'udaje') ? '<div id="editDup"></div>' : '';
+  return S.tab === 'hist' ? h : dup + h + `<div class="delWrap">${delBtnHtml()}</div>`;
 }
 function tabBodyInner(r) {
   if (S.tab === 'hovor') return tabHovor(r);
@@ -1974,6 +1980,7 @@ async function saveAll(form) {
   const r = rowBy(S.sel); if (!r) return;
   const vals = changedOnly(r, collect(form));
   if (!Object.keys(vals).length) { saveMsg('Nič na uloženie'); return; }
+  if (!editDupConfirm(r, form)) return;
   busy(form, true);
   try {
     const j = await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actFor(r, changeTyp(vals, ''), '', vals), check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
@@ -1984,15 +1991,12 @@ async function saveAll(form) {
 }
 async function saveFirma(form) {
   const r = rowBy(S.sel); if (!r) return;
+  if (!editDupConfirm(r, form)) return;
   busy(form, true);
   try {
     const raw = collect(form);
     const vals = changedOnly(r, await materializeNewCols(raw));
     if (!Object.keys(vals).length) { busy(form, false); saveMsg('Nič na uloženie'); return; }
-    if (S.m.ico && vals[S.m.ico] !== undefined) {
-      const ic = specVal(vals[S.m.ico]), d = findDupIco(ic, r.r, norm(V(r, 'firma')));
-      if (d && !confirm(`⚠️ IČO ${ic} už má aj firma „${V(d, 'firma')}“.\nUložiť napriek tomu?`)) { busy(form, false); return; }
-    }
     const actF = actFor(r, 'Firma', '', vals);
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actF, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, vals); applyLocal(r, vals); pushActivity(actF); persist(); S.dirty = false;
@@ -2045,6 +2049,36 @@ function newDupCheck(form) {
   const b = form.querySelector('button[type=submit]');
   if (b) { b.disabled = block; b.classList.toggle('ready', filled && !block); }
   return {block, hits};
+}
+/* ---------- overenie duplicity pri editácii (názov firmy, Odberateľ, IČO) ---------- */
+function editDupMsgs(r, form) {
+  const val = h => { const e = h && form.querySelector('[data-h="' + CSS.escape(h) + '"]'); return e ? e.value.trim() : null; };
+  const own = norm(V(r, 'firma')), out = [], others = S.data.contacts.rows.filter(x => x.r !== r.r);
+  const nm = val(S.m.firma);
+  if (nm && norm(nm) !== own) {
+    const d = others.find(x => norm(V(x, 'firma')) === norm(nm));
+    if (d) out.push(`Firma s názvom „${V(d, 'firma')}“ už existuje.`);
+  }
+  const ob = val(S.m.obch);
+  if (ob && norm(ob).length >= 3 && norm(ob) !== norm(V(r, 'obch'))) {
+    const d = others.find(x => norm(V(x, 'firma')) !== own && (norm(V(x, 'firma')) === norm(ob) || norm(V(x, 'obch')) === norm(ob)));
+    if (d) out.push(`Odberateľ „${ob}“ už existuje u firmy „${V(d, 'firma') || '(bez firmy)'}“.`);
+  }
+  const ic = val(S.m.ico);
+  if (ic && icoNorm(ic) !== icoNorm(r.v[S.m.ico])) {
+    const d = findDupIco(ic, r.r, own);
+    if (d) out.push(`IČO ${ic} už má firma „${V(d, 'firma') || '(bez firmy)'}“.`);
+  }
+  return out;
+}
+function editDupCheck(form) {
+  const r = rowBy(S.sel), box = document.getElementById('editDup'); if (!r || !box || !form) return;
+  const m = editDupMsgs(r, form);
+  box.innerHTML = m.length ? `<div class="dupWarn">⚠️ Duplicita:<ul>${m.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
+}
+function editDupConfirm(r, form) {
+  const m = editDupMsgs(r, form);
+  return !m.length || confirm('⚠️ Duplicita:\n\n' + m.map(x => '• ' + x).join('\n') + '\n\nUložiť napriek tomu?');
 }
 const icoNorm = x => String(x || '').replace(/\D/g, '');
 function findDupIco(ico, exceptRow, ownFirma) {
@@ -2312,6 +2346,7 @@ document.addEventListener('input', e => {
   if (t.id === 'anFile') return;
   if (t.id === 'q') { S.q = t.value; S.limit = 150; renderListBody(); return; }
   if (t.closest('#fNew')) { newDupCheck(t.closest('#fNew')); return; }
+  if (t.closest('#fAll, #fComp')) editDupCheck(t.closest('form'));
   if (t.closest('#detailPane') && t.dataset.stsel === undefined) markDirty();
 });
 document.addEventListener('change', e => {
