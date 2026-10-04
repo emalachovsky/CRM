@@ -918,36 +918,70 @@ html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){font-fami
 }
 
 /* ===== v18 ===== */
-:root{--note-gr:#c3cad5}
+:root{--note-gr:#c3cad5;--stfs:.95rem;--stfw:400}
 html[data-theme="light"]{--note-gr:#6b7585}
+@media(max-width:600px){:root{--stfs:1.05rem;--stfw:600}}
 
-/* 1) Stav v okne kontaktu (zoznam) – väčší a tučný */
+/* Stav v okne kontaktu (zoznam) – väčší a tučný */
 html body .card .c-left .c-st .badge{font-size:.82rem;font-weight:700!important;padding:.08rem .45rem;line-height:1.25}
 
-/* 2) Hovor – dátum vycentrovaný v okienku, zástupný dátum rovnakou farbou ako dátum */
-#fCall input[type=date]{text-align:center}
-#fCall input[type=date]::-webkit-date-and-time-value{text-align:center}
-#fCall input[type=date]::-webkit-datetime-edit{text-align:center}
-#fCall .dwrap .dph,#fCall .dtNarrow .dwrap .dph{left:0;right:0;text-align:center;color:var(--dt-yel)}
+/* Nasleduje pod menom v hlavičke – farby ako v zozname kontaktov vľavo (čierne pozadie, svetlomodrý text) */
+html .dhead .nextCall{display:flex;align-items:center;gap:.35rem;width:fit-content;max-width:100%;box-sizing:border-box;margin:.45rem 0 0;padding:.2rem .7rem;line-height:1.25;font-size:.98rem;font-weight:400;
+  font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#000;color:#9fd8ff;border:1.5px solid var(--ibd);border-radius:12px}
+html .dhead .nextCall>span{min-width:0;overflow-wrap:anywhere}
+/* Urgent – tmavšia červená, svetlejšia žltá, tieňovanie ako v oknách */
+html .dhead .nextCall.urg{background:linear-gradient(90deg,#fffadc 0%,#f6edb4 55%,#e9dd9a 100%);border-color:#dccf84;color:#7a0e17}
 
-/* 3) Poznámka k Nasleduje – hneď pod oknom Nasleduje, svetlosivá, v jednom riadku s tlačidlom Vymazať kontakt */
-.nxRow{display:flex;align-items:center;gap:.6rem;margin:.1rem 0 .8rem}
-.nxRow .callnote.nxnote{flex:1 1 auto;min-width:0;margin:0;padding:0 .3rem;color:var(--note-gr);opacity:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nxRow .delSw{flex:none;margin-left:auto}
-@media(max-width:600px){.delSw span{display:inline}.delSw{padding:.25rem .6rem}}
+/* Poznámka k Nasleduje – pod oknom Nasleduje, svetlosivá, v jednom riadku s Urgent a Vymazať kontakt */
+.nxRow{display:flex;align-items:center;gap:.6rem;margin:.35rem 0 .1rem}
+.nxRow .callnote.nxnote{flex:1 1 auto;min-width:0;margin:0;padding:0 .1rem;color:var(--note-gr);opacity:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nxRow .nxUrg{flex:none;display:flex;margin-left:auto}
+.nxRow .delSw{flex:none}
+.nxRow .nxnote:empty+.nxUrg,.nxRow .nxnote:empty+.nxUrg:empty{margin-left:auto}
+@media(max-width:600px){.nxRow .callnote.nxnote{white-space:normal;overflow:visible;text-overflow:clip}.nxUrg{display:none!important}.delSw span{display:inline}.delSw{padding:.25rem .6rem}.nxRow .delSw{margin-left:auto}}
 
-/* 4) Nasleduje v zozname kontaktov – späť Helvetica */
+/* Hovor – dátum vycentrovaný v okienku */
+.dsh{display:none}
+#fCall .dsh{display:flex;position:absolute;left:0;right:0;top:.3rem;bottom:0;align-items:center;justify-content:center;pointer-events:none;color:var(--dt-yel);font-size:1.05rem;line-height:1;text-transform:none;letter-spacing:normal;white-space:nowrap}
+#fCall .dwrap.has input[type=date]{color:transparent!important;-webkit-text-fill-color:transparent}
+#fCall .dwrap.has input[type=date]::-webkit-datetime-edit{opacity:0}
+#fCall .dwrap .dph,#fCall .dtNarrow .dwrap .dph{left:0;right:0;top:calc(50% + .15rem);text-align:center;color:var(--dt-yel)}
+
+/* Aktivita – názov vycentrovaný s tlačidlom, info o zápise do kalendára vycentrované pod tlačidlom */
+.dtAct{text-align:center}
+.dtAct .calsaved{text-align:center;margin:.3rem 0 0}
+
+/* Nasleduje v zozname kontaktov – Helvetica */
 html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:400!important;font-stretch:normal;letter-spacing:0}
 
-/* 5) iPhone – dátum načítania analýzy: sivý ako „Uložené do kalendára“, veľkosť ako dátum, 1 riadok, vycentrovaný pod tlačidlom */
+/* iPhone – pod tlačidlami v jednom riadku: vľavo „Uložené do kalendára“, vpravo ✔ dátum analýzy; sivé, rovnaká veľkosť, vycentrované pod svojím tlačidlom */
 @media(max-width:600px){
-  .tabsRow .anbox{padding-bottom:1.6rem}
-  html body .anbox .anok{left:auto;right:0;bottom:0;width:calc(50% - .25rem);display:flex;justify-content:center;align-items:center;gap:.3rem;text-align:center;white-space:nowrap;font-size:1rem;line-height:1.2;color:var(--muted)}
+  .tabsRow .anbox{padding-bottom:1.7rem}
+  html body .anbox .calsaved,html body .anbox .anok{position:absolute;margin:.3rem 0 0;display:flex;justify-content:center;align-items:center;gap:.3rem;text-align:center;white-space:nowrap;overflow:visible;font-size:.95rem;line-height:1.2;color:var(--muted);background:none;border:0;box-shadow:none;padding:0}
+  html body .anbox .calsaved{left:0;top:100%;width:100%;max-width:none}
+  html body .anbox .anok{left:auto;right:0;bottom:auto;top:calc(100% - 1.7rem);width:calc(50% - .25rem)}
   html body .anbox .anok .anchk{color:var(--muted)}
 }
 
-/* 6) Nasleduje hore pod menom pri Urgent – tmavšia červená, svetlejšia žltá, tieňovanie ako v oknách */
-html .nextCall.urg{background:linear-gradient(90deg,#fffadc 0%,#f6edb4 55%,#e9dd9a 100%);border-color:#dccf84;color:#7a0e17}
+/* po termíne – čas a dátum biele ako všade, červený obrys */
+html body .card.over .c-left .c-time,html body .card.over .c-left .c-date,html body .c-left.over .c-time,html body .c-left.over .c-date{color:var(--meno)!important;opacity:1;-webkit-text-stroke:1.2px #e5474d;paint-order:stroke fill;text-shadow:0 0 3px rgba(229,71,77,.55)}
+html[data-theme="light"] body .card.over .c-left .c-time,html[data-theme="light"] body .card.over .c-left .c-date,html[data-theme="light"] body .c-left.over .c-time,html[data-theme="light"] body .c-left.over .c-date{color:var(--meno)!important;-webkit-text-stroke:1.2px #d63a42;text-shadow:0 0 3px rgba(214,58,66,.4)}
+
+/* Stav hore vpravo – rovnaký font ako Späť/Uložiť, šírka podľa najdlhšieho stavu */
+html body .dhead .stsel,html body .dhead .saveTop,html body .dhead .undoTop{font-family:inherit;font-size:var(--stfs)!important;font-weight:var(--stfw)!important;line-height:1.1}
+html body .dhead .stCol .stsel{width:var(--stselw,auto);min-width:0;padding:0 2.1rem 0 .7rem}
+@media(max-width:600px){html body .dhead .stCol .stsel{flex:0 0 auto;width:var(--stselw,auto)}}
+
+/* štyri záložky v jednom riadku; tlačidlo analýzy sa v prípade nedostatku miesta zalomí pod ne */
+.tabsRow{flex-wrap:wrap}
+.tabsRow .tabs{flex:1 0 auto;flex-wrap:nowrap}
+@media(min-width:601px){.tab{padding:.5rem .6rem}.tabsRow .anok{font-size:.68rem;padding:.2rem .5rem}}
+/* záložky – vybraná má úplne jemné tmavooranžové vytieňovanie */
+.tab.on{background:linear-gradient(180deg,color-mix(in srgb,#c2570c 17%,var(--panel)) 0%,color-mix(in srgb,#c2570c 6%,var(--panel)) 60%,var(--panel) 100%)}
+html[data-theme="light"] .tab.on{background:linear-gradient(180deg,color-mix(in srgb,#d9690f 13%,var(--panel)) 0%,var(--panel) 100%)}
+
+/* Všetky údaje – jemný rámček na nevyplnených Aktivita a Stav */
+select.pillSel:has(option[value=""]:checked){border:2px solid var(--ibd)}
 </style>
 </head>
 <body>
@@ -1496,7 +1530,7 @@ function companyNames() {
 let _stwKey = '';
 function setStateW() {
   const st = statuses().map(x => String(x)), ac = ['Telefonát', 'Stretnutie', 'Email'];
-  const key = st.concat(ac).join('|');
+  const key = st.concat(ac).join('|') + (innerWidth <= 600 ? 'm' : 'd');
   if (key === _stwKey) return;
   let w = 0;
   [...st.map(t => [t, 0]), ...ac.map(t => [t, 18])].forEach(([t, extra]) => {
@@ -1509,12 +1543,12 @@ function setStateW() {
   _stwKey = key;
   document.documentElement.style.setProperty('--stw', w + 'px');
   let sw = 0;
-  st.forEach(t => {
+  st.concat(['Stav']).forEach(t => {
     const m = document.createElement('span');
-    m.textContent = t.toUpperCase(); m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-size:1rem';
+    m.textContent = t; m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-family:inherit;font-size:var(--stfs);font-weight:var(--stfw)';
     document.body.appendChild(m); sw = Math.max(sw, m.getBoundingClientRect().width); m.remove();
   });
-  document.documentElement.style.setProperty('--stselw', Math.ceil(sw * .9 + 44) + 'px');
+  document.documentElement.style.setProperty('--stselw', Math.ceil(sw + 12 + 34 + 6) + 'px');
 }
 function renderListBody() {
   const el = $('#listBody'); if (!el) return;
@@ -1558,18 +1592,20 @@ function renderDetail() {
   const r = rowBy(S.sel);
   p.innerHTML = r ? contactDetail(r) : '<div class="ph">Kontakt sa nenašiel.</div>';
 }
+const urgBtnHtml = r => { const urg = isUrg(r); return V(r, 'dalsi') ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : ''; };
+const delBtnHtml = () => `<button type="button" class="delSw" data-act="delcontact" aria-label="Vymazať celý kontakt" title="Vymazať celý kontakt">${ico('trash')}<span>Vymazať kontakt</span></button>`;
+/* Nasleduje pod menom v hlavičke + pod ním poznámka k Nasleduje v jednom riadku s tlačidlom Vymazať kontakt */
+function nextHeadHtml(r) {
+  const next = V(r, 'dalsi'), urg = isUrg(r);
+  const nn = String((r.n && S.m.dalsi && r.n[S.m.dalsi]) || '').trim();
+  return (next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '') +
+    `<div class="nxRow"><div class="callnote nxnote">${esc(nn)}</div><span class="nxUrg">${urgBtnHtml(r)}</span>${delBtnHtml()}</div>`;
+}
 function callBtns(r) {
   const ps = phones(r);
-  const next = V(r, 'dalsi');
-  const urg = isUrg(r);
-  const urgBtn = next ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : '';
-  const delBtn = `<button type="button" class="delSw" data-act="delcontact" aria-label="Vymazať celý kontakt" title="Vymazať celý kontakt">${ico('trash')}<span>Vymazať kontakt</span></button>`;
-  const urgMob = `<div class="urgCol urgMob">${urgBtn}</div>`;
-  const nextHtml = `<div class="nextRow">${next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '<div style="flex:1"></div>'}<div class="urgCol">${urgBtn}</div></div>`;
-  const nn = String((r.n && S.m.dalsi && r.n[S.m.dalsi]) || '').trim();
-  const noteHtml = `<div class="nxRow"><div class="callnote nxnote">${esc(nn)}</div>${delBtn}</div>`;
-  if (!ps.length) return nextHtml + noteHtml + `<div class="callRow"><div class="empty" style="margin:0">Žiadne telefónne číslo.</div>${urgMob}</div>`;
-  return nextHtml + noteHtml + `<div class="callRow"><div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
+  const urgMob = `<div class="urgCol urgMob">${urgBtnHtml(r)}</div>`;
+  if (!ps.length) return `<div class="callRow"><div class="empty" style="margin:0">Žiadne telefónne číslo.</div>${urgMob}</div>`;
+  return `<div class="callRow"><div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
     const main = p.k === 'tel', extra = [p.label, p.note].filter(Boolean).join(' · ');
     const inner = `${ico('phone')}<span>${esc(p.shown || p.label)}</span>`;
     return `<div>${p.num ? `<a class="call ${main ? 'main' : 'alt'}" href="tel:${esc(p.num)}">${inner}</a>` : `<div class="call alt">${inner}</div>`}
@@ -1590,9 +1626,9 @@ function timeSelect(a, val) {
 function contactDetail(r) {
   setStateW();
   const em = V(r, 'email'), web = String(V(r, 'web') || '').trim(), webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
-  const tabs = [['hovor', 'Hovor'], ['firma', 'Firma'], ['hist', 'História'], ['udaje', 'Všetky údaje']];
+  const tabs = [['hovor', 'Hovor'], ['firma', 'Firma'], ['udaje', 'Všetky údaje'], ['hist', 'História']];
   return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
-    <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div></div>${savemsgHtml()}<div class="stCol">${stSelect(V(r, 'stav'))}${saveGrpHtml()}</div></div>
+    <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div>${nextHeadHtml(r)}</div>${savemsgHtml()}<div class="stCol">${stSelect(V(r, 'stav'))}${saveGrpHtml()}</div></div>
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
 </div>
@@ -2007,9 +2043,10 @@ async function saveNew(form) {
 /* ---------- dátum: prázdny = dnešný, tmavosivý (len na zobrazenie) ---------- */
 function dateInp(attrs, val) {
   const td = new Date().toLocaleDateString('sk-SK');
-  return `<span class="dwrap ${val ? 'has' : ''}"><input type="date" readonly ${attrs} data-t="d" value="${esc(val || '')}"><span class="dph">${esc(td)}</span></span>`;
+  return `<span class="dwrap ${val ? 'has' : ''}"><input type="date" readonly ${attrs} data-t="d" value="${esc(val || '')}"><span class="dsh">${esc(showD(val))}</span><span class="dph">${esc(td)}</span></span>`;
 }
-function syncDates() { document.querySelectorAll('.dwrap').forEach(w => { const i = w.querySelector('input'); w.classList.toggle('has', !!(i && i.value)); }); }
+const showD = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ''); return m ? `${+m[3]}. ${+m[2]}. ${m[1]}` : ''; };
+function syncDates() { document.querySelectorAll('.dwrap').forEach(w => { const i = w.querySelector('input'); w.classList.toggle('has', !!(i && i.value)); const d = w.querySelector('.dsh'); if (d && i) d.textContent = showD(i.value); }); }
 document.addEventListener('input', syncDates, true);
 document.addEventListener('change', syncDates, true);
 document.addEventListener('click', () => setTimeout(syncDates, 0), true);
