@@ -638,7 +638,7 @@ html[data-theme="light"] body .card.card.act{--cg:color-mix(in srgb,#e0b000 55%,
 /* Vložiť poznámku – sivé / červené ako Uložiť */
 .btn-sm[data-act="savenote"]{background:#2b313c;color:#7d8795;border:1px solid #3a4250;box-shadow:none}
 html[data-theme="light"] .btn-sm[data-act="savenote"]{background:#d5d9e0;color:#8a93a1;border-color:#c3c9d3}
-body.dirty .btn-sm[data-act="savenote"],html[data-theme="light"] body.dirty .btn-sm[data-act="savenote"]{background:linear-gradient(135deg,#e5484d,#a1141c);color:#fff;border-color:#ff8a8f}
+#fCall:has(#callNote:not(:placeholder-shown)) .btn-sm[data-act="savenote"],html[data-theme="light"] #fCall:has(#callNote:not(:placeholder-shown)) .btn-sm[data-act="savenote"]{background:linear-gradient(135deg,#e5484d,#a1141c);color:#fff;border-color:#ff8a8f}
 /* oznamy – svetlé pozadie */
 #toast{background:#f4f6fa!important;color:#1a2230!important;border:1px solid #cbd3e0!important;box-shadow:0 6px 22px rgba(0,0,0,.4)}
 #toast.err{background:#ffe5e3!important;color:#8a1212!important;border-color:#e5484d!important}
@@ -650,6 +650,17 @@ html .dtNarrow label input,html .dtNarrow label select{height:2.4rem;min-height:
 .rcOld{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rcP{color:var(--muted);margin:.3rem 0}
 .rcBtns{display:flex;gap:.6rem;margin-top:1rem}
+/* vybraný kontakt – pásik aj vpravo (rovnaký ako vľavo) */
+html .card.sel{border-right:4px solid var(--ibd)!important;padding-right:calc(.9rem - 3px)}
+html .card.sel.fut{border-right-color:#3b82f6!important}
+html .card.sel.today{border-right-color:var(--ok)!important}
+html .card.sel.over{border-right-color:#b91c1c!important}
+html .card.sel.act{border-right-color:#f5c518!important}
+/* Nasleduje v kontakte – jeden riadok, dlhší text sa odseká, čierne pozadie + svetlozelený text ako pole Telefón */
+.nextRow{min-width:0}
+html .nextCall,html .nextCall.urg{min-width:0;background:#000;color:var(--tel-g);border:1.5px solid var(--ibd);border-radius:12px;font-weight:400}
+html .nextCall.urg{border-color:var(--urg-bd)}
+.nextCall span{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
