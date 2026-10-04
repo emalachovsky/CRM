@@ -1017,7 +1017,7 @@ html[data-theme="light"] #fCall .dwrap:not(.has) .dph{color:#aab2c0}
   html body .dhead>.savemsg{min-height:0;padding:.1rem .6rem;font-size:.85rem}
 }
 /* Nasleduje hore pod menom – svetlejšie modré okno, žltý text */
-html .dhead .nextCall:not(.urg){background:linear-gradient(90deg,#4a82d0,#3a69b0);border-color:#7fa8e6;color:#ffe97a}
+html .dhead .nextCall:not(.urg){background:linear-gradient(90deg,#e9edf3,#d3dae5);border-color:#aab6c8;color:#0b3d91}
 /* dátum v ostatných záložkách – po doplnení biely (v Hovore ostáva žltý) */
 html:not([data-theme="light"]) #fAll .dwrap.has input[type=date],html:not([data-theme="light"]) #fComp .dwrap.has input[type=date],html:not([data-theme="light"]) #fNew .dwrap.has input[type=date]{color:#fff!important;-webkit-text-fill-color:#fff}
 .dupWarn{margin:.2rem 0 .8rem}
@@ -1708,11 +1708,11 @@ function tabHovor(r) {
   return `<form id="fCall" class="win pad" autocomplete="off">
     ${dtBlock}
     ${phs ? `<div class="ph2">${phs}</div>` : ''}
-    <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder=" "></textarea></label>
-    <button type="button" class="btn-sm" data-act="savenote">Vložiť poznámku</button>
     ${S.m.dalsi ? `<div class="nxIn"><label>Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label><div class="nxInUrg">${urgBtnHtml(r)}</div></div>
       <label>Poznámka k Nasleduje<input type="text" data-note="${A('dalsi')}" value="${esc((r.n && r.n[S.m.dalsi]) || '')}"></label>
       <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qnx="${esc(x)}">${x}</button>`).join('')}</div>` : ''}
+    <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder=" "></textarea></label>
+    <button type="button" class="btn-sm" data-act="savenote">Vložiť poznámku</button>
     <div id="notesBox">${notesHtml(r)}</div>
     </form>`;
 }
