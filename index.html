@@ -656,11 +656,17 @@ html .card.sel.fut{border-right-color:#3b82f6!important}
 html .card.sel.today{border-right-color:var(--ok)!important}
 html .card.sel.over{border-right-color:#b91c1c!important}
 html .card.sel.act{border-right-color:#f5c518!important}
-/* Nasleduje v kontakte – jeden riadok, dlhší text sa odseká, čierne pozadie + svetlozelený text ako pole Telefón */
-.nextRow{min-width:0}
-html .nextCall,html .nextCall.urg{min-width:0;background:#000;color:var(--tel-g);border:1.5px solid var(--ibd);border-radius:12px;font-weight:400}
-html .nextCall.urg{border-color:var(--urg-bd)}
-.nextCall span{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Nasleduje v zozname kontaktov – jeden riadok, dlhší text sa odseká, čierne pozadie + svetlozelený text ako pole Telefón */
+html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){display:flex;flex-wrap:nowrap;align-items:center;gap:.35rem;width:100%;min-width:0;max-width:100%;box-sizing:border-box;background:#000;color:var(--tel-g);border:1.5px solid var(--ibd);border-radius:12px;font-weight:400}
+html .card .c-next.urg{border-color:var(--urg-bd)}
+html .card .c-next .ico{flex:none}
+html .card .c-next>span{flex:1 1 auto;min-width:0;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-main{min-width:0}
+/* Klient – zelený rámik okolo kontaktu v zozname */
+html .card.klient,html .card.klient:not(.sel),html .card.klient.over:not(.sel){border:1.5px solid #3fb950!important}
+html .card.klient.sel{border:1.5px solid #3fb950!important;border-left:4px solid #3fb950!important;border-right:4px solid #3fb950!important}
+/* Vložiť poznámku – po stlačení krátko „Ukladám…“ */
+.btn-sm[data-act="savenote"].pressed{background:linear-gradient(135deg,#2fb860,#14803a)!important;color:#fff!important;border-color:#a5f0c0!important;transform:scale(.97);box-shadow:0 0 0 3px rgba(80,220,130,.4)!important}
 </style>
 </head>
 <body>
@@ -1025,7 +1031,7 @@ function card(r) {
   const p = phones(r).find(x => x.num);
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = ['stretnutie', 'telefonat'].includes(norm(V(r, 'pozicia')));
-  return `<div class="card ${c} ${S.sel === r.r ? 'sel' : ''}" data-open="${r.r}">
+  return `<div class="card ${c} ${S.sel === r.r ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
     <div class="c-left ${c} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div></div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b><span class="c-stcol">${badge(st)}</span></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
@@ -1567,13 +1573,13 @@ async function saveNote(btn) {
   if (!S.m.pozn) { toast('Chýba stĺpec Poznámka – pozri Nastavenia', true); return; }
   const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = $('#notesTa') ? $('#notesTa').value.trim() : V(r, 'pozn'), vals = {[S.m.pozn]: old ? line + '\n' + old : line};
   const act = actFor(r, 'Poznámka', note, null);
-  btn.disabled = true;
+  btn.disabled = true; const t0 = Date.now(); btn.classList.add('pressed'); btn.textContent = 'Ukladám…';
   try {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); ta.value = '';
     const nb = $('#notesBox'); if (nb) nb.innerHTML = notesHtml(r);    saveMsg('Poznámka uložená ✔'); S.dirty = false;
   } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
-  finally { btn.disabled = false; }
+  finally { setTimeout(() => { btn.classList.remove('pressed'); btn.textContent = 'Vložiť poznámku'; btn.disabled = false; }, Math.max(0, 1100 - (Date.now() - t0))); }
 }
 async function saveAll(form) {
   const r = rowBy(S.sel); if (!r) return;
