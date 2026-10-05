@@ -1304,11 +1304,17 @@ function fmtPhone(raw) {
   raw = String(raw || ''); const m = raw.match(/\+?\d[\d\s\/().-]{5,}\d/); if (!m) return raw.trim();
   let d = m[0].replace(/\D/g, '');
   if (d.startsWith('00421')) d = '0' + d.slice(5); else if (m[0].trim().startsWith('+421')) d = '0' + d.slice(3); else if (d.startsWith('421') && d.length === 12) d = '0' + d.slice(3);
-  let out;
-  if (/^09\d{8}$/.test(d)) out = d.slice(0, 4) + ' ' + d.slice(4, 7) + ' ' + d.slice(7);
-  else if (/^0\d{8,9}$/.test(d)) out = d;
-  else return raw.trim();
-  return raw.replace(m[0], out).trim();
+  if (/^9\d{8}$/.test(d)) d = '0' + d;   /* 905123456 → 0905123456 */
+  let out = null;
+  if (/^09\d{8}$/.test(d)) out = d.slice(0, 4) + ' ' + d.slice(4, 7) + ' ' + d.slice(7);   /* mobil: 0905 123 456 */
+  else if (/^0[2-8]\d{7,8}$/.test(d)) {   /* pevná linka: predvoľba mesta (02 / 0XX) + trojice, posledná skupina nikdy nie je jediná číslica */
+    const pl = d.startsWith('02') ? 2 : 3; let rest = d.slice(pl); const g = [];
+    while (rest.length > 4) { g.push(rest.slice(0, 3)); rest = rest.slice(3); }
+    g.push(rest); out = d.slice(0, pl) + ' ' + g.join(' ');
+  }
+  else if (/^\d{10}$/.test(d)) out = d.slice(0, 4) + ' ' + d.slice(4, 7) + ' ' + d.slice(7);
+  if (out) return raw.replace(m[0], out).trim();
+  return raw.trim();
 }
 function normPhones() {
   if (!S.data) return;
@@ -1394,6 +1400,7 @@ function paintSync() {
 }
 async function load(silent, quiet) {
   if (loading) return;
+  if (pendingSaves) { if (!silent) toast('Dokončujem ukladanie…'); return; }
   loading = true; if (!quiet) setSync('sync');
   try {
     const j = await api('read');
@@ -1955,7 +1962,7 @@ async function undoLast() {
 function pushActivity(a) {
   const v = {[ACT_H.dt]: nowISO(), [ACT_H.firma]: a.firma || '', [ACT_H.kontakt]: a.kontakt || '', [ACT_H.typ]: a.typ || '', [ACT_H.stav]: a.stav || '',
     [ACT_H.pozn]: a.pozn || '', [ACT_H.dalsi]: a.dalsi || '', [ACT_H.dalsiK]: a.dalsiKontakt || ''};
-  S.data.activities.rows.push({r: 0, v});
+  const row = {r: 0, v}; S.data.activities.rows.push(row); return row;
 }
 function changeTyp(vals, note) {
   const has = k => S.m[k] && vals && vals[S.m[k]] !== undefined, out = [];
@@ -1974,9 +1981,9 @@ function actFor(r, typ, note, vals) {
   return {typ, firma: V(r, 'firma'), kontakt: V(r, 'osoba'), stav: g('stav'), pozn: note, dalsi: g('dalsi'), dalsiKontakt: d ? (fmtD(d) + (t ? ' ' + t : '')) : ''};
 }
 /* hlásenie o zápise do kalendára (Aktivita = Stretnutie / Telefonát) */
-function calToast(j) {
+function calToast(j, row) {
   if (!j) return;
-  if (j.calNote !== undefined && S.m.pozicia) { const r = rowBy(S.sel); if (r) applyNotes(r, {[S.m.pozicia]: j.calNote}); }
+  if (j.calNote !== undefined && S.m.pozicia) { const r = row || rowBy(S.sel); if (r) applyNotes(r, {[S.m.pozicia]: j.calNote}); }
   if (!j.cal) return;
   if (j.cal.ok) toast(j.cal.dup ? '📅 Udalosť už v kalendári je' : '📅 Udalosť v kalendári: ' + j.cal.title);
   else toast('⚠️ ' + j.cal.error, true);
@@ -1994,6 +2001,39 @@ function applyNotes(r, notes) {
   r.n = r.n || {};
   for (const h in notes) { if (notes[h]) r.n[h] = notes[h]; else delete r.n[h]; }
 }
+let pendingSaves = 0;
+const rmAct = a => { const i = S.data.activities.rows.indexOf(a); if (i >= 0) S.data.activities.rows.splice(i, 1); };
+/* Okamžitá zmena v CRM (zoznam sa hneď prefiltruje a zoradí), zápis do Sheetu beží na pozadí; pri chybe sa zmena vráti. */
+function commitBg(r, o) {
+  const vals = o.vals, act = o.act, notes = o.notes || {}, hasN = Object.keys(notes).length;
+  const check = S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null;
+  const prevV = {}; for (const h in vals) prevV[h] = r.v[h];
+  const prevN = r.n ? {...r.n} : r.n;
+  const nm = V(r, 'firma') || 'kontakt';
+  setUndo(r, vals); applyLocal(r, vals); if (hasN) applyNotes(r, notes);
+  const actRow = pushActivity(act); persist(); S.dirty = false;
+  renderChips(); renderListBody();
+  if (o.stay) { renderDetail(); saveMsg(o.msg || 'Uložené ✔'); }
+  else if (!openTop()) renderDetail();
+  pendingSaves++;
+  (async () => {
+    let j, err;
+    try { j = await api('update', {sheet: 'contacts', row: r.r, values: vals, notes, activity: act, check}); } catch (e) { err = e; }
+    pendingSaves--;
+    if (!err) {
+      if (hasN && !j.ver) { r.n = prevN; toast('Server je na starej verzii API – poznámka k číslu sa neuložila. Nasaď novú verziu CRM_API.gs.', true); }
+      const cal = j && j.cal; calToast(j, r);
+      if (j && j.calNote !== undefined && S.sel === r.r && !S.dirty) renderDetail();
+      if (!cal && !pendingSaves) toast('Uložené ✔');
+      return;
+    }
+    for (const h in prevV) r.v[h] = prevV[h];
+    delete r._s; r.n = prevN; rmAct(actRow);
+    if (S.undo && S.undo.row === r.r) S.undo = null;
+    persist(); renderChips(); renderListBody(); if (S.sel === r.r && !S.dirty) renderDetail();
+    toast('Zmena „' + nm + '“ sa neuložila: ' + err.message, true); if (err.conflict) load(true);
+  })();
+}
 async function saveCall(form) {
   const r = rowBy(S.sel); if (!r) return;
   const all = collect(form), note = $('#callNote').value.trim();
@@ -2001,27 +2041,24 @@ async function saveCall(form) {
   if (note && S.m.pozn) { const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = $('#notesTa') ? $('#notesTa').value.trim() : V(r, 'pozn'); vals[S.m.pozn] = old ? line + '\n' + old : line; }
   const notes = collectNotes(form, r);
   if (!Object.keys(vals).length && !note && !Object.keys(notes).length) { saveMsg('Nič na uloženie'); return; }
-  const act = actFor(r, changeTyp(vals, note), note, vals);
-  busy(form, true);
-  try {
-    const j = await api('update', {sheet: 'contacts', row: r.r, values: vals, notes, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-    if (Object.keys(notes).length) {
-      if (j.ver) applyNotes(r, notes);
-      else toast('Server je na starej verzii API – poznámka k číslu sa neuložila. Nasaď novú verziu CRM_API.gs.', true);
-    }
-    calToast(j);
-    setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); S.dirty = false;
-    renderChips(); renderListBody(); renderDetail(); saveMsg('Uložené ✔'); openTop('Uložené ✔');
-  } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
+  commitBg(r, {vals, notes, act: actFor(r, changeTyp(vals, note), note, vals)});
 }
 async function saveStav(sel) {
   const r = rowBy(S.sel); if (!r || !S.m.stav) return;
   const vals = {[S.m.stav]: sel.value}, act = actFor(r, 'Stav', '', vals);
   sel.setAttribute('style', palStyle(sel.value));
+  const prev = r.v[S.m.stav], check = S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null;
+  setUndo(r, vals); applyLocal(r, vals); const actRow = pushActivity(act); persist(); renderChips(); renderListBody();
+  pendingSaves++;
   try {
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-    setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); saveMsg('Stav uložený ✔'); toast('Stav uložený do sheetu ✔'); renderChips(); renderListBody();
-  } catch (e) { sel.value = V(r, 'stav'); sel.setAttribute('style', palStyle(V(r, 'stav'))); toast(e.message, true); if (e.conflict) load(true); }
+    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check});
+    pendingSaves--; saveMsg('Stav uložený ✔'); if (!pendingSaves) toast('Stav uložený ✔');
+  } catch (e) {
+    pendingSaves--;
+    r.v[S.m.stav] = prev; delete r._s; rmAct(actRow); if (S.undo && S.undo.row === r.r) S.undo = null; persist(); renderChips(); renderListBody();
+    if (S.sel === r.r) { sel.value = prev ?? ''; sel.setAttribute('style', palStyle(prev)); }
+    toast(e.message, true); if (e.conflict) load(true);
+  }
 }
 async function clearHist() {
   const r = rowBy(S.sel); if (!r) return;
@@ -2067,13 +2104,7 @@ async function saveAll(form) {
   const vals = changedOnly(r, collect(form));
   if (!Object.keys(vals).length) { saveMsg('Nič na uloženie'); return; }
   if (!editDupConfirm(r, form)) return;
-  busy(form, true);
-  try {
-    const j = await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actFor(r, changeTyp(vals, ''), '', vals), check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-    calToast(j);
-    setUndo(r, vals); applyLocal(r, vals); pushActivity(actFor(r, changeTyp(vals, ''), '', vals)); persist(); S.dirty = false;
-    renderChips(); renderListBody(); renderDetail(); saveMsg('Uložené ✔'); openTop('Uložené ✔');
-  } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
+  commitBg(r, {vals, act: actFor(r, changeTyp(vals, ''), '', vals)});
 }
 async function saveFirma(form) {
   const r = rowBy(S.sel); if (!r) return;
@@ -2083,10 +2114,7 @@ async function saveFirma(form) {
     const raw = collect(form);
     const vals = changedOnly(r, await materializeNewCols(raw));
     if (!Object.keys(vals).length) { busy(form, false); saveMsg('Nič na uloženie'); return; }
-    const actF = actFor(r, 'Firma', '', vals);
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actF, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-    setUndo(r, vals); applyLocal(r, vals); pushActivity(actF); persist(); S.dirty = false;
-    renderDetail(); saveMsg('Firma uložená ✔');
+    commitBg(r, {vals, act: actFor(r, 'Firma', '', vals), stay: true, msg: 'Firma uložená ✔'});
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
 }
 function openNewContact() {
@@ -2293,12 +2321,12 @@ function revealSel() {
   }
 }
 /* po uložení otvor kontakt úplne hore v zozname */
-function openTop(msg) {
-  if (S.view !== 'contacts' || !S.data) return;
-  const rows = filtered(); if (!rows.length) return;
+function openTop() {
+  if (S.view !== 'contacts' || !S.data) return false;
+  const rows = filtered(); if (!rows.length) return false;
   S.limit = Math.max(S.limit, 150);
   openSel(rows[0].r);
-  if (msg) toast(msg);
+  return true;
 }
 /* šípky ↑ ↓ – prechod po kontaktoch v zozname */
 function stepSel(dir) {
