@@ -1071,6 +1071,11 @@ html:not([data-theme="light"]) #fAll .dwrap.has input[type=date],html:not([data-
 .omT td.n,.omT th.n{text-align:right;white-space:nowrap}
 .omT td.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;word-break:break-all;min-width:11rem}
 .omT .nm{font-weight:700;white-space:nowrap}
+.omCard{min-width:0;margin-bottom:.1rem}
+.omCard th{width:11rem;text-transform:none;letter-spacing:0;font-size:.82rem;white-space:nowrap}
+.omCard td{word-break:break-word}
+.omWrap+.omWrap{margin-top:.6rem}
+.omWrap:has(.omCard){border:1px solid var(--line);border-radius:12px;padding:.25rem .5rem}
 .omSum{color:var(--muted);font-size:.8rem;margin:.1rem 0 .4rem}
 </style>
 </head>
@@ -1382,7 +1387,9 @@ async function apiCore(action, payload = {}) {
       let res; try { res = await fetch(S.cfg.url, {method: 'POST', redirect: 'follow', cache: 'no-store', body, signal: ctl.signal}); } catch (e) { throw new Error(e.name === 'AbortError' ? 'Server neodpovedal včas' : e.message); } finally { clearTimeout(to); }
       const txt = await res.text();
       let j; try { j = JSON.parse(txt); } catch (e) {
-        last = new Error('Server nevrátil JSON (' + res.status + '): ' + txt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 140));
+        last = new Error(res.status === 404 || /ppConfig/.test(txt)
+          ? 'Apps Script nenájdený (404) – skontroluj URL nasadenia (Nasadiť → Spravovať nasadenia → Kto má prístup: Ktokoľvek) a zadaj ju v Nastaveniach alebo v CRM_URL.'
+          : 'Server nevrátil JSON (' + res.status + '): ' + txt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 140));
         last.lost = true;
         continue;
       }
@@ -2547,25 +2554,32 @@ document.addEventListener('keydown', e => {
 
 /* ---------- záložka OM (odberné miesta) ---------- */
 S.om = {};   // kľúč = norm(firma) → pole OM; 'err:' + kľúč = chyba
-const omKey = r => norm(V(r, 'firma'));
+const omIco = r => String(V(r, 'ico') || '').replace(/\s+/g, '');
+const omNazov = r => V(r, 'obch') || V(r, 'firma');   // obchodný názov (s.r.o.), nie pracovný
+const omKey = r => omIco(r) ? 'ico:' + omIco(r) : norm(omNazov(r));
 const omVal = x => (x === null || x === undefined) ? '' : String(x);
 const omDate = v => { const s = omVal(v); const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); return m ? `${+m[3]}. ${+m[2]}. ${m[1]}` : s; };
 const omNum = v => { const n = typeof v === 'number' ? v : num(v); return isFinite(n) ? fmtDec(n) : omVal(v); };
 async function loadOm(r) {
-  const k = omKey(r), firma = V(r, 'firma');
-  try { const j = await api('omread', {firma}); S.om[k] = j.rows || []; delete S.om['err:' + k]; }
+  const k = omKey(r);
+  try { const j = await api('omread', {ico: omIco(r), nazov: omNazov(r)}); S.om[k] = j.rows || []; delete S.om['err:' + k]; }
   catch (e) { S.om[k] = null; S.om['err:' + k] = /Neznáma akcia/.test(e.message) ? 'Apps Script ešte nepozná záložku OM – nasaď novú verziu CRM_API.gs (Nasadiť → Spravovať nasadenia → ✎ → Nová verzia → Nasadiť).' : e.message; }
   const cur = rowBy(S.sel);
   if (S.tab === 'om' && cur && omKey(cur) === k) { const tb = $('#tabBody'); if (tb) tb.innerHTML = tabBody(cur); }
 }
 function omTable(rows, kind) {
   const idl = kind === 'el' ? 'EIC' : 'POD';
-  return `<div class="omWrap"><table class="omT"><thead><tr><th>Č. OM</th><th>${idl}</th><th>Adresa OM</th><th class="n">Spotreba (MWh/rok)</th><th>Dodávateľ</th><th>Distribučná tarifa</th><th>Koniec viazanosti</th></tr></thead><tbody>` +
-    rows.map(o => `<tr><td class="nm">${esc(omVal(o.cislo))}</td><td class="mono">${esc(omVal(o.eic))}</td><td>${esc(omVal(o.adresa))}</td><td class="n">${esc(omNum(o.spotreba))}</td><td>${esc(omVal(o.dodavatel))}</td><td>${esc(omVal(o.tarifa))}</td><td>${esc(omDate(o.koniec))}</td></tr>`).join('') + '</tbody></table></div>';
+  return rows.map(o => `<div class="omWrap"><table class="omT omCard"><tbody>` +
+    `<tr><th>Adresa OM:</th><td class="nm">${esc(omVal(o.adresa)) || '–'}</td></tr>` +
+    `<tr><th>OM #${esc(omVal(o.cislo))}</th><td class="mono">${idl}: ${esc(omVal(o.eic)) || '–'}</td></tr>` +
+    `<tr><th>Spotreba (MWh/rok)</th><td>${esc(omNum(o.spotreba))}</td></tr>` +
+    `<tr><th>Dodávateľ</th><td>${esc(omVal(o.dodavatel)) || '–'}</td></tr>` +
+    `<tr><th>Koniec viazanosti</th><td>${esc(omDate(o.koniec)) || '–'}</td></tr>` +
+    `</tbody></table></div>`).join('');
 }
 function omHtml(r) {
   const k = omKey(r);
-  if (!k) return '<div class="empty">Kontakt nemá názov firmy.</div>';
+  if (!k) return '<div class="empty">Kontakt nemá IČO ani názov spoločnosti.</div>';
   if (S.om[k] === undefined) { loadOm(r); return '<div class="empty">Načítavam odberné miesta…</div>'; }
   if (S.om[k] === null) return `<div class="empty">${esc(S.om['err:' + k] || 'Odberné miesta sa nepodarilo načítať.')}</div><button type="button" class="cta ghost" data-act="omreload">Skúsiť znova</button>`;
   const rows = S.om[k];
@@ -2675,7 +2689,7 @@ function parseAnalysis(wb) {
     if (!data.length) return;
     // odberné miesta → jednotlivé riadky pre záložku OM
     const fnd = re => hr.findIndex(x => re.test(x));
-    const cE = fnd(/(^| )(eic|pod)( |$)/), cT = fnd(/tarif|sadzb/), cA = hr.map((x, i) => /adres/.test(x) ? i : -1).filter(i => i >= 0);
+    const cE = fnd(/(^| )(eic|pod)( |$)/), cA = hr.map((x, i) => /adres/.test(x) ? i : -1).filter(i => i >= 0);
     const cAdr = cA.length ? cA : ['ulica', 'psc', 'mesto', 'obec'].map(p => fnd(new RegExp(p))).filter(i => i >= 0);
     data.forEach(r => {
       const kv = r[cV], kd = xd(kv);
@@ -2684,7 +2698,7 @@ function parseAnalysis(wb) {
         eic: cE >= 0 ? txt(r[cE]) : '',
         adresa: cAdr.map(i => txt(r[i])).filter(Boolean).join(', '),
         spotreba: nn(r[cS]) > 0 || nn(r[cS]) === 0 ? r3(nn(r[cS])) : '',
-        dodavatel: txt(r[cD]), tarifa: cT >= 0 ? txt(r[cT]) : '',
+        dodavatel: txt(r[cD]),
         koniec: kd || txt(kv)
       });
     });
@@ -2707,9 +2721,12 @@ function parseAnalysis(wb) {
 }
 const r3 = x => Math.round(x * 1000) / 1000;
 const fmtDec = x => String(r3(x)).replace('.', ',');
-async function saveOm(r, rows) {
+async function saveOm(r, rows, cust) {
   if (!rows || !rows.length) return true;
-  try { await api('omsave', {firma: V(r, 'firma'), rows}); S.om[omKey(r)] = rows; delete S.om['err:' + omKey(r)]; return true; }
+  cust = cust || {};
+  const ico = (omIco(r) || String(cust.ico || '')).replace(/\s+/g, '');
+  const nazov = cust.odb || omNazov(r);
+  try { await api('omsave', {ico, nazov, rows}); S.om = {}; return true; }
   catch (e) { toast('OM sa nezapísali: ' + (/Neznáma akcia/.test(e.message) ? 'nasaď novú verziu CRM_API.gs' : e.message), true); return false; }
 }
 async function importAnalysis(file) {
@@ -2740,7 +2757,7 @@ async function importAnalysis(file) {
     }
     put('an_ok', {t: 'd', v: todayISO()});
     const real = await materializeNewCols(vals);
-    const omOk = await saveOm(r, A.om);
+    const omOk = await saveOm(r, A.om, A.cust);
     await api('update', {sheet: 'contacts', row: r.r, values: real, activity: actFor(r, 'Analýza načítaná', '', real),
       check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, real);
