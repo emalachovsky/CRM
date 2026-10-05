@@ -1332,7 +1332,25 @@ function phones(r) {
 }
 
 /* ---------- API ---------- */
+let savingN = 0;
 async function api(action, payload = {}) {
+  if (action === 'read' || action === 'ping') return apiCore(action, payload);
+  savingN++;
+  const t = $('#toast'); t.textContent = 'Ukladám…'; t.className = 'show'; clearTimeout(tt);
+  try { return await apiCore(action, payload); }
+  finally { if (--savingN <= 0) { savingN = 0; if (t.textContent === 'Ukladám…') t.className = ''; } }
+}
+/* po strate odpovedi servera: ticho over, či sa zmena zapísala (bez rušivého hlásenia a bez prepisovania rozpísaného formulára) */
+function verifyLater(rowNo, values) {
+  setTimeout(async () => {
+    await load(true, true);
+    const r = S.data && S.data.contacts.rows.find(x => x.r === rowNo); if (!r) return;
+    const flat = x => String(x ?? '').replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
+    const chk = Object.keys(values).filter(h => typeof values[h] === 'string');
+    if (chk.length && chk.every(h => flat(r.v[h]) !== flat(values[h]))) toast('⚠️ Zmena sa na serveri neuložila – ulož ju znova.', true);
+  }, 2500);
+}
+async function apiCore(action, payload = {}) {
   if (!S.cfg.url) throw new Error('Chýba URL – otvor Nastavenia');
   const body = JSON.stringify({token: S.cfg.token, action, ...payload});
   const isRead = action === 'read' || action === 'ping';
@@ -1357,6 +1375,7 @@ async function api(action, payload = {}) {
     }
   }
   if (!isRead && last && (last.lost || /neodpovedal/.test(last.message))) {
+    if (action === 'update' && payload.row && payload.values) { verifyLater(payload.row, payload.values); return {ok: true, lost: true, ver: true}; }
     setTimeout(() => { if (!loading) load(true); }, 1500);
     throw new Error('Odpoveď servera sa stratila – zmena sa pravdepodobne uložila, dáta si znova načítavam.');
   }
@@ -1373,14 +1392,15 @@ function paintSync() {
   const t = sy.st === 'ok' ? (tm ? 'Načítané ' + tm : 'Z pamäte') : sy.st === 'sync' ? 'Načítavam…' : (sy.msg || 'Chyba');
   el.innerHTML = `<span class="dot ${sy.st}"></span>${esc(t)}`;
 }
-async function load(silent) {
+async function load(silent, quiet) {
   if (loading) return;
-  loading = true; setSync('sync');
+  loading = true; if (!quiet) setSync('sync');
   try {
     const j = await api('read');
     S.data = j; S.lastLoad = Date.now(); buildMap(); persist();
     if (S.sel != null && S.view === 'contacts' && !rowBy(S.sel)) S.sel = null;
-    render(); setSync('ok'); checkLists();
+    if (quiet || S.dirty) { renderChips(); renderListBody(); } else render();
+    setSync('ok'); checkLists();
   } catch (e) { setSync('err', 'Chyba: ' + e.message); if (!silent) toast(e.message, true); }
   finally { loading = false; }
 }
@@ -2001,7 +2021,6 @@ async function saveStav(sel) {
   try {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); saveMsg('Stav uložený ✔'); toast('Stav uložený do sheetu ✔'); renderChips(); renderListBody();
-    if (!S.dirty) load(true);   /* po zápise sa dáta znova načítajú zo sheetu, aby apka ukazovala presne to, čo je v sheete */
   } catch (e) { sel.value = V(r, 'stav'); sel.setAttribute('style', palStyle(V(r, 'stav'))); toast(e.message, true); if (e.conflict) load(true); }
 }
 async function clearHist() {
@@ -2028,12 +2047,20 @@ async function saveNote(btn) {
   const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = $('#notesTa') ? $('#notesTa').value.trim() : V(r, 'pozn'), vals = {[S.m.pozn]: old ? line + '\n' + old : line};
   const act = actFor(r, 'Poznámka', note, null);
   btn.disabled = true; const t0 = Date.now(); btn.classList.add('pressed'); btn.textContent = 'Ukladám…';
+  /* hneď vlož do okna poznámok, na server sa odošle na pozadí */
+  const prevRaw = r.v[S.m.pozn];
+  setUndo(r, vals); applyLocal(r, vals); ta.value = ''; S.dirty = false;
+  const nb = $('#notesBox'); if (nb) nb.innerHTML = notesHtml(r);
   try {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-    setUndo(r, vals); applyLocal(r, vals); pushActivity(act); persist(); ta.value = '';
-    const nb = $('#notesBox'); if (nb) nb.innerHTML = notesHtml(r);    saveMsg('Poznámka uložená ✔'); S.dirty = false;
-  } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
-  finally { setTimeout(() => { btn.classList.remove('pressed'); btn.textContent = 'Vložiť poznámku'; btn.disabled = false; }, Math.max(0, 1100 - (Date.now() - t0))); }
+    pushActivity(act); persist(); saveMsg('Poznámka uložená ✔');
+  } catch (e) {
+    if (S.undo && S.undo.row === r.r) S.undo = null;
+    r.v[S.m.pozn] = prevRaw; delete r._s;
+    if (S.sel === r.r) { const nb2 = $('#notesBox'); if (nb2) nb2.innerHTML = notesHtml(r); const ta2 = $('#callNote'); if (ta2 && !ta2.value) ta2.value = note; }
+    toast(e.message, true); if (e.conflict) load(true);
+  }
+  finally { setTimeout(() => { btn.classList.remove('pressed'); btn.textContent = 'Vložiť poznámku'; btn.disabled = false; }, Math.max(0, 600 - (Date.now() - t0))); }
 }
 async function saveAll(form) {
   const r = rowBy(S.sel); if (!r) return;
@@ -2251,7 +2278,19 @@ function openSel(id) {
   S.sel = id; S.tab = 'hovor'; S.dirty = false; S.msg = null; S.undo = null;
   if (innerWidth < 900 && !(history.state && history.state.d)) history.pushState({d: 1}, '');
   render(); $('#detailPane').scrollTop = 0;
-  const sc = document.querySelector('#listPane .card.sel'); if (sc) sc.scrollIntoView({block: 'nearest'});
+  revealSel();
+}
+/* vybraná karta sa zastaví pod pevnou hlavičkou (hľadanie + filtre), nie za ňou */
+function revealSel() {
+  const c = document.querySelector('#listPane .card.sel'); if (!c) return;
+  const head = document.querySelector('#listPane .lhead');
+  const off = (head ? head.offsetHeight : 0) + 6;
+  c.style.scrollMarginTop = off + 'px'; c.style.scrollMarginBottom = '12px';
+  c.scrollIntoView({block: 'nearest'});
+  const g = c.previousElementSibling;
+  if (g && g.classList.contains('dgrp') && head && g.getBoundingClientRect().top < head.getBoundingClientRect().bottom) {
+    g.style.scrollMarginTop = off + 'px'; g.scrollIntoView({block: 'nearest'});
+  }
 }
 /* po uložení otvor kontakt úplne hore v zozname */
 function openTop(msg) {
