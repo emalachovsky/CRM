@@ -1076,6 +1076,9 @@ html:not([data-theme="light"]) #fAll .dwrap.has input[type=date],html:not([data-
 .omCard th{width:11rem;text-transform:none;letter-spacing:0;font-size:.82rem;white-space:nowrap}
 .omCard td{word-break:break-word}
 .omWrap+.omWrap{margin-top:.6rem}
+.omBox{border:1px solid var(--line);border-radius:12px;padding:.6rem .8rem .1rem;margin:.5rem 0;background:var(--panel)}
+.omBox .omNo{font-weight:800;margin-bottom:.5rem}
+#fOm input{height:2.75rem;min-height:2.75rem}
 .omWrap:has(.omCard){border:1px solid var(--line);border-radius:12px;padding:.25rem .5rem}
 .omSum{color:var(--muted);font-size:.8rem;margin:.1rem 0 .4rem}
 </style>
@@ -2033,10 +2036,15 @@ const rmAct = a => { const i = S.data.activities.rows.indexOf(a); if (i >= 0) S.
 /* Okamžitá zmena v CRM (zoznam sa hneď prefiltruje a zoradí), zápis do Sheetu beží na pozadí; pri chybe sa zmena vráti. */
 function commitBg(r, o) {
   const vals = o.vals, act = o.act, notes = o.notes || {}, hasN = Object.keys(notes).length;
+  const om = o.om || [];
   const check = S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null;
   const prevV = {}; for (const h in vals) prevV[h] = r.v[h];
   const prevN = r.n ? {...r.n} : r.n;
   const nm = V(r, 'firma') || 'kontakt';
+  /* OM: zmena sa hneď zapíše do pamäte apky; pri chybe sa vráti */
+  const prevOm = om.map(it => { const x = omRowByNo(it.row); return x ? {x, old: {...x}} : null; }).filter(Boolean);
+  const revertOm = () => prevOm.forEach(p => Object.assign(p.x, p.old));
+  om.forEach(it => { const x = omRowByNo(it.row); if (x) Object.assign(x, it.o); });
   setUndo(r, vals); applyLocal(r, vals); if (hasN) applyNotes(r, notes);
   const actRow = pushActivity(act); persist(); S.dirty = false;
   renderChips(); renderListBody();
@@ -2045,8 +2053,11 @@ function commitBg(r, o) {
   pendingSaves++;
   (async () => {
     let j, err;
-    try { j = await api('update', {sheet: 'contacts', row: r.r, values: vals, notes, activity: act, check}); } catch (e) { err = e; }
+    try { j = await api('update', {sheet: 'contacts', row: r.r, values: vals, notes, om, activity: act, check}); } catch (e) { err = e; }
     pendingSaves--;
+    if (!err && om.length && !j.lost && j.om !== om.length) {
+      err = new Error('Server je na starej verzii API – odberné miesta sa neuložili. Nasaď novú verziu CRM_API.gs.');
+    }
     if (!err) {
       if (hasN && !j.ver) { r.n = prevN; toast('Server je na starej verzii API – poznámka k číslu sa neuložila. Nasaď novú verziu CRM_API.gs.', true); }
       const cal = j && j.cal; calToast(j, r);
@@ -2055,7 +2066,7 @@ function commitBg(r, o) {
       return;
     }
     for (const h in prevV) r.v[h] = prevV[h];
-    delete r._s; r.n = prevN; rmAct(actRow);
+    delete r._s; r.n = prevN; rmAct(actRow); revertOm();
     if (S.undo && S.undo.row === r.r) S.undo = null;
     persist(); renderChips(); renderListBody(); if (S.sel === r.r && !S.dirty) renderDetail();
     toast('Zmena „' + nm + '“ sa neuložila: ' + err.message, true); if (err.conflict) load(true);
@@ -2508,7 +2519,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('submit', e => {
   e.preventDefault(); const f = e.target;
-  ({fCall: saveCall, fAll: saveAll, fComp: saveFirma, fNew: saveNew}[f.id] || (() => {}))(f);
+  ({fCall: saveCall, fAll: saveAll, fComp: saveFirma, fNew: saveNew, fOm: saveOmTab}[f.id] || (() => {}))(f);
   if (f.id === 'fSet') {
     S.cfg = {url: CRM_URL || $('#sUrl').value.trim(), token: ''};
     LS.setItem('crm.cfg', JSON.stringify(S.cfg)); closeModal(); load();
@@ -2561,38 +2572,59 @@ const omKey = r => omIco(r) ? 'ico:' + omIco(r) : norm(omNazov(r));
 const omVal = x => (x === null || x === undefined) ? '' : String(x);
 const omDate = v => { const s = omVal(v); const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); return m ? `${+m[3]}. ${+m[2]}. ${m[1]}` : s; };
 const omNum = v => { const n = typeof v === 'number' ? v : num(v); return isFinite(n) ? fmtDec(n) : omVal(v); };
-async function loadOm(r) {
-  const k = omKey(r);
-  try { const j = await api('omread', {ico: omIco(r), nazov: omNazov(r)}); S.om[k] = j.rows || []; delete S.om['err:' + k]; }
-  catch (e) { S.om[k] = null; S.om['err:' + k] = /Neznáma akcia/.test(e.message) ? 'Apps Script ešte nepozná záložku OM – nasaď novú verziu CRM_API.gs (Nasadiť → Spravovať nasadenia → ✎ → Nová verzia → Nasadiť).' : e.message; }
-  const cur = rowBy(S.sel);
-  if (S.tab === 'om' && cur && omKey(cur) === k) { const tb = $('#tabBody'); if (tb) tb.innerHTML = tabBody(cur); }
+/* OM sa načítavajú spolu s ostatnými dátami (S.data.om) a ukladajú sa do pamäte apky ako ostatné údaje */
+const omIcoN = x => String(x || '').replace(/\s+/g, '');
+const omMatch = (o, ico, nazov) => ico ? omIcoN(o.ico) === ico : (!!norm(nazov) && norm(o.nazov) === norm(nazov));
+const omRowByNo = n => ((S.data && S.data.om && S.data.om.rows) || []).find(x => x.r === n);
+function omRowsFor(r) {
+  const all = S.data && S.data.om && S.data.om.rows;
+  if (!all) return null;
+  const ico = omIco(r), nz = omNazov(r);
+  return all.filter(o => omMatch(o, ico, nz));
 }
-function omTable(rows, kind) {
-  return rows.map(o => `<div class="omWrap"><table class="omT omCard"><thead><tr><th colspan="2" class="omNo">OM #${esc(omVal(o.cislo))}</th></tr></thead><tbody>` +
-    `<tr><th>EIC/POD:</th><td class="mono">${esc(omVal(o.eic)) || '–'}</td></tr>` +
-    `<tr><th>Adresa OM:</th><td>${esc(omVal(o.adresa)) || '–'}</td></tr>` +
-    `<tr><th>Spotreba:</th><td>${omVal(o.spotreba) === '' ? '–' : esc(omNum(o.spotreba)) + ' MWh/rok'}</td></tr>` +
-    `<tr><th>Dodávateľ:</th><td>${esc(omVal(o.dodavatel)) || '–'}</td></tr>` +
-    `<tr><th>Koniec viazanosti:</th><td>${esc(omDate(o.koniec)) || '–'}</td></tr>` +
-    `</tbody></table></div>`).join('');
+const omCmp = (f, x) => f === 'spotreba' ? (isFinite(num(x)) ? r3(num(x)) : '') : String(x ?? '').trim();
+function omEdit(rows) {
+  return rows.map(o => {
+    const a = f => `data-omrow="${o.r}" data-omf="${f}"`;
+    const kon = omVal(o.koniec);
+    const koInp = kon && !isoDate(kon) ? `<input type="text" ${a('koniec')} value="${esc(kon)}">` : dateInp(a('koniec'), isoDate(kon));
+    const sp = omVal(o.spotreba) === '' ? '' : fmtDec(num(o.spotreba));
+    return `<div class="omBox"><div class="omNo">OM #${esc(omVal(o.cislo))}</div>
+      <label>EIC/POD<input type="text" ${a('eic')} value="${esc(omVal(o.eic))}"></label>
+      <label>Adresa OM<input type="text" ${a('adresa')} value="${esc(omVal(o.adresa))}"></label>
+      <label>Spotreba (MWh/rok)<input type="text" inputmode="decimal" ${a('spotreba')} value="${esc(sp)}"></label>
+      <label>Dodávateľ<input type="text" ${a('dodavatel')} value="${esc(omVal(o.dodavatel))}"></label>
+      <label>Koniec viazanosti${koInp}</label></div>`;
+  }).join('');
 }
 function omHtml(r) {
   const k = omKey(r);
   if (!k) return '<div class="empty">Kontakt nemá IČO ani názov spoločnosti.</div>';
-  if (S.om[k] === undefined) { loadOm(r); return '<div class="empty">Načítavam odberné miesta…</div>'; }
-  if (S.om[k] === null) return `<div class="empty">${esc(S.om['err:' + k] || 'Odberné miesta sa nepodarilo načítať.')}</div><button type="button" class="cta ghost" data-act="omreload">Skúsiť znova</button>`;
-  const rows = S.om[k];
+  const rows = omRowsFor(r);
+  if (rows === null) return '<div class="empty">Server ešte neposiela odberné miesta spolu s ostatnými údajmi – nasaď novú verziu CRM_API.gs (Nasadiť → Spravovať nasadenia → ✎ → Nová verzia → Nasadiť) a načítaj dáta znova.</div>';
   if (!rows.length) return '<div class="empty">Zatiaľ bez odberných miest. Načítaj analýzu (xlsx) tlačidlom „Načítať analýzu“.</div>';
   const grp = (kind, title, ico2, cls) => {
     const L = rows.filter(o => norm(o.komodita).startsWith(kind === 'el' ? 'elektr' : 'plyn'));
     if (!L.length) return '';
-    const sum = L.reduce((a, o) => a + (num(o.spotreba) || 0), 0);
-    return `<div class="cg ${cls}"><div class="gtitle"><span class="gi">${ico2}</span>${title}</div>${omTable(L, kind)}</div>`;
+    return `<div class="cg ${cls}"><div class="gtitle"><span class="gi">${ico2}</span>${title}</div>${omEdit(L)}</div>`;
   };
   const other = rows.filter(o => !/^(elektr|plyn)/.test(norm(o.komodita)));
-  return grp('el', 'Elektrina', '⚡', 'el') + grp('pl', 'Plyn', '🔥', 'gas') +
-    (other.length ? `<div class="cg basic"><div class="gtitle">Ostatné</div>${omTable(other, 'el')}</div>` : '');
+  return `<form id="fOm" class="win pad" autocomplete="off">` + grp('el', 'Elektrina', '⚡', 'el') + grp('pl', 'Plyn', '🔥', 'gas') +
+    (other.length ? `<div class="cg basic"><div class="gtitle">Ostatné</div>${omEdit(other)}</div>` : '') + `</form>`;
+}
+function saveOmTab(form) {
+  const r = rowBy(S.sel); if (!r) return;
+  const list = [];
+  (omRowsFor(r) || []).forEach(o => {
+    const ch = {};
+    form.querySelectorAll(`[data-omrow="${o.r}"]`).forEach(el => {
+      const f = el.dataset.omf, v = el.value.trim();
+      if (omCmp(f, o[f]) !== omCmp(f, v)) ch[f] = f === 'spotreba' ? (v === '' ? '' : r3(num(v))) : v;
+    });
+    if (Object.keys(ch).length) list.push({row: o.r, cislo: o.cislo, komodita: o.komodita, o: ch});
+  });
+  if (!list.length) { saveMsg('Nič na uloženie'); return; }
+  commitBg(r, {vals: {}, om: list, act: actFor(r, 'OM', '', null), stay: true, msg: 'OM uložené ✔'});
 }
 
 /* ---------- načítanie analýzy z xlsx ---------- */
@@ -2726,7 +2758,12 @@ async function saveOm(r, rows, cust) {
   cust = cust || {};
   const ico = (omIco(r) || String(cust.ico || '')).replace(/\s+/g, '');
   const nazov = cust.odb || omNazov(r);
-  try { const j = await api('omsave', {ico, nazov, rows}); S.om = {}; S.omRes = j; return true; }
+  try {
+    const j = await api('omsave', {ico, nazov, rows});
+    S.omRes = j;
+    if (j.rows && S.data.om) { S.data.om.rows = S.data.om.rows.filter(o => !omMatch(o, ico, nazov)).concat(j.rows); persist(); }
+    return true;
+  }
   catch (e) { toast('OM sa nezapísali: ' + (/Neznáma akcia/.test(e.message) ? 'nasaď novú verziu CRM_API.gs' : e.message), true); return false; }
 }
 async function importAnalysis(file) {
