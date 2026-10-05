@@ -2726,7 +2726,7 @@ async function saveOm(r, rows, cust) {
   cust = cust || {};
   const ico = (omIco(r) || String(cust.ico || '')).replace(/\s+/g, '');
   const nazov = cust.odb || omNazov(r);
-  try { await api('omsave', {ico, nazov, rows}); S.om = {}; return true; }
+  try { const j = await api('omsave', {ico, nazov, rows}); S.om = {}; S.omRes = j; return true; }
   catch (e) { toast('OM sa nezapísali: ' + (/Neznáma akcia/.test(e.message) ? 'nasaď novú verziu CRM_API.gs' : e.message), true); return false; }
 }
 async function importAnalysis(file) {
@@ -2765,7 +2765,7 @@ async function importAnalysis(file) {
     applyLocal(r, local); pushActivity(actFor(r, 'Analýza načítaná', '', real)); persist();
     S.dirty = false; S.tab = 'firma'; renderChips(); renderListBody(); renderDetail();
     const bits = []; if (A.el) bits.push(`elektrina ${fmtDec(A.el.sp)} MWh · ${fmtDec(A.el.cs)} €/MWh`); if (A.pl) bits.push(`plyn ${fmtDec(A.pl.sp)} MWh · ${fmtDec(A.pl.cs)} €/MWh`);
-    if (omOk && A.om.length) bits.push(A.om.length + ' OM'); toast('Analýza načítaná: ' + bits.join(' | '));
+    if (omOk && A.om.length) bits.push(A.om.length + ' OM' + (S.omRes && S.omRes.added != null ? ` (${S.omRes.updated} prepísaných, ${S.omRes.added} nových)` : '')); toast('Analýza načítaná: ' + bits.join(' | '));
   } catch (e) { toast(e.message || String(e), true); if (e.conflict) load(true); }
   finally { document.querySelectorAll('.btn-an').forEach(b => b.disabled = false); }
 }
