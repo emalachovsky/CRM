@@ -1163,7 +1163,7 @@ const S = {
   cfg: (() => { const c = JSON.parse(LS.getItem('crm.cfg') || '{}'); return {url: CRM_URL || c.url || '', token: ''}; })(),
   map: JSON.parse(LS.getItem('crm.map') || '{}'),
   data: null, m: {}, auto: {},
-  view: 'contacts', q: '', chip: 'all', sel: null, tab: 'hovor',
+  view: 'contacts', q: '', chip: 'all', sel: null, tab: (() => { try { return LS.getItem('crmTab') || 'hovor'; } catch (e) { return 'hovor'; } })(),
   dirty: false, stSet: new Set(JSON.parse(LS.getItem('crm.stfilter') || '[]')), stOpen: false, msg: null, sy: {st: 'ok'}, limit: 150, lastLoad: 0, extraCo: new Set(), undo: null
 };
 /* neuložené zmeny → tlačidlo „Uložiť“ sa zvýrazní (body.dirty) */
@@ -2348,7 +2348,7 @@ function dupReport() {
 
 /* ---------- navigácia ---------- */
 function openSel(id) {
-  S.sel = id; S.tab = 'hovor'; S.dirty = false; S.msg = null; S.undo = null;
+  S.sel = id; if (!['hovor', 'firma', 'om', 'udaje', 'hist'].includes(S.tab)) { try { S.tab = LS.getItem('crmTab'); } catch (e) {} } if (!['hovor', 'firma', 'om', 'udaje', 'hist'].includes(S.tab)) S.tab = 'hovor'; S.dirty = false; S.msg = null; S.undo = null;
   if (innerWidth < 900 && !(history.state && history.state.d)) history.pushState({d: 1}, '');
   render(); $('#detailPane').scrollTop = 0;
   revealSel();
@@ -2443,7 +2443,7 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-urgent]'))) { toggleUrgent(); return; }
   if ((el = t.closest('[data-themeset]'))) { setTheme(el.dataset.themeset); return; }
   if ((el = t.closest('[data-nav]'))) { if (el.dataset.nav === 'settings') { openSettings(); if (S.cfg.url) load(true).then(() => { if ($('#fSet') && !$('#sUrl').matches(':focus')) openSettings(); }); } return; }
-  if ((el = t.closest('[data-tab]'))) { S.tab = el.dataset.tab; $('#tabBody').innerHTML = tabBody(rowBy(S.sel)); document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === el)); S.dirty = false; return; }
+  if ((el = t.closest('[data-tab]'))) { S.tab = el.dataset.tab; try { LS.setItem('crmTab', S.tab); } catch (e) {} $('#tabBody').innerHTML = tabBody(rowBy(S.sel)); document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === el)); S.dirty = false; return; }
   if (S.stOpen && !t.closest('.chips')) { S.stOpen = false; renderChips(); }
   if ((el = t.closest('[data-stpop]'))) { S.stOpen = !S.stOpen; renderChips(); return; }
   if ((el = t.closest('[data-stall]'))) { S.stSet.clear(); saveStFilter(); S.limit = 150; renderChips(); renderListBody(); return; }
@@ -2602,7 +2602,7 @@ function omEdit(rows) {
       <label>Spotreba (MWh/rok)<input type="text" inputmode="decimal" ${a('spotreba')} value="${esc(sp)}"></label>
       <label>Dodávateľ<input type="text" ${a('dodavatel')} value="${esc(omVal(o.dodavatel))}"></label>
       <label>Distribučná sadzba<input type="text" ${a('sadzba')} value="${esc(omVal(o.sadzba))}"></label>
-      <label>Hlavný istič<input type="text" ${a('istic')} value="${esc(omVal(o.istic))}"></label>
+      ${/^plyn/.test(norm(o.komodita)) ? '' : `<label>Hlavný istič<input type="text" ${a('istic')} value="${esc(omVal(o.istic))}"></label>`}
       <label>Koniec viazanosti${koInp}</label></div>`;
   }).join('');
 }
@@ -2741,7 +2741,7 @@ function parseAnalysis(wb) {
         spotreba: nn(r[cS]) > 0 || nn(r[cS]) === 0 ? r3(nn(r[cS])) : '',
         dodavatel: txt(r[cD]),
         sadzba: cSad >= 0 ? txt(r[cSad]) : '',
-        istic: cIst >= 0 ? txt(r[cIst]) : '',
+        istic: kind === 'el' && cIst >= 0 ? txt(r[cIst]) : '',
         koniec: kd || txt(kv)
       });
     });
