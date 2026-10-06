@@ -1081,6 +1081,12 @@ html:not([data-theme="light"]) #fAll .dwrap.has input[type=date],html:not([data-
 #fOm input{height:2.75rem;min-height:2.75rem}
 .omWrap:has(.omCard){border:1px solid var(--line);border-radius:12px;padding:.25rem .5rem}
 .omSum{color:var(--muted);font-size:.8rem;margin:.1rem 0 .4rem}
+/* ===== v20 ===== */
+/* dnes, čas už uplynul – červený text s tmavosivým obrysom */
+html body .card .c-left.late .c-time,html body .card .c-left.late .c-date{color:#ff4d4d!important;opacity:1;-webkit-text-stroke:3px #3a404c;paint-order:stroke fill;text-shadow:none}
+html[data-theme="light"] body .card .c-left.late .c-time,html[data-theme="light"] body .card .c-left.late .c-date{color:#e03030!important;-webkit-text-stroke:3px #4a505c}
+/* Nasleduje v zozname kontaktov – tmavosivé pozadie (hlavička detailu sa nemení) */
+html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){background:#2f3541}
 </style>
 </head>
 <body>
@@ -1501,13 +1507,14 @@ function filtered() {
   return rows.sort((a, b) => { const x = key(a), y = key(b);
     return x[0].localeCompare(y[0]) || x[1].localeCompare(y[1]) || String(V(a, 'firma')).localeCompare(String(V(b, 'firma')), 'sk'); });
 }
+const nowHM = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
 function card(r) {
   const {d, t} = DT(r), c = dueClass(d), st = V(r, 'stav');
   const p = phones(r).find(x => x.num);
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = isActLbl(V(r, 'pozicia'));
   return `<div class="card ${c} ${S.sel === r.r ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
-    <div class="c-left ${c} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
+    <div class="c-left ${c} ${c === 'today' && t && t < nowHM() ? 'late' : ''} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
@@ -2594,6 +2601,8 @@ function omEdit(rows) {
       <label>Adresa OM<input type="text" ${a('adresa')} value="${esc(omVal(o.adresa))}"></label>
       <label>Spotreba (MWh/rok)<input type="text" inputmode="decimal" ${a('spotreba')} value="${esc(sp)}"></label>
       <label>Dodávateľ<input type="text" ${a('dodavatel')} value="${esc(omVal(o.dodavatel))}"></label>
+      <label>Distribučná sadzba<input type="text" ${a('sadzba')} value="${esc(omVal(o.sadzba))}"></label>
+      <label>Hlavný istič<input type="text" ${a('istic')} value="${esc(omVal(o.istic))}"></label>
       <label>Koniec viazanosti${koInp}</label></div>`;
   }).join('');
 }
@@ -2721,7 +2730,7 @@ function parseAnalysis(wb) {
     if (!data.length) return;
     // odberné miesta → jednotlivé riadky pre záložku OM
     const fnd = re => hr.findIndex(x => re.test(x));
-    const cE = fnd(/(^| )(eic|pod)( |$)/), cA = hr.map((x, i) => /adres/.test(x) ? i : -1).filter(i => i >= 0);
+    const cE = fnd(/(^| )(eic|pod)( |$)/), cSad = fnd(/sadzb|tarif/), cIst = fnd(/istic|isti c|hlavny ist|ampe/), cA = hr.map((x, i) => /adres/.test(x) ? i : -1).filter(i => i >= 0);
     const cAdr = cA.length ? cA : ['ulica', 'psc', 'mesto', 'obec'].map(p => fnd(new RegExp(p))).filter(i => i >= 0);
     data.forEach(r => {
       const kv = r[cV], kd = xd(kv);
@@ -2731,6 +2740,8 @@ function parseAnalysis(wb) {
         adresa: cAdr.map(i => txt(r[i])).filter(Boolean).join(', '),
         spotreba: nn(r[cS]) > 0 || nn(r[cS]) === 0 ? r3(nn(r[cS])) : '',
         dodavatel: txt(r[cD]),
+        sadzba: cSad >= 0 ? txt(r[cSad]) : '',
+        istic: cIst >= 0 ? txt(r[cIst]) : '',
         koniec: kd || txt(kv)
       });
     });
@@ -2802,7 +2813,7 @@ async function importAnalysis(file) {
     applyLocal(r, local); pushActivity(actFor(r, 'Analýza načítaná', '', real)); persist();
     S.dirty = false; S.tab = 'firma'; renderChips(); renderListBody(); renderDetail();
     const bits = []; if (A.el) bits.push(`elektrina ${fmtDec(A.el.sp)} MWh · ${fmtDec(A.el.cs)} €/MWh`); if (A.pl) bits.push(`plyn ${fmtDec(A.pl.sp)} MWh · ${fmtDec(A.pl.cs)} €/MWh`);
-    if (omOk && A.om.length) bits.push(A.om.length + ' OM' + (S.omRes && S.omRes.added != null ? ` (${S.omRes.skipped || 0} už existovalo, ${S.omRes.added} nových)` : '')); toast('Analýza načítaná: ' + bits.join(' | '));
+    if (omOk && A.om.length) bits.push(A.om.length + ' OM' + (S.omRes && S.omRes.added != null ? ` (${S.omRes.skipped || 0} už existovalo, ${S.omRes.added} nových${S.omRes.filled ? ', doplnené sadzba/istič: ' + S.omRes.filled : ''})` : '')); toast('Analýza načítaná: ' + bits.join(' | '));
   } catch (e) { toast(e.message || String(e), true); if (e.conflict) load(true); }
   finally { document.querySelectorAll('.btn-an').forEach(b => b.disabled = false); }
 }
@@ -2832,6 +2843,9 @@ try {
   new MutationObserver(placeAct).observe(document.getElementById('detailPane'), {childList: true, subtree: true});
   matchMedia('(max-width:600px)').addEventListener('change', placeAct);
 } catch (e) {}
+
+/* každú minútu prekresli zoznam – dnešné časy, ktoré uplynuli, sa zafarbia samy */
+setInterval(() => { if (S.data && S.view === 'contacts' && !S.dirty && !document.querySelector('#modal .ovl')) renderListBody(); }, 60000);
 
 /* ---------- štart ---------- */
 buildMap(); render();
