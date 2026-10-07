@@ -2437,17 +2437,24 @@ async function syncGroups() {
   finally { syncingG = false; }
 }
 async function unlinkRow() {
-  const r = rowBy(S.sel); if (!r || groupOf(r).length < 2) return;
+  const r = rowBy(S.sel); if (!r) return;
+  const grp = groupOf(r); if (grp.length < 2) return;
   if (!confirm(`Odpojiť firmu „${V(r, 'firma')}“ od ostatných firiem konateľa?`)) return;
-  delete lgGet()[rowKey(r)]; lgSave();
+  const rest = grp.filter(x => x !== r);
+  const targets = rest.length === 1 ? [r, rest[0]] : [r];   /* ak zostane jediná firma, spojenie sa zruší aj jej */
+  const lg = lgGet(), saved = {}; targets.forEach(x => { saved[rowKey(x)] = lg[rowKey(x)]; delete lg[rowKey(x)]; }); lgSave();
   try {
-    if (S.m.skup && String(V(r, 'skup')).trim()) {
-      const vals = {[S.m.skup]: ''}, act = actFor(r, 'Odpojená firma', '', null);
-      await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-      applyLocal(r, vals); pushActivity(act);
+    if (S.m.skup) for (const x of targets) {
+      if (!String(V(x, 'skup')).trim()) continue;
+      const vals = {[S.m.skup]: ''}, act = x === r ? actFor(x, 'Odpojená firma', '', null) : undefined;
+      await api('update', {sheet: 'contacts', row: x.r, values: vals, ...(act ? {activity: act} : {}), check: S.m.firma && !x.fd ? {header: S.m.firma, value: V(x, 'firma')} : null});
+      applyLocal(x, vals); if (act) pushActivity(act);
     }
-    persist(); renderChips(); renderListBody(); renderDetail(); toast('Firma odpojená');
-  } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
+    persist(); renderChips(); renderListBody(); renderDetail(); toast('Firma odpojená, stĺpec „Skupina firiem“ v Sheete vymazaný');
+  } catch (e) {
+    Object.assign(lg, saved); lgSave(); persist(); renderChips(); renderListBody(); renderDetail();
+    toast('Odpojenie sa nepodarilo (Sheet sa nezmenil): ' + e.message, true); if (e.conflict) load(true);
+  }
 }
 /* zápis do ďalšej firmy skupiny na pozadí (bez prekreslenia obrazovky); pri chybe sa zmena vráti */
 async function quietUpdate(sb, vals, act, notes) {
