@@ -1115,7 +1115,8 @@ html .card .c-next>span{color:inherit}
 .setSec .cta,.setSec .cta.ghost{background:linear-gradient(135deg,var(--acc),var(--acc-d));color:#fff;border:0;box-shadow:0 6px 18px color-mix(in srgb,var(--acc) 22%,transparent)}
 .setSec .cta+.cta,.setSec .cta+.rcP,.setSec .cta+.maprow{margin-top:.6rem}
 .setSec .miss .cta{margin-top:.4rem}
-/* šesť záložiek (Hovor, Firma, Osoba, OM, Všetky údaje, História) sa na úzkom displeji vojde */
+/* päť záložiek na úzkom displeji + osoby v záložke Aktivita */
+.pr2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}.pr2>label{min-width:0}
 @media(max-width:600px){.tabsRow .tabs{overflow-x:auto;scrollbar-width:none}.tabsRow .tab{padding:.45rem .25rem!important;font-size:.76rem!important}}
 </style>
 </head>
@@ -1859,9 +1860,9 @@ function timeSelect(a, val) {
 function contactDetail(r) {
   setStateW();
   const em = V(r, 'email'), web = String(V(r, 'web') || '').trim(), webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
-  const tabs = [['hovor', 'Hovor'], ['firma', 'Firma'], ['osoba', 'Osoba'], ['om', 'OM'], ['udaje', 'Všetky údaje'], ['hist', 'História']];
+  const tabs = [['hovor', 'Aktivita'], ['firma', 'Firma'], ['om', 'OM'], ['udaje', 'Všetky údaje'], ['hist', 'História']];
   return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
-    <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}${V(r, 'osoba') ? `<span class="fn"> · ${esc(funkciaOf(r))}</span>` : ''}</div>${nextHeadHtml(r)}</div>${savemsgHtml()}<div class="stCol">${stSelect(V(r, 'stav'))}${saveGrpHtml()}</div></div>
+    <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div>${nextHeadHtml(r)}</div>${savemsgHtml()}<div class="stCol">${stSelect(V(r, 'stav'))}${saveGrpHtml()}</div></div>
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
 </div>
@@ -1871,13 +1872,12 @@ function contactDetail(r) {
 function tabBody(r) {
   const h = tabBodyInner(r);
   const dup = (S.tab === 'firma' || S.tab === 'udaje') ? '<div id="editDup"></div>' : '';
-  return (S.tab === 'hist' || S.tab === 'om' || S.tab === 'osoba') ? h : dup + h + `<div class="delWrap">${delBtnHtml()}</div>`;
+  return (S.tab === 'hist' || S.tab === 'om') ? h : dup + h + `<div class="delWrap">${delBtnHtml()}</div>`;
 }
 function tabBodyInner(r) {
   if (S.tab === 'hovor') return tabHovor(r);
   if (S.tab === 'firma') return companyBlock(r);
   if (S.tab === 'om') return omHtml(r);
-  if (S.tab === 'osoba') return osobaHtml(r);
   if (S.tab === 'hist') {
     const f = norm(V(r, 'firma')), o = norm(V(r, 'osoba'));
     const rows = S.data.activities.rows.filter(a => norm(a.v[ACT_H.firma]) === f && (!o || !norm(a.v[ACT_H.kontakt]) || norm(a.v[ACT_H.kontakt]) === o))
@@ -1891,8 +1891,6 @@ function notesHtml(r) { return S.m.pozn ? `<label class="notesLb" style="margin-
 function tabHovor(r) {
   const {d, t} = DT(r), A = k => esc(S.m[k]);
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
-  const phs = ['tel', 'tel2'].filter(k => S.m[k]).map(k => `<div><label>${k === 'tel' ? 'Telefón' : 'Telefón 2'}<input type="tel" data-h="${A(k)}" value="${esc(r.v[S.m[k]] ?? '')}"></label>
-    <label>Poznámka k číslu<input type="text" data-note="${A(k)}" value="${esc((r.n && r.n[S.m[k]]) || '')}"></label></div>`).join('');
   const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${isActLbl(ak) ? actStyle(ak) : palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" style="${palStyle(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>${['stretnutie', 'telefonat'].includes(norm(ak)) && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend') ? '<span class="calsaved">Uložené do kalendára</span>' : ''}</label>` : '';
   const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
@@ -1903,7 +1901,7 @@ function tabHovor(r) {
     ${actBlock}</div>` : (actBlock ? `<div class="dtRow dtRowSingle">${actBlock}</div>` : '');
   return `<form id="fCall" class="win pad" autocomplete="off">
     ${dtBlock}
-    ${phs ? `<div class="ph2">${phs}</div>` : ''}
+    ${persBlock(r)}
     ${S.m.dalsi ? `<div class="nxIn"><label>Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label><div class="nxInUrg">${urgBtnHtml(r)}</div></div>
       <label>Poznámka k Nasleduje<input type="text" data-note="${A('dalsi')}" value="${esc((r.n && r.n[S.m.dalsi]) || '')}"></label>
       <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qnx="${esc(x)}">${x}</button>`).join('')}</div>` : ''}
@@ -2117,6 +2115,7 @@ let pendingSaves = 0;
 const rmAct = a => { const i = S.data.activities.rows.indexOf(a); if (i >= 0) S.data.activities.rows.splice(i, 1); };
 /* Okamžitá zmena v CRM (zoznam sa hneď prefiltruje a zoradí), zápis do Sheetu beží na pozadí; pri chybe sa zmena vráti. */
 function commitBg(r, o) {
+  syncKonatel(r, o.vals);
   const vals = o.vals, act = o.act, notes = o.notes || {}, hasN = Object.keys(notes).length;
   const om = o.om || [];
   const check = S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null;
@@ -2157,7 +2156,9 @@ function commitBg(r, o) {
 async function saveCall(form) {
   const r = rowBy(S.sel); if (!r) return;
   const all = collect(form), note = $('#callNote').value.trim();
-  const vals = changedOnly(r, all);
+  const os = collectOsoby(form); if (os !== serOsoby(parseOsoby(V(r, 'osoby')))) all[fieldHeader('osoby')] = os;
+  let vals;
+  try { vals = changedOnly(r, await materializeNewCols(all)); } catch (e) { toast(e.message, true); return; }
   if (note && S.m.pozn) { const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = $('#notesTa') ? $('#notesTa').value.trim() : V(r, 'pozn'); vals[S.m.pozn] = old ? line + '\n' + old : line; }
   const notes = collectNotes(form, r);
   if (!Object.keys(vals).length && !note && !Object.keys(notes).length) { saveMsg('Nič na uloženie'); return; }
@@ -2227,44 +2228,52 @@ async function saveAll(form) {
   if (!editDupConfirm(r, form)) return;
   commitBg(r, {vals, act: actFor(r, changeTyp(vals, ''), '', vals)});
 }
-/* ---------- záložka Osoba ---------- */
-/* hlavná osoba = existujúce stĺpce (Kontaktná osoba, Funkcia, Telefón, E-mail); ďalšie osoby = jeden stĺpec „Ďalšie osoby“, riadok = „Meno | Funkcia | Telefón | E-mail“ */
+/* ---------- osoby v záložke Aktivita ---------- */
+/* Osoba 1 = stĺpce Kontaktná osoba / Funkcia / Telefón / E-mail (meno = konateľ). Osoba 2 = telefón 2 + riadok 1 v stĺpci „Ďalšie osoby“.
+   Osoby 3+ = ďalšie riadky v „Ďalšie osoby“. Riadok = „Meno | Funkcia | Telefón | E-mail“ */
 function parseOsoby(t) {
-  return String(t || '').split(/\r?\n/).map(l => l.split('|').map(x => x.trim())).filter(a => a.some(Boolean))
+  return String(t || '').split(/\r?\n/).filter(l => l.trim() !== '').map(l => l.split('|').map(x => x.trim()))
     .map(a => ({meno: a[0] || '', fn: a[1] || '', tel: a[2] || '', mail: a[3] || ''}));
 }
 const serOsoby = list => list.map(o => [o.meno, o.fn, o.tel, o.mail].map(x => String(x || '').replace(/[|\r\n]+/g, ' ').trim()).join(' | ')).join('\n');
-function osExtraCard(o) {
-  return `<div class="omBox osX"><div class="omNo">Ďalšia osoba <button type="button" class="btn-sm" data-act="delosoba" style="float:right">Odstrániť</button></div>
-    <label>Meno<input type="text" data-of="meno" value="${esc(o.meno)}"></label>
-    <label>Funkcia<input type="text" data-of="fn" list="funkcieDl" value="${esc(o.fn)}"></label>
-    <label>Telefón<input type="tel" data-of="tel" value="${esc(o.tel)}"></label>
-    <label>E-mail<input type="email" data-of="mail" value="${esc(o.mail)}"></label></div>`;
+const pf = (lab, inner) => `<label>${lab}${inner}</label>`;
+function persCard(o, kind, r) {
+  /* kind: 'p2' (telefón z tel2) alebo 'x' (vlastný telefón) */
+  const del = `<button type="button" class="btn-sm" data-act="delosoba" style="float:right">Odstrániť</button>`;
+  const h2 = fieldHeader('tel2'), n2 = S.m.tel2 ? pf('Poznámka k číslu', `<input type="text" data-note="${esc(S.m.tel2)}" value="${esc((r && r.n && r.n[S.m.tel2]) || '')}">`) : '';
+  const tel = kind === 'p2' ? pf('Telefón 2', `<input type="tel" data-h="${esc(h2)}" value="${esc(r ? V(r, 'tel2') : '')}">`) : pf('Telefón', `<input type="tel" data-of="tel" value="${esc(o.tel || '')}">`);
+  return `<div class="omBox osX ${kind === 'p2' ? 'osP2' : ''}"><div class="omNo">${kind === 'p2' ? 'Osoba 2' : 'Ďalšia osoba'} ${del}</div>
+    <div class="pr2">${pf('Meno', `<input type="text" data-of="meno" value="${esc(o.meno || '')}">`)}${pf('Funkcia', `<input type="text" data-of="fn" list="funkcieDl" value="${esc(o.fn || '')}">`)}</div>
+    <div class="pr2">${tel}${pf('E-mail', `<input type="email" data-of="mail" value="${esc(o.mail || '')}">`)}</div>${kind === 'p2' ? n2 : ''}</div>`;
 }
-function osobaHtml(r) {
+function persBlock(r) {
   const hO = fieldHeader('osoba'), hF = fieldHeader('funkcia'), hT = fieldHeader('tel'), hE = fieldHeader('email');
-  const L = (lab, h, inner) => h ? `<label>${lab}${inner}</label>` : '';
-  const main = `<div class="omBox"><div class="omNo">Hlavná osoba</div>
-    ${L('Meno', hO, `<input type="text" data-h="${esc(hO)}" value="${esc(V(r, 'osoba'))}">`)}
-    ${L('Funkcia', hF, funkciaSelect(`data-h="${esc(hF)}"`, V(r, 'funkcia')))}
-    ${L('Telefón', hT, `<input type="tel" data-h="${esc(hT)}" value="${esc(V(r, 'tel'))}">`)}
-    ${L('E-mail', hE, `<input type="email" data-h="${esc(hE)}" value="${esc(V(r, 'email'))}">`)}</div>`;
-  return `<form id="fOs" class="win pad" autocomplete="off"><datalist id="funkcieDl">${FUNKCIE.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
-    ${main}<div id="osList">${parseOsoby(V(r, 'osoby')).map(osExtraCard).join('')}</div>
-    <button type="button" class="cta ghost" data-act="addosoba" style="margin-top:.6rem">+ Pridať osobu</button></form>`;
+  const nt = S.m.tel ? pf('Poznámka k číslu', `<input type="text" data-note="${esc(S.m.tel)}" value="${esc((r.n && r.n[S.m.tel]) || '')}">`) : '';
+  const c1 = `<div class="omBox"><div class="omNo">Osoba 1</div>
+    <div class="pr2">${pf('Meno', `<input type="text" data-h="${esc(hO)}" value="${esc(V(r, 'osoba') || V(r, 'konatel'))}">`)}${pf('Funkcia', funkciaSelect(`data-h="${esc(hF)}"`, V(r, 'funkcia')))}</div>
+    <div class="pr2">${pf('Telefón', `<input type="tel" data-h="${esc(hT)}" value="${esc(V(r, 'tel'))}">`)}${pf('E-mail', `<input type="email" data-h="${esc(hE)}" value="${esc(V(r, 'email'))}">`)}</div>${nt}</div>`;
+  const ps = parseOsoby(V(r, 'osoby'));
+  const p2 = (String(V(r, 'tel2')).trim() || ps.length) ? persCard(ps[0] || {}, 'p2', r) : '';
+  return `<datalist id="funkcieDl">${FUNKCIE.map(x => `<option value="${esc(x)}">`).join('')}</datalist>${c1}<div id="osList">${p2}${ps.slice(1).map(o => persCard(o, 'x', r)).join('')}</div>
+    <button type="button" class="btn-sm" data-act="addosoba" style="margin:.3rem 0 .6rem">+ Pridať osobu</button>`;
 }
-async function saveOsoby(form) {
-  const r = rowBy(S.sel); if (!r) return;
-  try {
-    const raw = collect(form);
-    const extra = [...form.querySelectorAll('.osX')].map(c => { const g = f => (c.querySelector(`[data-of="${f}"]`) || {value: ''}).value.trim();
-      return {meno: g('meno'), fn: g('fn'), tel: g('tel') ? fmtPhone(g('tel')) : '', mail: g('mail')}; }).filter(o => o.meno || o.fn || o.tel || o.mail);
-    const cur = serOsoby(parseOsoby(V(r, 'osoby'))), now = serOsoby(extra);
-    if (now !== cur) raw[fieldHeader('osoby')] = now;
-    const vals = changedOnly(r, await materializeNewCols(raw));
-    if (!Object.keys(vals).length) { saveMsg('Nič na uloženie'); return; }
-    commitBg(r, {vals, act: actFor(r, 'Osoba', '', vals), stay: true, msg: 'Osoba uložená ✔'});
-  } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
+/* ďalšie osoby z formulára → text pre stĺpec „Ďalšie osoby“ */
+function collectOsoby(form) {
+  const g = (c, f) => (c.querySelector(`[data-of="${f}"]`) || {value: ''}).value.trim();
+  const one = c => ({meno: g(c, 'meno'), fn: g(c, 'fn'), tel: g(c, 'tel') ? fmtPhone(g(c, 'tel')) : '', mail: g(c, 'mail')});
+  const p2c = form.querySelector('.osP2'), others = [...form.querySelectorAll('.osX:not(.osP2)')].map(one);
+  const list = [p2c ? one(p2c) : {}, ...others];
+  while (list.length && !list[list.length - 1].meno && !list[list.length - 1].fn && !list[list.length - 1].tel && !list[list.length - 1].mail) list.pop();
+  return serOsoby(list);
+}
+/* meno konateľa = meno osoby 1 (ak má funkciu Konateľ) – zmena na jednom mieste sa prenesie na druhé */
+function syncKonatel(r, vals) {
+  const hK = S.m.konatel, hO = S.m.osoba, hF = S.m.funkcia; if (!hK || !hO) return;
+  const g = (h, k) => String(h in vals ? (specVal(vals[h]) ?? '') : (V(r, k) ?? '')).trim();
+  const kNew = g(hK, 'konatel'), oNew = g(hO, 'osoba'), kOld = String(V(r, 'konatel')).trim(), oOld = String(V(r, 'osoba')).trim();
+  const fn = norm(hF && hF in vals ? specVal(vals[hF]) : funkciaOf(r));
+  if (kNew !== kOld && oNew === oOld && (!oOld || norm(oOld) === norm(kOld))) vals[hO] = kNew;
+  else if (oNew !== oOld && kNew === kOld && fn.startsWith('konatel') && (!kOld || norm(kOld) === norm(oOld))) vals[hK] = oNew;
 }
 async function saveFirma(form) {
   const r = rowBy(S.sel); if (!r) return;
@@ -2628,7 +2637,7 @@ async function exportTpl() {
     const tel = tx(V(r, 'tel')) || tx(V(r, 'tel2')), mail = tx(V(r, 'email'));
     if (os) { add(os, tx(funkciaOf(r)), tel, mail, norm(os) === norm(kn)); if (kn && norm(kn) !== norm(os)) add(kn, 'konateľ', '', '', true); }
     else add(kn, 'konateľ', tel, mail, true);
-    for (const p of parseOsoby(V(r, 'osoby'))) add(p.meno, p.fn, p.tel, p.mail, norm(p.meno) === norm(kn));
+    parseOsoby(V(r, 'osoby')).forEach((p, i) => add(p.meno, p.fn, i === 0 ? tx(V(r, 'tel2')) : p.tel, p.mail, norm(p.meno) === norm(kn)));
   }
   const now = new Date(), nowS = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
   /* poznámky → aktivity: každý záznam začínajúci dátumom (📅 DD.MM.RRRR) = jedna aktivita; história aktivít sa neexportuje */
@@ -2707,8 +2716,8 @@ document.addEventListener('click', e => {
     else if (a === 'undodel') undoDelete();
     else if (a === 'dupcheck') dupReport();
     else if (a === 'exporttpl') exportTpl();
-    else if (a === 'addosoba') { const l = $('#osList'); if (l) { l.insertAdjacentHTML('beforeend', osExtraCard({})); const c = l.lastElementChild.querySelector('input'); if (c) c.focus(); markDirty(); } }
-    else if (a === 'delosoba') { const c = el.closest('.osX'); if (c) { c.remove(); markDirty(); } }
+    else if (a === 'addosoba') { const l = $('#osList'), rr = rowBy(S.sel); if (l) { const has2 = l.querySelector('.osP2'); l.insertAdjacentHTML('beforeend', persCard({}, has2 ? 'x' : 'p2', has2 ? null : rr)); const c = l.lastElementChild.querySelector('input'); if (c) c.focus(); markDirty(); } }
+    else if (a === 'delosoba') { const c = el.closest('.osX'); if (c) { const t2 = c.classList.contains('osP2') && c.querySelector('[data-h]'); const h = t2 && !t2.dataset.h.startsWith('__new__') ? t2.dataset.h : ''; if (h) c.outerHTML = `<input type="hidden" data-h="${esc(h)}" value="">`; else c.remove(); markDirty(); } }
     else if (a === 'undo') undoLast();
     else if (a === 'refresh') load();
     else if (a === 'savenote') saveNote(el);
@@ -2752,7 +2761,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('submit', e => {
   e.preventDefault(); const f = e.target;
-  ({fCall: saveCall, fAll: saveAll, fComp: saveFirma, fNew: saveNew, fOm: saveOmTab, fOs: saveOsoby}[f.id] || (() => {}))(f);
+  ({fCall: saveCall, fAll: saveAll, fComp: saveFirma, fNew: saveNew, fOm: saveOmTab}[f.id] || (() => {}))(f);
   if (f.id === 'fSet') {
     S.cfg = {url: CRM_URL || $('#sUrl').value.trim(), token: ''};
     LS.setItem('crm.cfg', JSON.stringify(S.cfg)); closeModal(); load();
