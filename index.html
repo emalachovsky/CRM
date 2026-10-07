@@ -1118,6 +1118,10 @@ html .card .c-next>span{color:inherit}
 /* päť záložiek na úzkom displeji + osoby v záložke Aktivita */
 .pr2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}.pr2>label{min-width:0}
 @media(max-width:600px){.tabsRow .tabs{overflow-x:auto;scrollbar-width:none}.tabsRow .tab{padding:.45rem .25rem!important;font-size:.76rem!important}}
+.grpBar{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;margin:.5rem 0 .2rem}.grpBar .gl{color:var(--muted);font-size:.82rem}
+.lnkSug{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.4rem 0;padding:.45rem .7rem;border-radius:12px;border:1px solid rgba(235,188,90,.55);background:rgba(235,188,90,.12);font-size:.9rem}
+.lnkSug>span{flex:1 1 12rem}.lnkSug .btn-sm{margin-left:0}
+#linkBox{margin:.4rem 0}#linkBox input{width:100%}#linkRes{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
 </style>
 </head>
 <body>
@@ -1246,7 +1250,8 @@ const FIELDS = [
   {k:'an_ok', label:'Analýza načítaná', pats:['analyza nacitana']},
   {k:'el_dod', label:'EE Dodávateľ', pats:['ee dodavatel','dodavatel ee','dodavatel el','dodavatel elektriny','ee dod']},
   {k:'pl_dod', label:'PL Dodávateľ', pats:['pl dodavatel','dodavatel pl','dodavatel plyn','pl dod']},
-  {k:'osoby', label:'Ďalšie osoby', pats:['dalsie osoby']}
+  {k:'osoby', label:'Ďalšie osoby', pats:['dalsie osoby']},
+  {k:'skup', label:'Skupina firiem', pats:['skupina firiem']}
 ];
 const ACT_H = {dt:'Dátum a čas', firma:'Firma', kontakt:'Kontakt', typ:'Typ', stav:'Stav', pozn:'Poznámka', dalsi:'Ďalší krok', dalsiK:'Ďalší kontakt'};
 const CGROUPS = [
@@ -1577,8 +1582,17 @@ function filtered() {
     return true;
   });
   const key = r => { const {d, t} = DT(r); return [d || '9999-99-99', t || '99:99']; };
-  return rows.sort((a, b) => { const x = key(a), y = key(b);
+  rows.sort((a, b) => { const x = key(a), y = key(b);
     return x[0].localeCompare(y[0]) || x[1].localeCompare(y[1]) || String(V(a, 'firma')).localeCompare(String(V(b, 'firma')), 'sk'); });
+  /* firmy jedného konateľa sa v zozname ukážu ako jeden kontakt */
+  const seenG = new Set();
+  return rows.filter(r => { const g = String(V(r, 'skup')).trim(); if (!g || groupOf(r).length < 2) return true; if (seenG.has(g)) return false; seenG.add(g); return true; });
+}
+/* pre export: všetky firmy spojených kontaktov, každá zvlášť */
+function exportRows() {
+  const out = [], seen = new Set();
+  for (const r of filtered()) for (const x of groupOf(r)) if (!seen.has(x.r)) { seen.add(x.r); out.push(x); }
+  return out;
 }
 const nowHM = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
 function card(r) {
@@ -1586,9 +1600,10 @@ function card(r) {
   const p = phones(r).find(x => x.num);
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = isActLbl(V(r, 'pozicia'));
-  return `<div class="card ${c} ${S.sel === r.r ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
+  const gl = groupOf(r);
+  return `<div class="card ${c} ${gl.some(x => x.r === S.sel) ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
     <div class="c-left ${c} ${c === 'today' && t && t < nowHM() ? 'late' : ''} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
-    <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b></div>
+    <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b>${gl.length > 1 ? `<span class="badge b-grey" title="${esc(gl.map(x => V(x, 'firma')).join(' · '))}">🔗 +${gl.length - 1}</span>` : ''}</div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
 </div>`;
@@ -1866,6 +1881,7 @@ function contactDetail(r) {
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
 </div>
+    ${grpBar(r)}
     <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div class="anbox"><div id="actSlot"></div>${anBadge(r)}<button type="button" class="btn-an" data-act="loadan">Načítať analýzu</button><input type="file" id="anFile" accept=".xlsx,.xls" style="display:none"></div></div>
     <div id="tabBody">${tabBody(r)}</div>`;
 }
@@ -1879,9 +1895,10 @@ function tabBodyInner(r) {
   if (S.tab === 'firma') return companyBlock(r);
   if (S.tab === 'om') return omHtml(r);
   if (S.tab === 'hist') {
-    const f = norm(V(r, 'firma')), o = norm(V(r, 'osoba'));
-    const rows = S.data.activities.rows.filter(a => norm(a.v[ACT_H.firma]) === f && (!o || !norm(a.v[ACT_H.kontakt]) || norm(a.v[ACT_H.kontakt]) === o))
-      .sort((a, b) => String(b.v[ACT_H.dt]).localeCompare(String(a.v[ACT_H.dt])));
+    const gl = groupOf(r), fs = new Set(gl.map(x => norm(V(x, 'firma')))), o = norm(V(r, 'osoba')), seenH = new Set();
+    const rows = S.data.activities.rows.filter(a => fs.has(norm(a.v[ACT_H.firma])) && (gl.length > 1 || !o || !norm(a.v[ACT_H.kontakt]) || norm(a.v[ACT_H.kontakt]) === o))
+      .sort((a, b) => String(b.v[ACT_H.dt]).localeCompare(String(a.v[ACT_H.dt])))
+      .filter(a => { if (gl.length < 2) return true; const v = a.v, k = [String(v[ACT_H.dt] || '').slice(0, 16), v[ACT_H.typ], v[ACT_H.pozn], v[ACT_H.dalsi], v[ACT_H.stav]].join('|'); if (seenH.has(k)) return false; seenH.add(k); return true; });
     return (rows.map(a => histItem(a, false)).join('') || '<div class="empty">Zatiaľ bez zaznamenanej aktivity.</div>') +
       (rows.length ? '<button type="button" class="cta ghost" data-act="clearhist" style="margin-top:1rem">Vyčistiť históriu</button>' : '');
   }
@@ -1932,7 +1949,7 @@ function fieldInput(h, val) {
 }
 function orderedHeaders() {
   const hs = S.data.contacts.headers, first = ['firma', 'osoba', 'funkcia', 'pozicia', 'tel', 'tel2', 'email', 'stav', 'dalsi', 'datum', 'cas', 'pozn'].map(k => k === 'funkcia' ? fieldHeader(k) : S.m[k]).filter(Boolean);
-  return [...first, ...hs.filter(h => !first.includes(h) && norm(h) !== 'odvetvie' && h !== S.m.osoby)];   /* Odvetvie sa nezobrazuje */
+  return [...first, ...hs.filter(h => !first.includes(h) && norm(h) !== 'odvetvie' && h !== S.m.osoby && h !== S.m.skup)];   /* Odvetvie sa nezobrazuje */
 }
 function tabAll(r) {
   const grp = ks => ks.map(k => S.m[k]).filter(Boolean);
@@ -2031,7 +2048,7 @@ function busy(form, on, txt) {
   if (on) { b.dataset.t = b.textContent; b.textContent = 'Ukladám…'; b.disabled = true; }
   else { b.textContent = txt || b.dataset.t; b.disabled = false; }
 }
-function applyLocal(row, vals) { for (const h in vals) row.v[h] = specVal(vals[h]); delete row._s; }
+function applyLocal(row, vals) { for (const h in vals) row.v[h] = specVal(vals[h]); delete row._s; delete row._k; _gm = null; }
 /* ---------- späť (undo posledného uloženia) ---------- */
 function snapshotPrev(row, vals) {
   const o = {};
@@ -2162,6 +2179,13 @@ async function saveCall(form) {
   if (note && S.m.pozn) { const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = $('#notesTa') ? $('#notesTa').value.trim() : V(r, 'pozn'); vals[S.m.pozn] = old ? line + '\n' + old : line; }
   const notes = collectNotes(form, r);
   if (!Object.keys(vals).length && !note && !Object.keys(notes).length) { saveMsg('Nič na uloženie'); return; }
+  /* spojené firmy jedného konateľa: aktivita, osoby a telefóny sa uložia do všetkých */
+  groupOf(r).filter(x => x !== r).forEach(sb => {
+    const sv = {};
+    ['datum', 'cas', 'dalsi', 'pozicia', 'urgent', 'tel', 'tel2', 'email', 'osoba', 'funkcia', 'osoby'].forEach(k => { const h = S.m[k]; if (h && h in vals) sv[h] = vals[h]; });
+    if (note && S.m.pozn) { const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = V(sb, 'pozn').trim(); sv[S.m.pozn] = old ? line + '\n' + old : line; }
+    if (Object.keys(sv).length || Object.keys(notes).length) quietUpdate(sb, sv, actFor(sb, changeTyp(sv, note), note, sv), notes);
+  });
   commitBg(r, {vals, notes, act: actFor(r, changeTyp(vals, note), note, vals)});
 }
 async function saveStav(sel) {
@@ -2204,6 +2228,7 @@ async function saveNote(btn) {
   if (!S.m.pozn) { toast('Chýba stĺpec Poznámka – pozri Nastavenia', true); return; }
   const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = $('#notesTa') ? $('#notesTa').value.trim() : V(r, 'pozn'), vals = {[S.m.pozn]: old ? line + '\n' + old : line};
   const act = actFor(r, 'Poznámka', note, null);
+  groupOf(r).filter(x => x !== r).forEach(sb => { const old = V(sb, 'pozn').trim(); quietUpdate(sb, {[S.m.pozn]: old ? line + '\n' + old : line}, actFor(sb, 'Poznámka', note, null)); });
   btn.disabled = true; const t0 = Date.now(); btn.classList.add('pressed'); btn.textContent = 'Ukladám…';
   /* hneď vlož do okna poznámok, na server sa odošle na pozadí */
   const prevRaw = r.v[S.m.pozn];
@@ -2294,6 +2319,89 @@ function syncOsobaFromKonatel(r, vals) {
   const hK = S.m.konatel, hO = S.m.osoba; if (!hK || !hO || !(hK in vals) || hO in vals) return;
   const kNew = String(specVal(vals[hK]) ?? '').trim(), kOld = String(V(r, 'konatel')).trim(), oOld = String(V(r, 'osoba')).trim();
   if (kNew !== kOld && (!oOld || norm(oOld) === norm(kOld))) vals[hO] = kNew;
+}
+/* ---------- spojenie firiem jedného konateľa ---------- */
+let _gm = null;
+function gmap() {
+  const rows = S.data.contacts.rows;
+  if (_gm && _gm.src === rows && _gm.len === rows.length) return _gm.m;
+  const m = new Map();
+  rows.forEach(x => { const g = String(V(x, 'skup')).trim(); if (g) { if (!m.has(g)) m.set(g, []); m.get(g).push(x); } });
+  _gm = {src: rows, len: rows.length, m}; return m;
+}
+function groupOf(r) { const g = String(V(r, 'skup')).trim(), L = g ? gmap().get(g) : null; return L && L.length > 1 ? L : [r]; }
+const TITLES = new Set(['ing', 'mgr', 'bc', 'phd', 'jud', 'judr', 'dr', 'mudr', 'prof', 'doc', 'csc', 'mba', 'rndr', 'pharmdr', 'paeddr', 'phdr', 'arch', 'ing arch', 'mvdr', 'mph', 'art', 'artd', 'dis']);
+/* mená konateľov (bez titulov, na poradí nezáleží) – kľúč na hľadanie rovnakého konateľa vo viacerých firmách */
+function kNames(r) {
+  if (r._k) return r._k;
+  const out = [];
+  konatelShown(r).split(/[,;]/).forEach(x => { const t = norm(x).split(' ').filter(w => w && !TITLES.has(w)); if (t.length >= 2) out.push({k: t.slice().sort().join(' '), d: x.trim()}); });
+  return (r._k = out);
+}
+const noLink = () => { try { return new Set(JSON.parse(LS.getItem('crm.nolink') || '[]')); } catch (e) { return new Set(); } };
+const nlKey = (a, b) => [norm(V(a, 'firma')), norm(V(b, 'firma'))].sort().join('|');
+function linkCands(r) {
+  const mine = new Map(), grp = new Set(groupOf(r)), dis = noLink(), out = [];
+  grp.forEach(x => kNames(x).forEach(n => mine.set(n.k, n.d)));
+  if (!mine.size) return out;
+  const seenF = new Set();
+  for (const o of S.data.contacts.rows) {
+    if (grp.has(o) || out.length >= 5) continue;
+    const hit = kNames(o).find(n => mine.has(n.k)); if (!hit || dis.has(nlKey(r, o)) || seenF.has(norm(V(o, 'firma')))) continue;
+    seenF.add(norm(V(o, 'firma'))); out.push({o, d: mine.get(hit.k)});
+  }
+  return out;
+}
+function grpBar(r) {
+  const g = groupOf(r), cands = linkCands(r);
+  const chips = g.length > 1 ? `<span class="gl">Firmy konateľa:</span>` + g.map(x => `<button type="button" class="chip sm ${x === r ? 'on' : ''}" data-gsel="${x.r}">${esc(V(x, 'firma') || '(bez firmy)')}</button>`).join('') + `<button type="button" class="chip sm" data-act="unlink">Odpojiť túto firmu</button>` : '';
+  const sug = cands.map(c => `<div class="lnkSug"><span>Konateľ <b>${esc(c.d)}</b> je aj pri <b>${esc(V(c.o, 'firma'))}</b>.</span><button type="button" class="btn-sm" data-act="linkyes" data-cand="${c.o.r}">Spojiť</button><button type="button" class="chip sm" data-act="linkno" data-cand="${c.o.r}">Nie</button></div>`).join('');
+  return `<div class="grpBar">${chips}<button type="button" class="chip sm" data-act="linkopen">🔗 Spojiť s firmou</button></div>${sug}<div id="linkBox" style="display:none"><input type="text" id="linkQ" placeholder="Hľadať firmu, IČO alebo konateľa…" autocomplete="off"><div id="linkRes"></div></div>`;
+}
+function linkSearch(q) {
+  const el = $('#linkRes'), r = rowBy(S.sel); if (!el || !r) return;
+  const n = norm(q); if (n.length < 2) { el.innerHTML = ''; return; }
+  const grp = new Set(groupOf(r));
+  const L = S.data.contacts.rows.filter(o => !grp.has(o) && norm([V(o, 'firma'), V(o, 'ico'), konatelShown(o), V(o, 'osoba')].join(' ')).includes(n)).slice(0, 8);
+  el.innerHTML = L.map(o => `<button type="button" class="chip sm" data-linkto="${o.r}">${esc(V(o, 'firma') || '(bez firmy)')}${V(o, 'ico') ? ' · ' + esc(V(o, 'ico')) : ''}${konatelShown(o) ? ' · ' + esc(konatelShown(o)) : ''}</button>`).join('') || '<div class="empty" style="margin:.3rem 0">Nič sa nenašlo.</div>';
+}
+async function linkRows(r, others) {
+  if (!r || !others.length) return;
+  const involved = new Set(); [r, ...others].filter(Boolean).forEach(x => groupOf(x).forEach(y => involved.add(y)));
+  let gid = ''; for (const x of involved) { const g = String(V(x, 'skup')).trim(); if (g) { gid = g; break; } }
+  if (!gid) gid = 'G' + Date.now().toString(36);
+  const todo = [...involved].filter(x => String(V(x, 'skup')).trim() !== gid);
+  if (!todo.length) return;
+  try {
+    const real = await materializeNewCols({[fieldHeader('skup')]: gid});
+    for (const x of todo) {
+      const act = actFor(x, 'Spojené firmy', '', null);
+      await api('update', {sheet: 'contacts', row: x.r, values: real, activity: act, check: S.m.firma && !x.fd ? {header: S.m.firma, value: V(x, 'firma')} : null});
+      applyLocal(x, real); pushActivity(act);
+    }
+    persist(); renderChips(); renderListBody(); renderDetail(); toast('Firmy spojené: ' + [...involved].map(x => V(x, 'firma')).join(' + '));
+  } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
+}
+async function unlinkRow() {
+  const r = rowBy(S.sel); if (!r || !S.m.skup || groupOf(r).length < 2) return;
+  if (!confirm(`Odpojiť firmu „${V(r, 'firma')}“ od ostatných firiem konateľa?`)) return;
+  try {
+    const vals = {[S.m.skup]: ''}, act = actFor(r, 'Odpojená firma', '', null);
+    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    applyLocal(r, vals); pushActivity(act); persist(); renderChips(); renderListBody(); renderDetail(); toast('Firma odpojená');
+  } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
+}
+/* zápis do ďalšej firmy skupiny na pozadí (bez prekreslenia obrazovky); pri chybe sa zmena vráti */
+async function quietUpdate(sb, vals, act, notes) {
+  notes = notes && Object.keys(notes).length ? notes : null;
+  const prev = {}; for (const h in vals) prev[h] = sb.v[h];
+  const prevN = sb.r !== undefined && sb.n ? {...sb.n} : sb.n;
+  applyLocal(sb, vals); if (notes) applyNotes(sb, notes);
+  const row = pushActivity(act); persist();
+  pendingSaves++;
+  try { await api('update', {sheet: 'contacts', row: sb.r, values: vals, notes: notes || {}, activity: act, check: S.m.firma && !sb.fd ? {header: S.m.firma, value: V(sb, 'firma')} : null}); }
+  catch (e) { for (const h in prev) sb.v[h] = prev[h]; delete sb._s; sb.n = prevN; rmAct(row); persist(); renderListBody(); toast('Zmena „' + V(sb, 'firma') + '“ sa neuložila: ' + e.message, true); }
+  pendingSaves--;
 }
 async function saveFirma(form) {
   const r = rowBy(S.sel); if (!r) return;
@@ -2573,7 +2681,7 @@ function openSettings() {
       </form>
     </section>
     ${hs.length ? `<section class="setSec"><div class="gtitle">Export</div>
-      <button class="cta ghost" type="button" data-act="exporttpl">Exportovať filtrované kontakty do šablóny (${S.data ? filtered().length : 0})</button>
+      <button class="cta ghost" type="button" data-act="exporttpl">Exportovať filtrované kontakty do šablóny (${S.data ? exportRows().length : 0})</button>
       <p class="rcP">Exportuje sa to, čo máš práve vyfiltrované v zozname (Dnes/Všetky, Stav, hľadanie). Záznamy z poznámok sa prevedú na aktivity, História sa neexportuje.</p>
     </section>
     <section class="setSec"><div class="gtitle">Kontrola duplicity</div>
@@ -2621,7 +2729,7 @@ function dodSelect(attrs, val) {
 }
 async function exportTpl() {
   if (!S.data) return;
-  const tx = x => String(x ?? '').trim(), rows = filtered();
+  const tx = x => String(x ?? '').trim(), rows = exportRows();
   const K = [], C = [], O = [], P = [], A = [], seen = new Set(), byFirma = new Map(), cSeen = new Set();
   const omAll = (S.data.om && S.data.om.rows) || [];
   let skip = 0, omSkip = 0, pc = 0;
@@ -2695,6 +2803,8 @@ document.addEventListener('click', e => {
   let el;
   if ((el = t.closest('[data-urgent]'))) { toggleUrgent(); return; }
   if ((el = t.closest('[data-themeset]'))) { setTheme(el.dataset.themeset); return; }
+  if ((el = t.closest('[data-gsel]'))) { openSel(+el.dataset.gsel); return; }
+  if ((el = t.closest('[data-linkto]'))) { const o = rowBy(+el.dataset.linkto); if (o) linkRows(rowBy(S.sel), [o]); return; }
   if ((el = t.closest('[data-nav]'))) { if (el.dataset.nav === 'settings') { openSettings(); if (S.cfg.url) load(true).then(() => { if ($('#fSet') && !$('#sUrl').matches(':focus')) openSettings(); }); } return; }
   if ((el = t.closest('[data-tab]'))) { S.tab = el.dataset.tab; try { LS.setItem('crmTab', S.tab); } catch (e) {} $('#tabBody').innerHTML = tabBody(rowBy(S.sel)); document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === el)); S.dirty = false; return; }
   if (S.stOpen && !t.closest('.chips')) { S.stOpen = false; renderChips(); }
@@ -2739,6 +2849,10 @@ document.addEventListener('click', e => {
     else if (a === 'exporttpl') exportTpl();
     else if (a === 'addosoba') { const l = $('#osList'), rr = rowBy(S.sel); if (l) { const has2 = l.querySelector('.osP2'); l.insertAdjacentHTML('beforeend', persCard({}, has2 ? 'x' : 'p2', has2 ? null : rr)); const c = l.lastElementChild.querySelector('input'); if (c) c.focus(); markDirty(); } }
     else if (a === 'delosoba') { const c = el.closest('.osX'); if (c) { const t2 = c.classList.contains('osP2') && c.querySelector('[data-h]'); const h = t2 && !t2.dataset.h.startsWith('__new__') ? t2.dataset.h : ''; if (h) c.outerHTML = `<input type="hidden" data-h="${esc(h)}" value="">`; else c.remove(); markDirty(); } }
+    else if (a === 'linkopen') { const b = $('#linkBox'); if (b) { b.style.display = b.style.display === 'none' ? '' : 'none'; const q = $('#linkQ'); if (q && b.style.display === '') q.focus(); } }
+    else if (a === 'linkyes') { const o = rowBy(+el.dataset.cand); if (o) linkRows(rowBy(S.sel), [o]); }
+    else if (a === 'linkno') { const o = rowBy(+el.dataset.cand), r0 = rowBy(S.sel); if (o && r0) { const d = noLink(); d.add(nlKey(r0, o)); try { LS.setItem('crm.nolink', JSON.stringify([...d])); } catch (e) {} renderDetail(); } }
+    else if (a === 'unlink') unlinkRow();
     else if (a === 'undo') undoLast();
     else if (a === 'refresh') load();
     else if (a === 'savenote') saveNote(el);
@@ -2791,6 +2905,7 @@ document.addEventListener('submit', e => {
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'anFile') return;
+  if (t.id === 'linkQ') { linkSearch(t.value); return; }
   if (t.id === 'q') { S.q = t.value; S.limit = 150; renderListBody(); return; }
   if (t.closest('#fNew')) { newDupCheck(t.closest('#fNew')); return; }
   if (t.closest('#fAll, #fComp')) editDupCheck(t.closest('form'));
