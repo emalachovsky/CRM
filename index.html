@@ -1973,7 +1973,7 @@ function companyBlock(r) {
     if (!list.length) continue;
     const cls = g === 'Elektrina' ? 'el' : g === 'Plyn' ? 'gas' : 'basic';
     const blk = `<div class="cg ${cls}"><div class="gtitle">${g === 'Elektrina' ? '<span class="gi">⚡</span>' : g === 'Plyn' ? '<span class="gi">🔥</span>' : ''}${g}</div>` +
-      list.map(k => { const h = k === 'email' ? S.m.email : fieldHeader(k); if (!h) return ''; return `<label>${esc(CGROUP_LABELS[k] || k)}${k === 'email' ? `<input type="email" data-h="${esc(h)}" value="${esc(V(r, 'email'))}">` : cInput(k, h, V(r, k))}</label>`; }).join('') + '</div>';
+      list.map(k => { const h = k === 'email' ? S.m.email : fieldHeader(k); if (!h) return ''; return `<label>${esc(CGROUP_LABELS[k] || k)}${k === 'email' ? `<input type="email" data-h="${esc(h)}" value="${esc(V(r, 'email'))}">` : cInput(k, h, k === 'konatel' ? konatelShown(r) : V(r, k))}</label>`; }).join('') + '</div>';
     if (cls === 'basic') basic += blk; else pair += blk;
   }
   return `<form id="fComp" class="win pad" autocomplete="off">${basic}${pair ? `<div class="cgpair">${pair}</div>` : ''}</form>`;
@@ -2265,6 +2265,14 @@ function collectOsoby(form) {
   const list = [p2c ? one(p2c) : {}, ...others];
   while (list.length && !list[list.length - 1].meno && !list[list.length - 1].fn && !list[list.length - 1].tel && !list[list.length - 1].mail) list.pop();
   return serOsoby(list);
+}
+/* Konateľ firmy: uložená hodnota, inak mená osôb s funkciou Konateľ (osoba 1 má bez zadanej funkcie predvolene Konateľ) */
+function konatelShown(r) {
+  const k = String(V(r, 'konatel')).trim(); if (k) return k;
+  const isK = f => norm(f).startsWith('konatel'), n = [];
+  const o = String(V(r, 'osoba')).trim(); if (o && isK(funkciaOf(r))) n.push(o);
+  parseOsoby(V(r, 'osoby')).forEach(p => { if (p.meno && isK(p.fn) && !n.includes(p.meno)) n.push(p.meno); });
+  return n.join(', ');
 }
 /* osoba s funkciou Konateľ → jej meno sa vloží aj do Firma → Konateľ (viac konateľov oddelí čiarkou) */
 function syncKonatel(r, vals) {
@@ -2641,7 +2649,7 @@ async function exportTpl() {
           g('sp') && isFinite(sp) ? sp : '', csOk && !isSpot ? cs : '', csOk && isSpot ? cs : '', '', isoDate(g('kon')) || g('kon'), tplDod(g('dod')), '']);
       }
     }
-    const os = tx(V(r, 'osoba')), kn = tx(V(r, 'konatel'));
+    const os = tx(V(r, 'osoba')), kn = tx(konatelShown(r));
     const add = (meno, fn, tel, mail, sign) => {
       const key = ico + '|' + norm(meno); if (!meno || cSeen.has(key)) return; cSeen.add(key);
       const first = !C.some(x => x[0] === ico);
