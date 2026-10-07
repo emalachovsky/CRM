@@ -1199,6 +1199,10 @@ try { const c = LS.getItem('crm.cache'); if (c) S.data = JSON.parse(c); } catch 
 
 /* polia hlavnej tabuľky – poradie je dôležité (prvé sa priraďujú) */
 const FIELDS = [
+  {k:'konatel',label:'Konateľ', pats:['konatel','konatelia','statutarny organ','statutar']},
+  {k:'dic',    label:'DIČ', pats:['dic']},
+  {k:'icdph',  label:'IČ DPH', pats:['ic dph','icdph','ic pre dph','dph']},
+  {k:'register',label:'Register', pats:['register','obchodny register','zapis v registri']},
   {k:'datum',  label:'Dátum ďalšej komunikácie', pats:['datum dalsej komunikacie','datum','date']},
   {k:'cas',    label:'Čas', pats:['cas','time']},
   {k:'tel2',   label:'Telefón 2', pats:['telefon 2','tel 2','tel2','telefon2','mobil 2','druhy telefon']},
@@ -1231,7 +1235,7 @@ const FIELDS = [
 ];
 const ACT_H = {dt:'Dátum a čas', firma:'Firma', kontakt:'Kontakt', typ:'Typ', stav:'Stav', pozn:'Poznámka', dalsi:'Ďalší krok', dalsiK:'Ďalší kontakt'};
 const CGROUPS = [
-  ['Základné údaje', ['obch', 'ico', 'web', 'email', 'ulica', 'psc', 'mesto', 'an_ok']],
+  ['Základné údaje', ['obch', 'ico', 'dic', 'icdph', 'konatel', 'register', 'web', 'email', 'ulica', 'psc', 'mesto', 'an_ok']],
   ['Elektrina', ['el_dod', 'el_druh', 'el_sp', 'el_cs', 'el_kon']],
   ['Plyn', ['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']]
 ];
@@ -1917,7 +1921,7 @@ function tabAll(r) {
 }
 
 /* ---------- firma / analýza ---------- */
-const CGROUP_LABELS = {obch:'Odberateľ (obchodný názov)', ico:'IČO', web:'Web', email:'E-mail', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', an_ok:'Analýza načítaná (dátum)',
+const CGROUP_LABELS = {obch:'Odberateľ (obchodný názov)', ico:'IČO', dic:'DIČ', icdph:'IČ DPH', konatel:'Konateľ', register:'Register', web:'Web', email:'E-mail', ulica:'Ulica / adresa', psc:'PSČ', mesto:'Mesto', an_ok:'Analýza načítaná (dátum)',
   el_dod:'Dodávateľ', pl_dod:'Dodávateľ', el_druh:'Druh (Fix / Spot)', pl_druh:'Druh (Fix / Spot)',
   el_sp:'Spotreba (MWh/rok)', el_cs:'Cena súčasná (€/MWh)', el_kon:'Viazanosť / koniec zmluvy',
   pl_sp:'Spotreba (MWh/rok)', pl_cs:'Cena súčasná (€/MWh)', pl_kon:'Viazanosť / koniec zmluvy'};
