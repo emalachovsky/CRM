@@ -1953,6 +1953,7 @@ function cInput(k, h, val) {
   if (/_sp$|_cs$|_cp$|^uspora$/.test(k)) return `<input type="text" inputmode="decimal" ${a} value="${esc(val)}">`;
   if (/_druh$/.test(k)) { const o = ['Fix', 'Spot', 'Kombi']; const cur = String(val || '').trim(); const m = o.find(x => norm(x) === norm(cur)); const opts = ['', ...o, ...(cur && !m ? [cur] : [])];
     return `<select ${a}>${opts.map(x => `<option value="${esc(x)}" ${(x === (m || cur)) ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`; }
+  if (/_dod$/.test(k)) return dodSelect(a, val);
   if (k === 'pozn_an') return `<textarea ${a} rows="3">${esc(val)}</textarea>`;
   if (k === 'web') return `<input type="url" ${a} value="${esc(val)}">`;
   return `<input type="text" ${a} value="${esc(val)}">`;
@@ -2520,8 +2521,31 @@ function openSettings() {
 
 /* ---------- export do šablóny Meitn CRM ---------- */
 const TPL = {"navod": ["Import údajov do Meitn CRM", null, "Ako na to", "1. Vyplň hárky Klienti, Kontakty, Odberné miesta, Prípady a Aktivity (nemusíš všetky, len tie, čo potrebuješ). Hlavičky ani názvy hárkov nemeň.", "2. Hárky sa prepájajú cez IČO klienta. Prípad a aktivita sa k odbernému miestu a prípadu pripájajú cez EIC/POD a Kód importu.", "3. V CRM klikni hore na Import, vyber tento súbor, skontroluj náhľad a klikni Importovať.", "4. Ak náhľad ukáže chyby, oprav riadky podľa hlášky (hárok + číslo riadka) a súbor nahraj znova. Pri chybe sa nezapíše nič.", null, "Pravidlá", "• Všetko, čo importuješ, bude patriť tebe. Klient s IČO, ktoré už v CRM je a patrí inému obchodníkovi, sa neimportuje (požiadaj o prístup).", "• Ak klient s IČO už je tvoj, doplnia sa mu odberné miesta, kontakty, prípady a aktivity. Jeho údaje (názov, adresa…) sa neprepisujú.", "• Všetky prípady vstupujú na začiatok procesu (čakáme na podklady). Kroky a výhry nastavuje CRM podľa postupu, nie import.", "• Povinné polia majú v hlavičke hviezdičku (*). Ostatné údaje, ktoré CRM pred žiadosťou o ponuku vyžaduje, môžeš doplniť neskôr priamo v klientovi.", "• Desatinné čísla píš s bodkou (12.5). Dátumy ako RRRR-MM-DD (2027-01-01) alebo D.M.RRRR, dátum a čas ako RRRR-MM-DD HH:MM.", "• Rovnaký súbor sa nedá importovať dvakrát. Neprázdne riadky sa spracujú všetky, prázdne sa preskočia.", null, "Doterajší dodávateľ (presne takto)", "ELGAS, ENERGIE 2, Energetika Slovensko, a.s., Lama Energy, MET, MVM, Magna Energia, Rightpower, SPP, SSE, VSE, ZSE", null, "Hárky a stĺpce", "Klienti — Jeden riadok = jeden klient. IČO je kľúč, podľa ktorého sa k nemu pripoja ostatné hárky.", "   IČO* — 6 až 10 číslic, bez medzier", "   Názov*", "   Stav — prázdne = prospekt  [prospekt / klient]", "   DIČ", "   IČ DPH", "   Register — napr. OR OS Košice I, oddiel Sro, vložka č. 1234/V", "   Ulica", "   Mesto", "   PSČ", "   Korešpondenčná adresa", "   Banka", "   BIC", "   IBAN", "   Fakturačný e-mail — na doručovanie faktúr; prázdne = e-mail konateľa", "   Poznámka", null, "Kontakty — Kontaktné osoby klienta. Jeden riadok = jedna osoba.", "   IČO klienta*", "   Meno a priezvisko*", "   Funkcia — napr. konateľ", "   Telefón", "   E-mail", "   Hlavná osoba  [ano / nie]", "   Podpisuje — ano = osoba sa pripojí ako podpisujúca ku všetkým prípadom klienta z tohto súboru  [ano / nie]", null, "Odberné miesta — Odberné miesta klienta. Jeden riadok = jedno odberné miesto (EIC alebo POD).", "   IČO klienta*", "   Komodita*  [EE / PL]", "   EIC/POD*", "   Adresa odberného miesta", "   Ročná spotreba (MWh)", "   Tarifa — napr. C2-X3, X3-C2, X2; napätie (NN/VN) sa určí z tarify, X2 = VN", "   Istič (A) — pri NN", "   MRK (kW) — pri VN", "   RK (kW) — pri VN", "   Periodicita RK  [mesacna / trojmesacna / dvanastmesacna]", "   Typ merania  [A / C]", "   Fázy — pri NN  [1 / 3]", "   Doterajší dodávateľ", "   Koniec zmluvy — RRRR-MM-DD alebo D.M.RRRR", "   Poznámka", null, "Prípady — Obchodné prípady. Všetky vstupujú na začiatok procesu (čakáme na podklady). Jeden riadok = jedna komodita.", "   Kód importu* — vlastný kód len pre tento súbor, napr. P1, P2 (na prepojenie s aktivitami)", "   IČO klienta*", "   Komodita*  [EE / PL]", "   Predmet — prázdne = Zmena dodávateľa EE/PL", "   Produkt  [FIX / SPOT]", "   EIC/POD odberných miest — viac oddeľ bodkočiarkou; musia byť v hárku Odberné miesta alebo už v CRM", "   Objem (MWh/rok)", "   Cena FIX (€/MWh)", "   Marža SPOT (€/MWh)", "   Zmluva od", "   Zmluva do", "   Doterajší dodávateľ — presne podľa zoznamu v hárku Návod", "   Poznámka", null, "Aktivity — Hovory, stretnutia, úlohy a ďalšie záznamy ku klientovi (voliteľne k prípadu).", "   IČO klienta*", "   Kód prípadu — kód z hárka Prípady, ak sa aktivita týka prípadu", "   Typ*  [uloha / stretnutie / telefonat / udalost / list]", "   Predmet*", "   Od* — RRRR-MM-DD HH:MM alebo D.M.RRRR HH:MM", "   Do", "   Stav — prázdne = naplánovaná  [naplanovana / hotova]", "   Výsledok", "   Poznámka"], "Klienti": ["IČO*", "Názov*", "Stav", "DIČ", "IČ DPH", "Register", "Ulica", "Mesto", "PSČ", "Korešpondenčná adresa", "Banka", "BIC", "IBAN", "Fakturačný e-mail", "Poznámka"], "Kontakty": ["IČO klienta*", "Meno a priezvisko*", "Funkcia", "Telefón", "E-mail", "Hlavná osoba", "Podpisuje"], "Odberné miesta": ["IČO klienta*", "Komodita*", "EIC/POD*", "Adresa odberného miesta", "Ročná spotreba (MWh)", "Tarifa", "Istič (A)", "MRK (kW)", "RK (kW)", "Periodicita RK", "Typ merania", "Fázy", "Doterajší dodávateľ", "Koniec zmluvy", "Poznámka"], "Prípady": ["Kód importu*", "IČO klienta*", "Komodita*", "Predmet", "Produkt", "EIC/POD odberných miest", "Objem (MWh/rok)", "Cena FIX (€/MWh)", "Marža SPOT (€/MWh)", "Zmluva od", "Zmluva do", "Doterajší dodávateľ", "Poznámka"], "Aktivity": ["IČO klienta*", "Kód prípadu", "Typ*", "Predmet*", "Od*", "Do", "Stav", "Výsledok", "Poznámka"]};
-const TPL_DOD = ['ELGAS', 'ENERGIE 2', 'Energetika Slovensko, a.s.', 'Lama Energy', 'MET', 'MVM', 'Magna Energia', 'Rightpower', 'SPP', 'SSE', 'VSE', 'ZSE'];
-function tplDod(x) { const n = norm(x); if (!n) return ''; return TPL_DOD.find(d => { const m = norm(d); return n === m || (n + ' ').startsWith(m + ' '); }) || ''; }
+const DODAVATELIA = ['ELGAS', 'MVM', 'VSE', 'MET', 'SPP', 'ENERGIE 2', 'ZSE', 'Energetika Slovensko, a.s.', 'SSE', 'Lama Energy', 'Magna Energia', 'Rightpower'];
+const TPL_DOD = DODAVATELIA;
+const DOD_ALIAS = {'ELGAS': ['elgas'], 'MVM': ['mvm'], 'VSE': ['vse', 'vychodoslovenska energetika', 'vychodoslovenska'], 'MET': ['met', 'met slovakia'],
+  'SPP': ['spp', 'slovensky plynarensky priemysel'], 'ENERGIE 2': ['energie 2', 'energie2'], 'ZSE': ['zse', 'zapadoslovenska energetika', 'zapadoslovenska'],
+  'Energetika Slovensko, a.s.': ['energetika slovensko'], 'SSE': ['sse', 'stredoslovenska energetika', 'stredoslovenska'],
+  'Lama Energy': ['lama energy', 'lama'], 'Magna Energia': ['magna energia', 'magna'], 'Rightpower': ['rightpower', 'right power']};
+/* priradí text dodávateľa (z analýzy / tabuľky) k položke zoznamu; ak sa nenájde, vráti '' */
+function matchDod(x) {
+  const n = ' ' + norm(x) + ' '; if (n.trim() === '') return '';
+  for (const d of DODAVATELIA) if (n.trim() === norm(d)) return d;
+  let best = '', pos = 1e9;
+  for (const d of DODAVATELIA) for (const a of DOD_ALIAS[d]) { const i = n.indexOf(' ' + a + ' '); if (i >= 0 && i < pos) { pos = i; best = d; } }
+  return best;
+}
+/* viac dodávateľov v jednej bunke (napr. „ZSE, SPP“) → vyberie najčastejší zo zoznamu */
+function pickDod(list) {
+  const cnt = new Map(); (Array.isArray(list) ? list : [list]).forEach(x => { const m = matchDod(x); if (m) cnt.set(m, (cnt.get(m) || 0) + 1); });
+  let best = '', c = 0; cnt.forEach((v, k) => { if (v > c) { c = v; best = k; } }); return best;
+}
+function tplDod(x) { return matchDod(x); }
+function dodSelect(attrs, val) {
+  const cur = String(val || '').trim(), m = matchDod(cur);
+  const opts = ['', ...DODAVATELIA, ...(cur && !m ? [cur] : [])];
+  return `<select ${attrs}>${opts.map(x => `<option value="${esc(x)}" ${x === (m || cur) ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
+}
 async function exportTpl() {
   if (!S.data) return;
   const tx = x => String(x ?? '').trim(), rows = filtered();
@@ -2529,6 +2553,7 @@ async function exportTpl() {
   const omAll = (S.data.om && S.data.om.rows) || [];
   let skip = 0, omSkip = 0, pc = 0;
   const kom = o => { const n = norm(o.komodita); return n.startsWith('elektr') ? 'EE' : n.startsWith('plyn') ? 'PL' : ''; };
+  const komN = c => c === 'EE' ? 'Elektrina' : c === 'PL' ? 'Plyn' : '';
   for (const r of rows) {
     const ico = tx(V(r, 'ico')).replace(/\s+/g, ''), firma = tx(V(r, 'firma'));
     if (!/^\d{6,10}$/.test(ico) || !firma) { skip++; continue; }
@@ -2539,15 +2564,16 @@ async function exportTpl() {
       for (const o of mine) {
         if (!kom(o) || !tx(o.eic)) { omSkip++; continue; }
         const sp = num(o.spotreba);
-        O.push([ico, kom(o), tx(o.eic), tx(o.adresa), isFinite(sp) && tx(o.spotreba) !== '' ? sp : '', tx(o.sadzba), tx(o.istic), '', '', '', '', '', tplDod(o.dodavatel), isoDate(o.koniec) || tx(o.koniec), '']);
+        O.push([ico, komN(kom(o)), tx(o.eic), tx(o.adresa), isFinite(sp) && tx(o.spotreba) !== '' ? sp : '', tx(o.sadzba), tx(o.istic), '', '', '', '', '', tplDod(o.dodavatel), isoDate(o.koniec) || tx(o.koniec), '']);
       }
       for (const [kc, k] of [['EE', 'el'], ['PL', 'pl']]) {
         const g = s => tx(V(r, k + '_' + s));
         if (!(g('sp') || g('dod') || g('kon') || g('cs') || g('druh'))) continue;
         const sp = num(g('sp')), dr = norm(g('druh'));
-        P.push(['P' + (++pc), ico, kc, '', dr.includes('fix') ? 'FIX' : dr.includes('spot') ? 'SPOT' : '',
+        const cs = num(g('cs')), csOk = g('cs') && isFinite(cs), isSpot = dr.includes('spot') && !dr.includes('fix');
+        P.push(['P' + (++pc), ico, komN(kc), kc, dr.includes('fix') ? 'FIX' : dr.includes('spot') ? 'SPOT' : '',
           mine.filter(o => kom(o) === kc && tx(o.eic)).map(o => tx(o.eic)).join('; '),
-          g('sp') && isFinite(sp) ? sp : '', '', '', '', isoDate(g('kon')) || g('kon'), tplDod(g('dod')), '']);
+          g('sp') && isFinite(sp) ? sp : '', csOk && !isSpot ? cs : '', csOk && isSpot ? cs : '', '', isoDate(g('kon')) || g('kon'), tplDod(g('dod')), '']);
       }
     }
     const os = tx(V(r, 'osoba')), kn = tx(V(r, 'konatel'));
@@ -2574,7 +2600,7 @@ async function exportTpl() {
     for (const x of recs) {
       const body = x.t.join('\n').trim(), n = norm(body), first = body.split('\n')[0].trim();
       A.push([ico, '', /telef|volal|hovor|zavolat/.test(n) ? 'telefonat' : n.includes('stretn') ? 'stretnutie' : 'udalost',
-        (first.length > 80 ? first.slice(0, 77) + '…' : first) || 'Poznámka', x.d + ' 00:00', '', 'hotova', '', body]);
+        body.split(/\r?\n/).map(l => l.trim()).filter(Boolean).join(' ') || 'Poznámka', x.d + ' 00:00', '', 'hotova', '', '']);
     }
   }
   if (!K.length) { toast('Nie je čo exportovať – vyfiltrované kontakty nemajú platné IČO', true); return; }
@@ -2765,7 +2791,7 @@ function omEdit(rows) {
       <label>EIC/POD<input type="text" ${a('eic')} value="${esc(omVal(o.eic))}"></label>
       <label>Adresa OM<input type="text" ${a('adresa')} value="${esc(omVal(o.adresa))}"></label>
       <label>Spotreba (MWh/rok)<input type="text" inputmode="decimal" ${a('spotreba')} value="${esc(sp)}"></label>
-      <label>Dodávateľ<input type="text" ${a('dodavatel')} value="${esc(omVal(o.dodavatel))}"></label>
+      <label>Dodávateľ${dodSelect(a('dodavatel'), omVal(o.dodavatel))}</label>
       <label>Distribučná sadzba<input type="text" ${a('sadzba')} value="${esc(omVal(o.sadzba))}"></label>
       ${/^plyn/.test(norm(o.komodita)) ? '' : `<label>Hlavný istič<input type="text" ${a('istic')} value="${esc(omVal(o.istic))}"></label>`}
       <label>Koniec viazanosti${koInp}</label></div>`;
@@ -2904,7 +2930,7 @@ function parseAnalysis(wb) {
         eic: cE >= 0 ? txt(r[cE]) : '',
         adresa: cAdr.map(i => txt(r[i])).filter(Boolean).join(', '),
         spotreba: nn(r[cS]) > 0 || nn(r[cS]) === 0 ? r3(nn(r[cS])) : '',
-        dodavatel: txt(r[cD]),
+        dodavatel: matchDod(txt(r[cD])) || txt(r[cD]),
         sadzba: cSad >= 0 ? txt(r[cSad]) : '',
         istic: kind === 'el' && cIst >= 0 ? txt(r[cIst]) : '',
         koniec: kd || txt(kv)
@@ -2918,7 +2944,8 @@ function parseAnalysis(wb) {
       const base = fix.length ? fix : ok, w = base.reduce((a, r) => a + nn(r[cS]), 0);
       price = w ? base.reduce((a, r) => a + nn(r[cS]) * nn(r[cC]), 0) / w : NaN;
     }
-    const dod = [...new Set(data.map(r => txt(r[cD])).filter(Boolean))].join(', ');
+    const dodRaw = [...new Set(data.map(r => txt(r[cD])).filter(Boolean))].join(', ');
+    const dod = pickDod(data.map(r => txt(r[cD]))) || dodRaw;
     const kons = data.map(r => xd(r[cV])).filter(Boolean).sort();
     const kon = kons[0] || (data.some(r => /neurcit/.test(norm(r[cV]))) ? 'neurčitá' : '');
     const druh = [...new Set(data.map(r => { const t = norm(r[cK]); return t.includes('fix') ? 'Fix' : t.includes('spot') ? 'Spot' : t.includes('kombi') ? 'Kombi' : txt(r[cK]); }).filter(Boolean))].join('/');
