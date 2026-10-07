@@ -2115,7 +2115,6 @@ let pendingSaves = 0;
 const rmAct = a => { const i = S.data.activities.rows.indexOf(a); if (i >= 0) S.data.activities.rows.splice(i, 1); };
 /* Okamžitá zmena v CRM (zoznam sa hneď prefiltruje a zoradí), zápis do Sheetu beží na pozadí; pri chybe sa zmena vráti. */
 function commitBg(r, o) {
-  syncKonatel(r, o.vals);
   const vals = o.vals, act = o.act, notes = o.notes || {}, hasN = Object.keys(notes).length;
   const om = o.om || [];
   const check = S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null;
@@ -2158,6 +2157,7 @@ async function saveCall(form) {
   const all = collect(form), note = $('#callNote').value.trim();
   const os = collectOsoby(form); if (os !== serOsoby(parseOsoby(V(r, 'osoby')))) all[fieldHeader('osoby')] = os;
   let vals;
+  syncKonatel(r, all);
   try { vals = changedOnly(r, await materializeNewCols(all)); } catch (e) { toast(e.message, true); return; }
   if (note && S.m.pozn) { const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = $('#notesTa') ? $('#notesTa').value.trim() : V(r, 'pozn'); vals[S.m.pozn] = old ? line + '\n' + old : line; }
   const notes = collectNotes(form, r);
@@ -2223,7 +2223,7 @@ async function saveNote(btn) {
 async function saveAll(form) {
   const r = rowBy(S.sel); if (!r) return;
   let vals;
-  try { vals = changedOnly(r, await materializeNewCols(collect(form))); } catch (e) { toast(e.message, true); return; }
+  try { const all = collect(form); syncKonatel(r, all); vals = changedOnly(r, await materializeNewCols(all)); } catch (e) { toast(e.message, true); return; }
   if (!Object.keys(vals).length) { saveMsg('Nič na uloženie'); return; }
   if (!editDupConfirm(r, form)) return;
   commitBg(r, {vals, act: actFor(r, changeTyp(vals, ''), '', vals)});
@@ -2266,14 +2266,26 @@ function collectOsoby(form) {
   while (list.length && !list[list.length - 1].meno && !list[list.length - 1].fn && !list[list.length - 1].tel && !list[list.length - 1].mail) list.pop();
   return serOsoby(list);
 }
-/* meno konateľa = meno osoby 1 (ak má funkciu Konateľ) – zmena na jednom mieste sa prenesie na druhé */
+/* osoba s funkciou Konateľ → jej meno sa vloží aj do Firma → Konateľ (viac konateľov oddelí čiarkou) */
 function syncKonatel(r, vals) {
-  const hK = S.m.konatel, hO = S.m.osoba, hF = S.m.funkcia; if (!hK || !hO) return;
+  const hK = fieldHeader('konatel'), hO = fieldHeader('osoba'), hF = fieldHeader('funkcia'), hX = fieldHeader('osoby');
+  if (!hK || !hO) return;
   const g = (h, k) => String(h in vals ? (specVal(vals[h]) ?? '') : (V(r, k) ?? '')).trim();
-  const kNew = g(hK, 'konatel'), oNew = g(hO, 'osoba'), kOld = String(V(r, 'konatel')).trim(), oOld = String(V(r, 'osoba')).trim();
-  const fn = norm(hF && hF in vals ? specVal(vals[hF]) : funkciaOf(r));
-  if (kNew !== kOld && oNew === oOld && (!oOld || norm(oOld) === norm(kOld))) vals[hO] = kNew;
-  else if (oNew !== oOld && kNew === kOld && fn.startsWith('konatel') && (!kOld || norm(kOld) === norm(oOld))) vals[hK] = oNew;
+  const isK = f => norm(f).startsWith('konatel');
+  const oOld = String(V(r, 'osoba')).trim(), oNew = g(hO, 'osoba'), kNew = g(hK, 'konatel');
+  const names = [];
+  if (oNew && isK(hF in vals ? specVal(vals[hF]) : funkciaOf(r))) names.push(oNew);
+  parseOsoby(hX in vals ? specVal(vals[hX]) : V(r, 'osoby')).forEach(p => { if (p.meno && isK(p.fn)) names.push(p.meno); });
+  if (!names.length) return;
+  let k = (oNew !== oOld && oOld && norm(kNew) === norm(oOld)) ? '' : kNew;   /* premenovanie: staré meno sa nahradí */
+  names.forEach(n => { if (!norm(k).includes(norm(n))) k = k ? k + ', ' + n : n; });
+  if (k !== kNew) vals[hK] = k;
+}
+/* zmena Konateľa vo Firme sa prenesie na osobu 1, ak mala doteraz to isté meno (alebo bola prázdna) */
+function syncOsobaFromKonatel(r, vals) {
+  const hK = S.m.konatel, hO = S.m.osoba; if (!hK || !hO || !(hK in vals) || hO in vals) return;
+  const kNew = String(specVal(vals[hK]) ?? '').trim(), kOld = String(V(r, 'konatel')).trim(), oOld = String(V(r, 'osoba')).trim();
+  if (kNew !== kOld && (!oOld || norm(oOld) === norm(kOld))) vals[hO] = kNew;
 }
 async function saveFirma(form) {
   const r = rowBy(S.sel); if (!r) return;
@@ -2282,6 +2294,7 @@ async function saveFirma(form) {
   try {
     const raw = collect(form);
     const vals = changedOnly(r, await materializeNewCols(raw));
+    syncOsobaFromKonatel(r, vals);
     if (!Object.keys(vals).length) { busy(form, false); saveMsg('Nič na uloženie'); return; }
     commitBg(r, {vals, act: actFor(r, 'Firma', '', vals), stay: true, msg: 'Firma uložená ✔'});
   } catch (e) { busy(form, false); toast(e.message, true); if (e.conflict) load(true); }
