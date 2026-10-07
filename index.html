@@ -1122,6 +1122,8 @@ html .card .c-next>span{color:inherit}
 .lnkSug{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.4rem 0;padding:.45rem .7rem;border-radius:12px;border:1px solid rgba(235,188,90,.55);background:rgba(235,188,90,.12);font-size:.9rem}
 .lnkSug>span{flex:1 1 12rem}.lnkSug .btn-sm{margin-left:0}
 #linkBox{margin:.4rem 0}#linkBox input{width:100%}#linkRes{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
+.grpBar .gsel{opacity:.8}
+.grpBar .gsel.gon,.grpBar .gsel.gon:hover{opacity:1;background:#ebbc5a!important;border:2px solid #fff3c4!important;color:#1a1405!important;font-weight:800!important;box-shadow:0 0 0 3px rgba(235,188,90,.4),0 2px 8px rgba(0,0,0,.35)!important;transform:scale(1.04)}
 </style>
 </head>
 <body>
@@ -1603,7 +1605,7 @@ function card(r) {
   const gl = groupOf(r);
   return `<div class="card ${c} ${gl.some(x => x.r === S.sel) ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
     <div class="c-left ${c} ${c === 'today' && t && t < nowHM() ? 'late' : ''} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
-    <div class="c-main"><div class="c-top"><b class="c-firma">${esc(V(r, 'firma') || '(bez firmy)')}</b>${gl.length > 1 ? `<span class="badge b-grey" title="${esc(gl.map(x => V(x, 'firma')).join(' · '))}">🔗 +${gl.length - 1}</span>` : ''}</div>
+    <div class="c-main"><div class="c-top"><b class="c-firma">${gl.length > 1 ? '🔗 ' + esc(gl.map(x => V(x, 'firma') || '(bez firmy)').join(' + ')) : esc(V(r, 'firma') || '(bez firmy)')}</b></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
 </div>`;
@@ -2354,7 +2356,7 @@ function linkCands(r) {
 }
 function grpBar(r) {
   const g = groupOf(r), cands = linkCands(r);
-  const chips = g.length > 1 ? `<span class="gl">Firmy konateľa:</span>` + g.map(x => `<button type="button" class="chip sm ${x === r ? 'on' : ''}" data-gsel="${x.r}">${esc(V(x, 'firma') || '(bez firmy)')}</button>`).join('') + `<button type="button" class="chip sm" data-act="unlink">Odpojiť túto firmu</button>` : '';
+  const chips = g.length > 1 ? `<span class="gl">Firmy konateľa:</span>` + g.map(x => `<button type="button" class="chip sm gsel ${x === r ? 'gon' : ''}" data-gsel="${x.r}">${esc(V(x, 'firma') || '(bez firmy)')}</button>`).join('') + `<button type="button" class="chip sm" data-act="unlink">Odpojiť túto firmu</button>` : '';
   const sug = cands.map(c => `<div class="lnkSug"><span>Konateľ <b>${esc(c.d)}</b> je aj pri <b>${esc(V(c.o, 'firma'))}</b>.</span><button type="button" class="btn-sm" data-act="linkyes" data-cand="${c.o.r}">Spojiť</button><button type="button" class="chip sm" data-act="linkno" data-cand="${c.o.r}">Nie</button></div>`).join('');
   return `<div class="grpBar">${chips}<button type="button" class="chip sm" data-act="linkopen">🔗 Spojiť s firmou</button></div>${sug}<div id="linkBox" style="display:none"><input type="text" id="linkQ" placeholder="Hľadať firmu, IČO alebo konateľa…" autocomplete="off"><div id="linkRes"></div></div>`;
 }
