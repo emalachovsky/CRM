@@ -1124,6 +1124,11 @@ html .card .c-next>span{color:inherit}
 #linkBox{margin:.4rem 0}#linkBox input{width:100%}#linkRes{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
 .grpBar .gsel{opacity:.8}
 .grpBar .gsel.gon,.grpBar .gsel.gon:hover{opacity:1;background:#ebbc5a!important;border:2px solid #fff3c4!important;color:#1a1405!important;font-weight:800!important;box-shadow:0 0 0 3px rgba(235,188,90,.4),0 2px 8px rgba(0,0,0,.35)!important;transform:scale(1.04)}
+.lhead .ib.refresh{width:2.7rem!important;height:2.7rem!important;border:0!important;background:linear-gradient(135deg,#ffd873,#d9a634)!important;color:#1a1405!important;box-shadow:0 0 0 2px rgba(235,188,90,.4),0 2px 8px rgba(0,0,0,.35)!important}
+.lhead .ib.refresh svg,.lhead .ib.refresh .ico{width:1.45rem!important;height:1.45rem!important;stroke-width:2.4}
+.lhead .ib.refresh.spin{box-shadow:0 0 0 3px rgba(255,216,115,.55),0 0 16px rgba(235,188,90,.7)!important}
+.lhead .ib.refresh.spin svg,.lhead .ib.refresh.spin .ico{animation:spinR .8s linear infinite}
+@keyframes spinR{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -1480,6 +1485,7 @@ function paintSync() {
   const tm = S.lastLoad ? new Date(S.lastLoad).toLocaleTimeString('sk-SK', {hour: '2-digit', minute: '2-digit'}) : '';
   const t = sy.st === 'ok' ? (tm ? 'Načítané ' + tm : 'Z pamäte') : sy.st === 'sync' ? 'Načítavam…' : (sy.msg || 'Chyba');
   el.innerHTML = `<span class="dot ${sy.st}"></span>${esc(t)}`;
+  const rb = $('#refreshBtn'); if (rb) rb.classList.toggle('spin', sy.st === 'sync');
 }
 async function load(silent, quiet) {
   if (loading) return;
@@ -1559,7 +1565,7 @@ function renderList() {
     return;
   }
   p.innerHTML = `<div class="lhead"><div class="ltitle"><span class="logo">CRM</span><h1>Kontakty</h1><span class="cnt" id="cnt"></span><span class="sp"></span><div class="sync" id="sync"></div>
-    <button class="ib" data-act="refresh" aria-label="Obnoviť">${ico('refresh')}</button>
+    <button class="ib refresh" id="refreshBtn" data-act="refresh" aria-label="Obnoviť" title="Načítať znova">${ico('refresh')}</button>
     <button class="ib" data-nav="settings" aria-label="Nastavenia">${ico('gear')}</button></div>
     <div class="qrow"><input id="q" type="search" placeholder="Hľadať…" value="${esc(S.q)}" autocomplete="off" style="margin:0">
     <button class="ib add" data-act="add" aria-label="Pridať">${ico('plus')}</button></div>
@@ -1588,7 +1594,7 @@ function filtered() {
     return x[0].localeCompare(y[0]) || x[1].localeCompare(y[1]) || String(V(a, 'firma')).localeCompare(String(V(b, 'firma')), 'sk'); });
   /* firmy jedného konateľa sa v zozname ukážu ako jeden kontakt */
   const seenG = new Set();
-  return rows.filter(r => { const g = String(V(r, 'skup')).trim(); if (!g || groupOf(r).length < 2) return true; if (seenG.has(g)) return false; seenG.add(g); return true; });
+  return rows.filter(r => { const g = gidOf(r); if (!g || groupOf(r).length < 2) return true; if (seenG.has(g)) return false; seenG.add(g); return true; });
 }
 /* pre export: všetky firmy spojených kontaktov, každá zvlášť */
 function exportRows() {
@@ -2018,7 +2024,7 @@ async function materializeNewCols(vals) {
   if (!real.length) return out;
   const labels = real.map(h => h.slice(7));
   let added = labels;
-  try { const j = await api('addcols', {headers: labels}); if (j.added) added = j.added; } catch (e) { /* ak zlyhá, skús zapísať aspoň pod pôvodným názvom */ }
+  try { const j = await api('addcols', {headers: labels}); if (j.added) added = j.added; } catch (e) { S.colWarn = true; /* ak zlyhá, skús zapísať aspoň pod pôvodným názvom */ }
   real.forEach((h, i) => { out[added[i] || labels[i]] = vals[h]; });
   // premapuj S.m na novovytvorené stĺpce podľa FIELDS.label
   labels.forEach((label, i) => {
@@ -2323,15 +2329,20 @@ function syncOsobaFromKonatel(r, vals) {
   if (kNew !== kOld && (!oOld || norm(oOld) === norm(kOld))) vals[hO] = kNew;
 }
 /* ---------- spojenie firiem jedného konateľa ---------- */
-let _gm = null;
+let _gm = null, _lg = null;
+/* záloha spojení v prehliadači (kľúč = IČO, inak názov firmy) – pre prípad, že Sheet stĺpec „Skupina firiem“ nemá */
+const rowKey = r => { const i = String(V(r, 'ico')).replace(/\s+/g, ''); return i ? 'i' + i : 'f' + norm(V(r, 'firma')); };
+function lgGet() { if (!_lg) { try { _lg = JSON.parse(LS.getItem('crm.groups') || '{}') || {}; } catch (e) { _lg = {}; } } return _lg; }
+function lgSave() { try { LS.setItem('crm.groups', JSON.stringify(_lg || {})); } catch (e) {} _gm = null; }
+function gidOf(r) { const g = String(V(r, 'skup')).trim(); return g || lgGet()[rowKey(r)] || ''; }
 function gmap() {
   const rows = S.data.contacts.rows;
   if (_gm && _gm.src === rows && _gm.len === rows.length) return _gm.m;
   const m = new Map();
-  rows.forEach(x => { const g = String(V(x, 'skup')).trim(); if (g) { if (!m.has(g)) m.set(g, []); m.get(g).push(x); } });
+  rows.forEach(x => { const g = gidOf(x); if (g) { if (!m.has(g)) m.set(g, []); m.get(g).push(x); } });
   _gm = {src: rows, len: rows.length, m}; return m;
 }
-function groupOf(r) { const g = String(V(r, 'skup')).trim(), L = g ? gmap().get(g) : null; return L && L.length > 1 ? L : [r]; }
+function groupOf(r) { const g = gidOf(r), L = g ? gmap().get(g) : null; return L && L.length > 1 ? L : [r]; }
 const TITLES = new Set(['ing', 'mgr', 'bc', 'phd', 'jud', 'judr', 'dr', 'mudr', 'prof', 'doc', 'csc', 'mba', 'rndr', 'pharmdr', 'paeddr', 'phdr', 'arch', 'ing arch', 'mvdr', 'mph', 'art', 'artd', 'dis']);
 /* mená konateľov (bez titulov, na poradí nezáleží) – kľúč na hľadanie rovnakého konateľa vo viacerých firmách */
 function kNames(r) {
@@ -2370,27 +2381,36 @@ function linkSearch(q) {
 async function linkRows(r, others) {
   if (!r || !others.length) return;
   const involved = new Set(); [r, ...others].filter(Boolean).forEach(x => groupOf(x).forEach(y => involved.add(y)));
-  let gid = ''; for (const x of involved) { const g = String(V(x, 'skup')).trim(); if (g) { gid = g; break; } }
+  let gid = ''; for (const x of involved) { const g = gidOf(x); if (g) { gid = g; break; } }
   if (!gid) gid = 'G' + Date.now().toString(36);
+  const lg = lgGet(); involved.forEach(x => { lg[rowKey(x)] = gid; }); lgSave();
   const todo = [...involved].filter(x => String(V(x, 'skup')).trim() !== gid);
-  if (!todo.length) return;
   try {
-    const real = await materializeNewCols({[fieldHeader('skup')]: gid});
-    for (const x of todo) {
-      const act = actFor(x, 'Spojené firmy', '', null);
-      await api('update', {sheet: 'contacts', row: x.r, values: real, activity: act, check: S.m.firma && !x.fd ? {header: S.m.firma, value: V(x, 'firma')} : null});
-      applyLocal(x, real); pushActivity(act);
+    if (todo.length) {
+      S.colWarn = false;
+      const real = await materializeNewCols({[fieldHeader('skup')]: gid});
+      for (const x of todo) {
+        const act = actFor(x, 'Spojené firmy', '', null);
+        await api('update', {sheet: 'contacts', row: x.r, values: real, activity: act, check: S.m.firma && !x.fd ? {header: S.m.firma, value: V(x, 'firma')} : null});
+        applyLocal(x, real); pushActivity(act);
+      }
     }
-    persist(); renderChips(); renderListBody(); renderDetail(); toast('Firmy spojené: ' + [...involved].map(x => V(x, 'firma')).join(' + '));
-  } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
+    persist(); renderChips(); renderListBody(); renderDetail();
+    if (S.colWarn) toast('Firmy sú spojené, ale stĺpec „Skupina firiem“ sa v Sheete nepodarilo vytvoriť – spojenie sa pamätá len v tomto prehliadači. Pridaj stĺpec „Skupina firiem“ do Sheetu ručne.', true);
+    else toast('Firmy spojené: ' + [...involved].map(x => V(x, 'firma')).join(' + '));
+  } catch (e) { persist(); renderChips(); renderListBody(); renderDetail(); toast('Spojenie sa uložilo len v tomto prehliadači: ' + e.message, true); if (e.conflict) load(true); }
 }
 async function unlinkRow() {
-  const r = rowBy(S.sel); if (!r || !S.m.skup || groupOf(r).length < 2) return;
+  const r = rowBy(S.sel); if (!r || groupOf(r).length < 2) return;
   if (!confirm(`Odpojiť firmu „${V(r, 'firma')}“ od ostatných firiem konateľa?`)) return;
+  delete lgGet()[rowKey(r)]; lgSave();
   try {
-    const vals = {[S.m.skup]: ''}, act = actFor(r, 'Odpojená firma', '', null);
-    await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
-    applyLocal(r, vals); pushActivity(act); persist(); renderChips(); renderListBody(); renderDetail(); toast('Firma odpojená');
+    if (S.m.skup && String(V(r, 'skup')).trim()) {
+      const vals = {[S.m.skup]: ''}, act = actFor(r, 'Odpojená firma', '', null);
+      await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+      applyLocal(r, vals); pushActivity(act);
+    }
+    persist(); renderChips(); renderListBody(); renderDetail(); toast('Firma odpojená');
   } catch (e) { toast(e.message, true); if (e.conflict) load(true); }
 }
 /* zápis do ďalšej firmy skupiny na pozadí (bez prekreslenia obrazovky); pri chybe sa zmena vráti */
