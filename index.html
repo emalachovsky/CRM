@@ -1105,6 +1105,16 @@ html[data-theme="light"] body .card.over .c-left .c-time,html[data-theme="light"
 html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){background:#000!important;border-color:var(--ibd)!important;color:#9fd8ff!important;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif!important;font-weight:400!important;font-size:.98rem!important;line-height:1.25!important;letter-spacing:0!important}
 html .card .c-next.urg{border-color:var(--urg-bd)!important}
 html .card .c-next>span{color:inherit}
+
+/* --- Funkcia osoby v hlavičke --- */
+.dhead .sub .fn{opacity:.7}
+/* --- Nastavenia: oddelené skupiny a modré tlačidlá --- */
+.setSec{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:.85rem 1rem 1rem;margin:0 0 1rem}
+.setSec>.gtitle{margin:0 0 .8rem!important;padding-bottom:.55rem;border-bottom:1px solid var(--line)}
+.setSec .seg{margin-bottom:0}
+.setSec .cta,.setSec .cta.ghost{background:linear-gradient(135deg,var(--acc),var(--acc-d));color:#fff;border:0;box-shadow:0 6px 18px color-mix(in srgb,var(--acc) 22%,transparent)}
+.setSec .cta+.cta,.setSec .cta+.rcP,.setSec .cta+.maprow{margin-top:.6rem}
+.setSec .miss .cta{margin-top:.4rem}
 </style>
 </head>
 <body>
@@ -1213,7 +1223,8 @@ const FIELDS = [
   {k:'pozn',   label:'Poznámka', pats:['poznamka','poznamky','notes','note']},
   {k:'firma',  label:'Firma', pats:['nazov firmy','nazov spolocnosti','spolocnost','company','nazov']},
   {k:'osoba',  label:'Kontaktná osoba', pats:['kontaktna osoba','meno a priezvisko','meno','kontakt','osoba','priezvisko']},
-  {k:'pozicia',label:'Aktivita', pats:['aktivita','pozicia','funkcia']},
+  {k:'funkcia',label:'Funkcia', pats:['funkcia','funkcia osoby','postavenie']},
+  {k:'pozicia',label:'Aktivita', pats:['aktivita','pozicia']},
   {k:'web',    label:'Web', pats:['web','stranka','website']},
   {k:'ico',    label:'IČO', pats:['ico']},
   {k:'ulica',  label:'Ulica / adresa', pats:['ulica','adresa','street']},
@@ -1240,6 +1251,15 @@ const CGROUPS = [
   ['Plyn', ['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']]
 ];
 const QUICK_NOTES = ['Čakám na FA', 'Dohodnúť stretnutie', 'Pripraviť ponuku'];
+/* Funkcia kontaktnej osoby: predvolene Konateľ, dá sa zmeniť (zoznam alebo „Iná funkcia…“) */
+const FUNKCIE = ['Konateľ', 'Prokurista', 'Riaditeľ', 'Majiteľ', 'Spoločník', 'Vedúci', 'Manažér', 'Nákupca', 'Účtovník', 'Asistent'];
+const FUNKCIA_DEF = 'Konateľ';
+const funkciaOf = r => String(V(r, 'funkcia') || '').trim() || FUNKCIA_DEF;
+function funkciaSelect(a, val) {
+  const cur = String(val || '').trim() || FUNKCIA_DEF, m = FUNKCIE.find(x => norm(x) === norm(cur)), sel = m || cur;
+  const opts = m ? FUNKCIE : [cur, ...FUNKCIE];
+  return `<select ${a} data-fn="1" data-cur="${esc(sel)}">${opts.map(x => `<option value="${esc(x)}" ${x === sel ? 'selected' : ''}>${esc(x)}</option>`).join('')}<option value="__other">Iná funkcia…</option></select>`;
+}
 const SEP = '────────────────────';
 
 function buildMap() {
@@ -1838,7 +1858,7 @@ function contactDetail(r) {
   const em = V(r, 'email'), web = String(V(r, 'web') || '').trim(), webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
   const tabs = [['hovor', 'Hovor'], ['firma', 'Firma'], ['om', 'OM'], ['udaje', 'Všetky údaje'], ['hist', 'História']];
   return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
-    <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div>${nextHeadHtml(r)}</div>${savemsgHtml()}<div class="stCol">${stSelect(V(r, 'stav'))}${saveGrpHtml()}</div></div>
+    <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}${V(r, 'osoba') ? `<span class="fn"> · ${esc(funkciaOf(r))}</span>` : ''}</div>${nextHeadHtml(r)}</div>${savemsgHtml()}<div class="stCol">${stSelect(V(r, 'stav'))}${saveGrpHtml()}</div></div>
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
 </div>
@@ -1890,6 +1910,7 @@ function tabHovor(r) {
 }
 function fieldInput(h, val) {
   const k = Object.keys(S.m).find(x => S.m[x] === h), lists = S.data.contacts.lists[h], a = `data-h="${esc(h)}"`;
+  if (k === 'funkcia' || h === '__new__Funkcia') return funkciaSelect(a, val);
   if (/_kon$/.test(k || '') && val && !isoDate(val)) return `<input type="text" ${a} value="${esc(val)}">`;
   if (k === 'datum' || k === 'an_ok' || /_kon$/.test(k || '')) return dateInp(a, isoDate(val));
   if (k === 'cas') return timeSelect(a, isoTime(val));
@@ -1908,13 +1929,13 @@ function fieldInput(h, val) {
   return `<input type="text" ${a} value="${esc(val)}">`;
 }
 function orderedHeaders() {
-  const hs = S.data.contacts.headers, first = ['firma', 'osoba', 'pozicia', 'tel', 'tel2', 'email', 'stav', 'dalsi', 'datum', 'cas', 'pozn'].map(k => S.m[k]).filter(Boolean);
+  const hs = S.data.contacts.headers, first = ['firma', 'osoba', 'funkcia', 'pozicia', 'tel', 'tel2', 'email', 'stav', 'dalsi', 'datum', 'cas', 'pozn'].map(k => k === 'funkcia' ? fieldHeader(k) : S.m[k]).filter(Boolean);
   return [...first, ...hs.filter(h => !first.includes(h) && norm(h) !== 'odvetvie')];   /* Odvetvie sa nezobrazuje */
 }
 function tabAll(r) {
   const grp = ks => ks.map(k => S.m[k]).filter(Boolean);
   const el = grp(['el_dod', 'el_druh', 'el_sp', 'el_cs', 'el_kon']), pl = grp(['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']);
-  const lab = h => `<label>${esc(h)}${fieldInput(h, r.v[h] ?? '')}</label>`;
+  const lab = h => `<label>${esc(h.replace(/^__new__/, ''))}${fieldInput(h, r.v[h] ?? '')}</label>`;
   const box = (cls, title, list) => list.length ? `<div class="cg ${cls}"><div class="gtitle">${title}</div>${list.map(lab).join('')}</div>` : '';
   return `<form id="fAll" class="win pad" autocomplete="off">${orderedHeaders().filter(h => !el.includes(h) && !pl.includes(h)).map(lab).join('')}${box('el', '<span class="gi">⚡</span>Elektrina', el)}${box('gas', '<span class="gi">🔥</span>Plyn', pl)}
     </form>`;
@@ -2195,7 +2216,8 @@ async function saveNote(btn) {
 }
 async function saveAll(form) {
   const r = rowBy(S.sel); if (!r) return;
-  const vals = changedOnly(r, collect(form));
+  let vals;
+  try { vals = changedOnly(r, await materializeNewCols(collect(form))); } catch (e) { toast(e.message, true); return; }
   if (!Object.keys(vals).length) { saveMsg('Nič na uloženie'); return; }
   if (!editDupConfirm(r, form)) return;
   commitBg(r, {vals, act: actFor(r, changeTyp(vals, ''), '', vals)});
@@ -2220,7 +2242,7 @@ function openNewContact() {
     <datalist id="dlFirmy">${companyNames().map(n => `<option value="${esc(n)}">`).join('')}</datalist>
     <form id="fNew" autocomplete="off">${hs.map(h => {
       const inp = fieldInput(h, S.m.datum === h ? todayISO() : '');
-      return `<label>${esc(h)}${S.m.firma === h ? inp.replace('<input ', '<input list="dlFirmy" ') : inp}</label>`;
+      return `<label>${esc(h.replace(/^__new__/, ''))}${S.m.firma === h ? inp.replace('<input ', '<input list="dlFirmy" ') : inp}</label>`;
     }).join('')}<button class="cta" type="submit">Pridať kontakt</button></form>`);
   newDupCheck(document.getElementById('fNew'));
 }
@@ -2298,9 +2320,9 @@ function findDupName(name) {
   return S.data.contacts.rows.find(r => norm(V(r, 'firma')) === n) || null;
 }
 async function saveNew(form) {
-  const vals = collect(form);
+  let vals = collect(form);
   for (const h in vals) if (vals[h] === '' || vals[h] === false || (vals[h] && vals[h].v === '')) delete vals[h];
-  if (!Object.keys(vals).length) { toast('Vyplň aspoň jedno pole', true); return; }
+  if (!Object.keys(vals).filter(h => h !== fieldHeader('funkcia')).length) { toast('Vyplň aspoň jedno pole', true); return; }
   const nm = S.m.firma && vals[S.m.firma] ? specVal(vals[S.m.firma]) : '';
   if (findDupName(nm)) { toast(`Firma „${nm}“ už v zozname existuje – nový záznam som nezapísal.`, true); return; }
   const ic = S.m.ico && vals[S.m.ico] ? specVal(vals[S.m.ico]) : '';
@@ -2309,6 +2331,7 @@ async function saveNew(form) {
   if (hits.length && !confirm(`⚠️ „${nm}“ sa už v CRM vyskytuje:\n\n` + hits.slice(0, 6).map(h => '• ' + (V(h.r, 'firma') || '(bez firmy)') + ' – ' + h.why).join('\n') + `\n\nNaozaj pridať ako nový kontakt?`)) return;
   busy(form, true);
   try {
+    vals = await materializeNewCols(vals);
     const tmp = {v: Object.fromEntries(Object.entries(vals).map(([h, s]) => [h, specVal(s)]))};
     const act = actFor(tmp, 'Nový kontakt', '', vals);
     const j = await api('append', {sheet: 'contacts', values: vals, activity: act});
@@ -2453,38 +2476,46 @@ function unmappedHtml(hs) {
   const noCol = FIELDS.filter(f => !S.m[f.k] && S.map[f.k] !== '');
   const off = FIELDS.filter(f => !S.m[f.k] && S.map[f.k] === '');
   const noField = hs.filter(h => !FIELDS.some(f => S.m[f.k] === h));
-  let html = `<div class="gtitle" style="margin-top:1.3rem">Kontrola spárovania</div>`;
+  let html = `<section class="setSec"><div class="gtitle">Kontrola spárovania</div>`;
   if (!noCol.length && !off.length) html += `<div class="miss okm">✔ Každý údaj v CRM má v Sheete svoj stĺpec.</div>`;
   if (noCol.length) html += `<div class="miss"><b>Údaje v CRM bez stĺpca v Sheete (${noCol.length}):</b><ul>${noCol.map(f => `<li>${esc(f.label)}</li>`).join('')}</ul>
     <button class="cta ghost" type="button" data-act="addcols">Vytvoriť tieto stĺpce v Sheete</button></div>`;
   if (off.length) html += `<div class="miss"><b>Vypnuté (nepoužité) údaje (${off.length}):</b><ul>${off.map(f => `<li>${esc(f.label)}</li>`).join('')}</ul></div>`;
   if (noField.length) html += `<div class="miss"><b>Stĺpce v Sheete, ktoré CRM nepoužíva ako samostatné pole (${noField.length}):</b><ul>${noField.map(h => `<li>${esc(h)}</li>`).join('')}</ul>
     Vidno ich len v záložke „Všetky údaje“.</div>`;
-  return html;
+  return html + '</section>';
 }
 function openSettings() {
   const hs = S.data ? S.data.contacts.headers : [];
   modal(`<div class="mhead"><h2>Nastavenia</h2><button class="ib" data-act="close">${ico('x')}</button></div>
-    <div class="gtitle">Vzhľad</div>
-    <div class="seg"><button type="button" data-themeset="dark" class="${themeNow() === 'dark' ? 'on' : ''}">☾ Tmavý</button><button type="button" data-themeset="light" class="${themeNow() === 'light' ? 'on' : ''}">☀ Svetlý</button></div>
-    <form id="fSet" autocomplete="off">
-      <label>URL Apps Script web aplikácie (…/exec)<input type="url" id="sUrl" value="${esc(S.cfg.url || '')}" placeholder="https://script.google.com/macros/s/…/exec"></label>
-            <button class="cta" type="submit">Uložiť a načítať</button>
-      <button class="cta ghost" type="button" data-act="copycfg" style="margin-top:.6rem">Skopírovať odkaz pre iné zariadenie</button>
-    </form>
-    ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Export</div>
+    <section class="setSec"><div class="gtitle">Vzhľad</div>
+      <div class="seg"><button type="button" data-themeset="dark" class="${themeNow() === 'dark' ? 'on' : ''}">☾ Tmavý</button><button type="button" data-themeset="light" class="${themeNow() === 'light' ? 'on' : ''}">☀ Svetlý</button></div>
+    </section>
+    <section class="setSec"><div class="gtitle">Pripojenie</div>
+      <form id="fSet" autocomplete="off">
+        <label>URL Apps Script web aplikácie (…/exec)<input type="url" id="sUrl" value="${esc(S.cfg.url || '')}" placeholder="https://script.google.com/macros/s/…/exec"></label>
+        <button class="cta" type="submit">Uložiť a načítať</button>
+        <button class="cta ghost" type="button" data-act="copycfg">Skopírovať odkaz pre iné zariadenie</button>
+      </form>
+    </section>
+    ${hs.length ? `<section class="setSec"><div class="gtitle">Export</div>
       <button class="cta ghost" type="button" data-act="exporttpl">Exportovať filtrované kontakty do šablóny (${S.data ? filtered().length : 0})</button>
-      <p class="rcP">Exportuje sa to, čo máš práve vyfiltrované v zozname (Dnes/Všetky, Stav, hľadanie). Záznamy z poznámok sa prevedú na aktivity, História sa neexportuje.</p>` : ''}
-    ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Zoznamy Stav a Aktivita</div>
-      <button class="cta ghost" type="button" data-act="dupcheck" style="margin-bottom:.6rem">Kontrola duplicity (IČO a názvy)</button>
+      <p class="rcP">Exportuje sa to, čo máš práve vyfiltrované v zozname (Dnes/Všetky, Stav, hľadanie). Záznamy z poznámok sa prevedú na aktivity, História sa neexportuje.</p>
+    </section>
+    <section class="setSec"><div class="gtitle">Kontrola duplicity</div>
+      <button class="cta ghost" type="button" data-act="dupcheck">Kontrola duplicity (IČO a názvy)</button>
+    </section>
+    <section class="setSec"><div class="gtitle">Zoznamy Stav a Aktivita</div>
       <button class="cta ghost" type="button" data-act="reconcile">Zosúladiť Stav a Aktivitu so zoznamami</button>
       <p class="rcP">Hodnoty v kontaktoch (aj ich veľkosť písmen) sa nahradia hodnotami zo zoznamov v Sheete. Zmeny sa zapíšu aj do Sheetu.</p>
-      <p class="rcP">${esc(colorsInfoText())}</p>` : ''}
+      <p class="rcP">${esc(colorsInfoText())}</p>
+    </section>` : ''}
     ${hs.length ? unmappedHtml(hs) : ''}
-    ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Spárovanie stĺpcov (${hs.length})</div>
-      <button class="cta ghost" type="button" data-act="reloadcols" style="margin-bottom:.5rem">Znovu načítať stĺpce zo Sheetu</button>
-      <button class="cta ghost" type="button" data-act="selectallcols" style="margin-bottom:.6rem">Vybrať všetky stĺpce</button>
-      ${hs.map(h => { const cur = (FIELDS.find(f => S.m[f.k] === h) || {}).k || ''; return `<div class="maprow"><span>${esc(h)}</span><select data-colmap="${esc(h)}"><option value="">(nepoužité)</option>${FIELDS.map(f => `<option value="${f.k}" ${f.k === cur ? 'selected' : ''}>${f.label}</option>`).join('')}</select></div>`; }).join('')}` : ''}`);
+    ${hs.length ? `<section class="setSec"><div class="gtitle">Spárovanie stĺpcov (${hs.length})</div>
+      <button class="cta ghost" type="button" data-act="reloadcols">Znovu načítať stĺpce zo Sheetu</button>
+      <button class="cta ghost" type="button" data-act="selectallcols">Vybrať všetky stĺpce</button>
+      ${hs.map(h => { const cur = (FIELDS.find(f => S.m[f.k] === h) || {}).k || ''; return `<div class="maprow"><span>${esc(h)}</span><select data-colmap="${esc(h)}"><option value="">(nepoužité)</option>${FIELDS.map(f => `<option value="${f.k}" ${f.k === cur ? 'selected' : ''}>${f.label}</option>`).join('')}</select></div>`; }).join('')}
+    </section>` : ''}`);
 }
 
 /* ---------- export do šablóny Meitn CRM ---------- */
@@ -2526,7 +2557,7 @@ async function exportTpl() {
       C.push([ico, meno, fn, tel, mail, first ? 'ano' : 'nie', sign ? 'ano' : 'nie']);
     };
     const tel = tx(V(r, 'tel')) || tx(V(r, 'tel2')), mail = tx(V(r, 'email'));
-    if (os) { add(os, '', tel, mail, norm(os) === norm(kn)); if (kn && norm(kn) !== norm(os)) add(kn, 'konateľ', '', '', true); }
+    if (os) { add(os, tx(funkciaOf(r)), tel, mail, norm(os) === norm(kn)); if (kn && norm(kn) !== norm(os)) add(kn, 'konateľ', '', '', true); }
     else add(kn, 'konateľ', tel, mail, true);
   }
   const now = new Date(), nowS = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
@@ -2667,6 +2698,17 @@ document.addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'anFile') { const f = t.files && t.files[0]; t.value = ''; if (f) importAnalysis(f); return; }
   if (t.dataset.stsel !== undefined) { saveStav(t); return; }
+  if (t.dataset.fn !== undefined) {
+    if (t.value === '__other') {
+      const v = (prompt('Zadaj funkciu osoby:', '') || '').trim();
+      if (v) {
+        let o = [...t.options].find(x => norm(x.value) === norm(v));
+        if (!o) { o = new Option(v, v); t.insertBefore(o, t.options[t.options.length - 1]); }
+        t.value = o.value; if (t.closest('#detailPane')) markDirty();
+      } else t.value = t.dataset.cur;
+    }
+    t.dataset.cur = t.value; return;
+  }
   if (t.classList.contains('actsel')) t.setAttribute('style', palStyle(t.value));
   if (t.dataset.sty) t.setAttribute('style', t.dataset.sty === 'act' && isActLbl(t.value) ? actStyle(t.value) : palStyle(t.value));
   if (t.dataset.colmap !== undefined) {
