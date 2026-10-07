@@ -1124,9 +1124,7 @@ html .card .c-next>span{color:inherit}
 #linkBox{margin:.4rem 0}#linkBox input{width:100%}#linkRes{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
 .grpBar .gsel{opacity:.8}
 .grpBar .gsel.gon,.grpBar .gsel.gon:hover{opacity:1;background:#ebbc5a!important;border:2px solid #fff3c4!important;color:#1a1405!important;font-weight:800!important;box-shadow:0 0 0 3px rgba(235,188,90,.4),0 2px 8px rgba(0,0,0,.35)!important;transform:scale(1.04)}
-.lhead .ib.refresh{width:2.7rem!important;height:2.7rem!important;border:0!important;background:linear-gradient(135deg,#ffd873,#d9a634)!important;color:#1a1405!important;box-shadow:0 0 0 2px rgba(235,188,90,.4),0 2px 8px rgba(0,0,0,.35)!important}
-.lhead .ib.refresh svg,.lhead .ib.refresh .ico{width:1.45rem!important;height:1.45rem!important;stroke-width:2.4}
-.lhead .ib.refresh.spin{box-shadow:0 0 0 3px rgba(255,216,115,.55),0 0 16px rgba(235,188,90,.7)!important}
+.lhead .ib.refresh.spin{color:#ebbc5a!important;border-color:#ebbc5a!important}
 .lhead .ib.refresh.spin svg,.lhead .ib.refresh.spin .ico{animation:spinR .8s linear infinite}
 @keyframes spinR{to{transform:rotate(360deg)}}
 </style>
@@ -1475,7 +1473,7 @@ async function apiCore(action, payload = {}) {
   }
   throw last;
 }
-let loading = false;
+let loading = false, loadT0 = 0;
 function persist() {
   try { LS.setItem('crm.cache', JSON.stringify(S.data, (k, v) => k === '_s' ? undefined : v)); } catch (e) {}
 }
@@ -1487,16 +1485,26 @@ function paintSync() {
   el.innerHTML = `<span class="dot ${sy.st}"></span>${esc(t)}`;
   const rb = $('#refreshBtn'); if (rb) rb.classList.toggle('spin', sy.st === 'sync');
 }
+/* ručné načítanie (ikona ⟳): vždy sa spustí – zaseknuté načítanie / ukladanie sa pustí a dáta sa načítajú nanovo */
+async function manualLoad() {
+  toast('Načítavam…');
+  if (loading && Date.now() - loadT0 > 15000) loading = false;
+  for (let i = 0; i < 20 && pendingSaves; i++) await new Promise(r => setTimeout(r, 500));
+  if (pendingSaves) pendingSaves = 0;
+  if (loading) { setSync('sync'); return; }
+  await load(false);
+  if (S.sy && S.sy.st === 'ok') toast('Načítané ✔');
+}
 async function load(silent, quiet) {
   if (loading) return;
   if (pendingSaves) { if (!silent) toast('Dokončujem ukladanie…'); return; }
-  loading = true; if (!quiet) setSync('sync');
+  loading = true; loadT0 = Date.now(); if (!quiet) setSync('sync');
   try {
     const j = await api('read');
     S.data = j; S.lastLoad = Date.now(); buildMap(); persist();
     if (S.sel != null && S.view === 'contacts' && !rowBy(S.sel)) S.sel = null;
     if (quiet || S.dirty) { renderChips(); renderListBody(); } else render();
-    setSync('ok'); checkLists(); sweepMeetings();
+    setSync('ok'); checkLists(); sweepMeetings(); syncGroups();
   } catch (e) { if (quiet && S.data) setSync('ok'); else { setSync('err', 'Chyba: ' + e.message); if (!silent) toast(e.message, true); } }
   finally { loading = false; }
 }
@@ -2024,15 +2032,16 @@ async function materializeNewCols(vals) {
   if (!real.length) return out;
   const labels = real.map(h => h.slice(7));
   let added = labels;
+  S.colWarn = false;
   try { const j = await api('addcols', {headers: labels}); if (j.added) added = j.added; } catch (e) { S.colWarn = true; /* ak zlyhá, skús zapísať aspoň pod pôvodným názvom */ }
   real.forEach((h, i) => { out[added[i] || labels[i]] = vals[h]; });
   // premapuj S.m na novovytvorené stĺpce podľa FIELDS.label
-  labels.forEach((label, i) => {
+  if (!S.colWarn) labels.forEach((label, i) => {
     const f = FIELDS.find(x => x.label === label || ('__new__' + x.label) === real[i]);
     if (f) { S.m[f.k] = added[i] || label; S.map[f.k] = added[i] || label; }
   });
   LS.setItem('crm.map', JSON.stringify(S.map));
-  if (added.length) S.data.contacts.headers.push(...added.filter(h => !S.data.contacts.headers.includes(h)));
+  if (added.length && !S.colWarn) S.data.contacts.headers.push(...added.filter(h => !S.data.contacts.headers.includes(h)));
   return out;
 }
 const specVal = s => (s && typeof s === 'object') ? s.v : s;
@@ -2399,6 +2408,33 @@ async function linkRows(r, others) {
     if (S.colWarn) toast('Firmy sú spojené, ale stĺpec „Skupina firiem“ sa v Sheete nepodarilo vytvoriť – spojenie sa pamätá len v tomto prehliadači. Pridaj stĺpec „Skupina firiem“ do Sheetu ručne.', true);
     else toast('Firmy spojené: ' + [...involved].map(x => V(x, 'firma')).join(' + '));
   } catch (e) { persist(); renderChips(); renderListBody(); renderDetail(); toast('Spojenie sa uložilo len v tomto prehliadači: ' + e.message, true); if (e.conflict) load(true); }
+}
+/* po načítaní: spojenia firiem sa automaticky doplnia do Sheetu (stĺpec „Skupina firiem“) a naopak zo Sheetu do prehliadača */
+let syncingG = false;
+async function syncGroups() {
+  if (syncingG || !S.data || S.dirty || pendingSaves) return;
+  syncingG = true;
+  try {
+    const lg = lgGet(), rows = S.data.contacts.rows;
+    if (!S.m.skup && Object.keys(lg).length && !S.triedSkupCol) {   /* stĺpec ešte nie je – skús ho vytvoriť */
+      S.triedSkupCol = true;
+      await materializeNewCols({[fieldHeader('skup')]: 'x'});
+    }
+    if (!S.m.skup) return;
+    let ch = false;
+    rows.forEach(x => { const g = String(V(x, 'skup')).trim(); if (g && lg[rowKey(x)] !== g) { lg[rowKey(x)] = g; ch = true; } });
+    if (ch) lgSave();
+    const cnt = {}; rows.forEach(x => { const g = lg[rowKey(x)]; if (g) cnt[g] = (cnt[g] || 0) + 1; });
+    const todo = rows.filter(x => !String(V(x, 'skup')).trim() && lg[rowKey(x)] && cnt[lg[rowKey(x)]] > 1);
+    for (const x of todo) {
+      const vals = {[S.m.skup]: lg[rowKey(x)]};
+      await api('update', {sheet: 'contacts', row: x.r, values: vals, check: S.m.firma && !x.fd ? {header: S.m.firma, value: V(x, 'firma')} : null});
+      applyLocal(x, vals);
+    }
+    if (todo.length) { persist(); renderListBody(); toast('Spojené firmy zapísané do Sheetu: ' + todo.length); }
+    else if (ch) { renderListBody(); if (!S.dirty) renderDetail(); }
+  } catch (e) { /* skúsi sa znova pri ďalšom načítaní */ }
+  finally { syncingG = false; }
 }
 async function unlinkRow() {
   const r = rowBy(S.sel); if (!r || groupOf(r).length < 2) return;
@@ -2876,7 +2912,7 @@ document.addEventListener('click', e => {
     else if (a === 'linkno') { const o = rowBy(+el.dataset.cand), r0 = rowBy(S.sel); if (o && r0) { const d = noLink(); d.add(nlKey(r0, o)); try { LS.setItem('crm.nolink', JSON.stringify([...d])); } catch (e) {} renderDetail(); } }
     else if (a === 'unlink') unlinkRow();
     else if (a === 'undo') undoLast();
-    else if (a === 'refresh') load();
+    else if (a === 'refresh') manualLoad();
     else if (a === 'savenote') saveNote(el);
     else if (a === 'rcskip') { try { sessionStorage.setItem('crm.rcskip', S.mmSig || ''); } catch (e) {} closeModal(); }
     else if (a === 'rcapply') applyLists();
@@ -2895,9 +2931,9 @@ document.addEventListener('click', e => {
     else if (a === 'close') closeModal();
     else if (a === 'add') openNewContact();
     else if (a === 'addcols') {
-      const names = FIELDS.filter(f => !S.m[f.k] && S.map[f.k] === undefined).map(f => f.label.replace(/ \(hlavný\)$/, ''));
+      const names = FIELDS.filter(f => !S.m[f.k] && S.map[f.k] !== '').map(f => f.label.replace(/ \(hlavný\)$/, ''));
       el.disabled = true;
-      api('addcols', {headers: names}).then(j => { toast('Pridané do Sheetu: ' + ((j.added || []).join(', ') || 'nič'));  closeModal(); load(); })
+      api('addcols', {headers: names}).then(j => { toast('Pridané do Sheetu: ' + ((j.added || []).join(', ') || 'nič'));  closeModal(); for (const f of FIELDS) if (S.map[f.k] && !S.data.contacts.headers.includes(S.map[f.k])) delete S.map[f.k]; LS.setItem('crm.map', JSON.stringify(S.map)); load(); })
         .catch(e => { el.disabled = false; toast(e.message, true); });
     }
     else if (a === 'reloadcols') { el.disabled = true; load().then(() => { if ($('#fSet')) openSettings(); }); }
