@@ -2474,7 +2474,7 @@ function openSettings() {
     </form>
     ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Export</div>
       <button class="cta ghost" type="button" data-act="exporttpl">Exportovať filtrované kontakty do šablóny (${S.data ? filtered().length : 0})</button>
-      <p class="rcP">Exportuje sa to, čo máš práve vyfiltrované v zozname (Dnes/Všetky, Stav, hľadanie). Vznikne súbor v tvare šablóny na import do Meitn CRM.</p>` : ''}
+      <p class="rcP">Exportuje sa to, čo máš práve vyfiltrované v zozname (Dnes/Všetky, Stav, hľadanie). Záznamy z poznámok sa prevedú na aktivity, História sa neexportuje.</p>` : ''}
     ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Zoznamy Stav a Aktivita</div>
       <button class="cta ghost" type="button" data-act="dupcheck" style="margin-bottom:.6rem">Kontrola duplicity (IČO a názvy)</button>
       <button class="cta ghost" type="button" data-act="reconcile">Zosúladiť Stav a Aktivitu so zoznamami</button>
@@ -2530,13 +2530,21 @@ async function exportTpl() {
     else add(kn, 'konateľ', tel, mail, true);
   }
   const now = new Date(), nowS = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-  for (const a of S.data.activities.rows) {
-    const ico = byFirma.get(norm(a.v[ACT_H.firma])), typ = tx(a.v[ACT_H.typ]), n = norm(typ);
-    if (!ico || n === 'analyza nacitana') continue;
-    const dt = tx(a.v[ACT_H.dt]), d = isoDate(dt); if (!d) continue;
-    const tm = (dt.match(/(\d{1,2}):(\d{2})/) || []), od = d + ' ' + (tm[1] ? pad(+tm[1]) + ':' + tm[2] : '00:00'), nx = tx(a.v[ACT_H.dalsi]);
-    A.push([ico, '', /telef|hovor/.test(n) ? 'telefonat' : n.includes('stretn') ? 'stretnutie' : n.includes('uloha') ? 'uloha' : 'udalost',
-      (typ || 'Aktivita') + (nx ? ' – ' + nx : ''), od, '', od < nowS ? 'hotova' : 'naplanovana', tx(a.v[ACT_H.stav]), tx(a.v[ACT_H.pozn])]);
+  /* poznámky → aktivity: každý záznam začínajúci dátumom (📅 DD.MM.RRRR) = jedna aktivita; história aktivít sa neexportuje */
+  const seenN = new Set();
+  for (const r of rows) {
+    const ico = tx(V(r, 'ico')).replace(/\s+/g, ''); if (!seen.has(ico) || seenN.has(ico)) continue; seenN.add(ico);
+    const recs = []; let cur = null;
+    for (const ln of String(V(r, 'pozn') || '').split(/\r?\n/)) {
+      const m = ln.match(/^\s*(?:📅\s*)?(\d{1,2})\s*\.\s*(\d{1,2})\s*\.\s*(\d{4})\b\s*(.*)$/);
+      if (m) { cur = {d: m[3] + '-' + pad(+m[2]) + '-' + pad(+m[1]), t: [m[4]]}; recs.push(cur); }
+      else if (cur) { if (/^[─\-_=]{8,}\s*$/.test(ln)) cur = null; else cur.t.push(ln); }
+    }
+    for (const x of recs) {
+      const body = x.t.join('\n').trim(), n = norm(body), first = body.split('\n')[0].trim();
+      A.push([ico, '', /telef|volal|hovor|zavolat/.test(n) ? 'telefonat' : n.includes('stretn') ? 'stretnutie' : 'udalost',
+        (first.length > 80 ? first.slice(0, 77) + '…' : first) || 'Poznámka', x.d + ' 00:00', '', 'hotova', '', body]);
+    }
   }
   if (!K.length) { toast('Nie je čo exportovať – vyfiltrované kontakty nemajú platné IČO', true); return; }
   try { await loadXLSX(); } catch (e) { toast(e.message, true); return; }
