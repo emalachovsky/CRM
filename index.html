@@ -2472,6 +2472,9 @@ function openSettings() {
             <button class="cta" type="submit">Uložiť a načítať</button>
       <button class="cta ghost" type="button" data-act="copycfg" style="margin-top:.6rem">Skopírovať odkaz pre iné zariadenie</button>
     </form>
+    ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Export</div>
+      <button class="cta ghost" type="button" data-act="exporttpl">Exportovať filtrované kontakty do šablóny (${S.data ? filtered().length : 0})</button>
+      <p class="rcP">Exportuje sa to, čo máš práve vyfiltrované v zozname (Dnes/Všetky, Stav, hľadanie). Vznikne súbor v tvare šablóny na import do Meitn CRM.</p>` : ''}
     ${hs.length ? `<div class="gtitle" style="margin-top:1.3rem">Zoznamy Stav a Aktivita</div>
       <button class="cta ghost" type="button" data-act="dupcheck" style="margin-bottom:.6rem">Kontrola duplicity (IČO a názvy)</button>
       <button class="cta ghost" type="button" data-act="reconcile">Zosúladiť Stav a Aktivitu so zoznamami</button>
@@ -2482,6 +2485,68 @@ function openSettings() {
       <button class="cta ghost" type="button" data-act="reloadcols" style="margin-bottom:.5rem">Znovu načítať stĺpce zo Sheetu</button>
       <button class="cta ghost" type="button" data-act="selectallcols" style="margin-bottom:.6rem">Vybrať všetky stĺpce</button>
       ${hs.map(h => { const cur = (FIELDS.find(f => S.m[f.k] === h) || {}).k || ''; return `<div class="maprow"><span>${esc(h)}</span><select data-colmap="${esc(h)}"><option value="">(nepoužité)</option>${FIELDS.map(f => `<option value="${f.k}" ${f.k === cur ? 'selected' : ''}>${f.label}</option>`).join('')}</select></div>`; }).join('')}` : ''}`);
+}
+
+/* ---------- export do šablóny Meitn CRM ---------- */
+const TPL = {"navod": ["Import údajov do Meitn CRM", null, "Ako na to", "1. Vyplň hárky Klienti, Kontakty, Odberné miesta, Prípady a Aktivity (nemusíš všetky, len tie, čo potrebuješ). Hlavičky ani názvy hárkov nemeň.", "2. Hárky sa prepájajú cez IČO klienta. Prípad a aktivita sa k odbernému miestu a prípadu pripájajú cez EIC/POD a Kód importu.", "3. V CRM klikni hore na Import, vyber tento súbor, skontroluj náhľad a klikni Importovať.", "4. Ak náhľad ukáže chyby, oprav riadky podľa hlášky (hárok + číslo riadka) a súbor nahraj znova. Pri chybe sa nezapíše nič.", null, "Pravidlá", "• Všetko, čo importuješ, bude patriť tebe. Klient s IČO, ktoré už v CRM je a patrí inému obchodníkovi, sa neimportuje (požiadaj o prístup).", "• Ak klient s IČO už je tvoj, doplnia sa mu odberné miesta, kontakty, prípady a aktivity. Jeho údaje (názov, adresa…) sa neprepisujú.", "• Všetky prípady vstupujú na začiatok procesu (čakáme na podklady). Kroky a výhry nastavuje CRM podľa postupu, nie import.", "• Povinné polia majú v hlavičke hviezdičku (*). Ostatné údaje, ktoré CRM pred žiadosťou o ponuku vyžaduje, môžeš doplniť neskôr priamo v klientovi.", "• Desatinné čísla píš s bodkou (12.5). Dátumy ako RRRR-MM-DD (2027-01-01) alebo D.M.RRRR, dátum a čas ako RRRR-MM-DD HH:MM.", "• Rovnaký súbor sa nedá importovať dvakrát. Neprázdne riadky sa spracujú všetky, prázdne sa preskočia.", null, "Doterajší dodávateľ (presne takto)", "ELGAS, ENERGIE 2, Energetika Slovensko, a.s., Lama Energy, MET, MVM, Magna Energia, Rightpower, SPP, SSE, VSE, ZSE", null, "Hárky a stĺpce", "Klienti — Jeden riadok = jeden klient. IČO je kľúč, podľa ktorého sa k nemu pripoja ostatné hárky.", "   IČO* — 6 až 10 číslic, bez medzier", "   Názov*", "   Stav — prázdne = prospekt  [prospekt / klient]", "   DIČ", "   IČ DPH", "   Register — napr. OR OS Košice I, oddiel Sro, vložka č. 1234/V", "   Ulica", "   Mesto", "   PSČ", "   Korešpondenčná adresa", "   Banka", "   BIC", "   IBAN", "   Fakturačný e-mail — na doručovanie faktúr; prázdne = e-mail konateľa", "   Poznámka", null, "Kontakty — Kontaktné osoby klienta. Jeden riadok = jedna osoba.", "   IČO klienta*", "   Meno a priezvisko*", "   Funkcia — napr. konateľ", "   Telefón", "   E-mail", "   Hlavná osoba  [ano / nie]", "   Podpisuje — ano = osoba sa pripojí ako podpisujúca ku všetkým prípadom klienta z tohto súboru  [ano / nie]", null, "Odberné miesta — Odberné miesta klienta. Jeden riadok = jedno odberné miesto (EIC alebo POD).", "   IČO klienta*", "   Komodita*  [EE / PL]", "   EIC/POD*", "   Adresa odberného miesta", "   Ročná spotreba (MWh)", "   Tarifa — napr. C2-X3, X3-C2, X2; napätie (NN/VN) sa určí z tarify, X2 = VN", "   Istič (A) — pri NN", "   MRK (kW) — pri VN", "   RK (kW) — pri VN", "   Periodicita RK  [mesacna / trojmesacna / dvanastmesacna]", "   Typ merania  [A / C]", "   Fázy — pri NN  [1 / 3]", "   Doterajší dodávateľ", "   Koniec zmluvy — RRRR-MM-DD alebo D.M.RRRR", "   Poznámka", null, "Prípady — Obchodné prípady. Všetky vstupujú na začiatok procesu (čakáme na podklady). Jeden riadok = jedna komodita.", "   Kód importu* — vlastný kód len pre tento súbor, napr. P1, P2 (na prepojenie s aktivitami)", "   IČO klienta*", "   Komodita*  [EE / PL]", "   Predmet — prázdne = Zmena dodávateľa EE/PL", "   Produkt  [FIX / SPOT]", "   EIC/POD odberných miest — viac oddeľ bodkočiarkou; musia byť v hárku Odberné miesta alebo už v CRM", "   Objem (MWh/rok)", "   Cena FIX (€/MWh)", "   Marža SPOT (€/MWh)", "   Zmluva od", "   Zmluva do", "   Doterajší dodávateľ — presne podľa zoznamu v hárku Návod", "   Poznámka", null, "Aktivity — Hovory, stretnutia, úlohy a ďalšie záznamy ku klientovi (voliteľne k prípadu).", "   IČO klienta*", "   Kód prípadu — kód z hárka Prípady, ak sa aktivita týka prípadu", "   Typ*  [uloha / stretnutie / telefonat / udalost / list]", "   Predmet*", "   Od* — RRRR-MM-DD HH:MM alebo D.M.RRRR HH:MM", "   Do", "   Stav — prázdne = naplánovaná  [naplanovana / hotova]", "   Výsledok", "   Poznámka"], "Klienti": ["IČO*", "Názov*", "Stav", "DIČ", "IČ DPH", "Register", "Ulica", "Mesto", "PSČ", "Korešpondenčná adresa", "Banka", "BIC", "IBAN", "Fakturačný e-mail", "Poznámka"], "Kontakty": ["IČO klienta*", "Meno a priezvisko*", "Funkcia", "Telefón", "E-mail", "Hlavná osoba", "Podpisuje"], "Odberné miesta": ["IČO klienta*", "Komodita*", "EIC/POD*", "Adresa odberného miesta", "Ročná spotreba (MWh)", "Tarifa", "Istič (A)", "MRK (kW)", "RK (kW)", "Periodicita RK", "Typ merania", "Fázy", "Doterajší dodávateľ", "Koniec zmluvy", "Poznámka"], "Prípady": ["Kód importu*", "IČO klienta*", "Komodita*", "Predmet", "Produkt", "EIC/POD odberných miest", "Objem (MWh/rok)", "Cena FIX (€/MWh)", "Marža SPOT (€/MWh)", "Zmluva od", "Zmluva do", "Doterajší dodávateľ", "Poznámka"], "Aktivity": ["IČO klienta*", "Kód prípadu", "Typ*", "Predmet*", "Od*", "Do", "Stav", "Výsledok", "Poznámka"]};
+const TPL_DOD = ['ELGAS', 'ENERGIE 2', 'Energetika Slovensko, a.s.', 'Lama Energy', 'MET', 'MVM', 'Magna Energia', 'Rightpower', 'SPP', 'SSE', 'VSE', 'ZSE'];
+function tplDod(x) { const n = norm(x); if (!n) return ''; return TPL_DOD.find(d => { const m = norm(d); return n === m || (n + ' ').startsWith(m + ' '); }) || ''; }
+async function exportTpl() {
+  if (!S.data) return;
+  const tx = x => String(x ?? '').trim(), rows = filtered();
+  const K = [], C = [], O = [], P = [], A = [], seen = new Set(), byFirma = new Map(), cSeen = new Set();
+  const omAll = (S.data.om && S.data.om.rows) || [];
+  let skip = 0, omSkip = 0, pc = 0;
+  const kom = o => { const n = norm(o.komodita); return n.startsWith('elektr') ? 'EE' : n.startsWith('plyn') ? 'PL' : ''; };
+  for (const r of rows) {
+    const ico = tx(V(r, 'ico')).replace(/\s+/g, ''), firma = tx(V(r, 'firma'));
+    if (!/^\d{6,10}$/.test(ico) || !firma) { skip++; continue; }
+    if (!seen.has(ico)) {
+      seen.add(ico); byFirma.set(norm(firma), ico);
+      K.push([ico, firma, norm(V(r, 'stav')) === 'klient' ? 'klient' : 'prospekt', tx(V(r, 'dic')), tx(V(r, 'icdph')), tx(V(r, 'register')), tx(V(r, 'ulica')), tx(V(r, 'mesto')), tx(V(r, 'psc')), '', '', '', '', '', '']);
+      const mine = omAll.filter(o => omIcoN(o.ico) === ico);
+      for (const o of mine) {
+        if (!kom(o) || !tx(o.eic)) { omSkip++; continue; }
+        const sp = num(o.spotreba);
+        O.push([ico, kom(o), tx(o.eic), tx(o.adresa), isFinite(sp) && tx(o.spotreba) !== '' ? sp : '', tx(o.sadzba), tx(o.istic), '', '', '', '', '', tplDod(o.dodavatel), isoDate(o.koniec) || tx(o.koniec), '']);
+      }
+      for (const [kc, k] of [['EE', 'el'], ['PL', 'pl']]) {
+        const g = s => tx(V(r, k + '_' + s));
+        if (!(g('sp') || g('dod') || g('kon') || g('cs') || g('druh'))) continue;
+        const sp = num(g('sp')), dr = norm(g('druh'));
+        P.push(['P' + (++pc), ico, kc, '', dr.includes('fix') ? 'FIX' : dr.includes('spot') ? 'SPOT' : '',
+          mine.filter(o => kom(o) === kc && tx(o.eic)).map(o => tx(o.eic)).join('; '),
+          g('sp') && isFinite(sp) ? sp : '', '', '', '', isoDate(g('kon')) || g('kon'), tplDod(g('dod')), '']);
+      }
+    }
+    const os = tx(V(r, 'osoba')), kn = tx(V(r, 'konatel'));
+    const add = (meno, fn, tel, mail, sign) => {
+      const key = ico + '|' + norm(meno); if (!meno || cSeen.has(key)) return; cSeen.add(key);
+      const first = !C.some(x => x[0] === ico);
+      C.push([ico, meno, fn, tel, mail, first ? 'ano' : 'nie', sign ? 'ano' : 'nie']);
+    };
+    const tel = tx(V(r, 'tel')) || tx(V(r, 'tel2')), mail = tx(V(r, 'email'));
+    if (os) { add(os, '', tel, mail, norm(os) === norm(kn)); if (kn && norm(kn) !== norm(os)) add(kn, 'konateľ', '', '', true); }
+    else add(kn, 'konateľ', tel, mail, true);
+  }
+  const now = new Date(), nowS = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+  for (const a of S.data.activities.rows) {
+    const ico = byFirma.get(norm(a.v[ACT_H.firma])), typ = tx(a.v[ACT_H.typ]), n = norm(typ);
+    if (!ico || n === 'analyza nacitana') continue;
+    const dt = tx(a.v[ACT_H.dt]), d = isoDate(dt); if (!d) continue;
+    const tm = (dt.match(/(\d{1,2}):(\d{2})/) || []), od = d + ' ' + (tm[1] ? pad(+tm[1]) + ':' + tm[2] : '00:00'), nx = tx(a.v[ACT_H.dalsi]);
+    A.push([ico, '', /telef|hovor/.test(n) ? 'telefonat' : n.includes('stretn') ? 'stretnutie' : n.includes('uloha') ? 'uloha' : 'udalost',
+      (typ || 'Aktivita') + (nx ? ' – ' + nx : ''), od, '', od < nowS ? 'hotova' : 'naplanovana', tx(a.v[ACT_H.stav]), tx(a.v[ACT_H.pozn])]);
+  }
+  if (!K.length) { toast('Nie je čo exportovať – vyfiltrované kontakty nemajú platné IČO', true); return; }
+  try { await loadXLSX(); } catch (e) { toast(e.message, true); return; }
+  const wb = XLSX.utils.book_new();
+  const nv = XLSX.utils.aoa_to_sheet(TPL.navod.map(x => [x])); nv['!cols'] = [{wch: 120}]; XLSX.utils.book_append_sheet(wb, nv, 'Návod');
+  [['Klienti', K], ['Kontakty', C], ['Odberné miesta', O], ['Prípady', P], ['Aktivity', A]].forEach(([nm, data]) => {
+    const ws = XLSX.utils.aoa_to_sheet([TPL[nm], ...data]); ws['!cols'] = TPL[nm].map(h => ({wch: Math.max(14, h.length + 2)})); XLSX.utils.book_append_sheet(wb, ws, nm);
+  });
+  XLSX.writeFile(wb, 'import-meitn-crm-' + nowS.slice(0, 10) + '.xlsx');
+  toast(`Export hotový: ${K.length} klientov, ${C.length} kontaktov, ${O.length} OM, ${P.length} prípadov, ${A.length} aktivít` + (skip ? ` · preskočené bez IČO: ${skip}` : '') + (omSkip ? ` · OM bez EIC/komodity: ${omSkip}` : ''));
 }
 
 /* ---------- udalosti ---------- */
@@ -2532,6 +2597,7 @@ document.addEventListener('click', e => {
     else if (a === 'delcontact') deleteContact();
     else if (a === 'undodel') undoDelete();
     else if (a === 'dupcheck') dupReport();
+    else if (a === 'exporttpl') exportTpl();
     else if (a === 'undo') undoLast();
     else if (a === 'refresh') load();
     else if (a === 'savenote') saveNote(el);
