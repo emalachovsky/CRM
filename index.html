@@ -1083,10 +1083,20 @@ html:not([data-theme="light"]) #fAll .dwrap.has input[type=date],html:not([data-
 .omSum{color:var(--muted);font-size:.8rem;margin:.1rem 0 .4rem}
 /* ===== v20 ===== */
 /* dnes, čas už uplynul – červený text s tmavosivým obrysom */
-html body .card .c-left.late .c-time,html body .card .c-left.late .c-date{color:#ff4d4d!important;opacity:1;-webkit-text-stroke:3px #3a404c;paint-order:stroke fill;text-shadow:none}
-html[data-theme="light"] body .card .c-left.late .c-time,html[data-theme="light"] body .card .c-left.late .c-date{color:#e03030!important;-webkit-text-stroke:3px #4a505c}
+html body .card .c-left.late .c-time{color:#ff4d4d!important;opacity:1;-webkit-text-stroke:3px #3a404c;paint-order:stroke fill;text-shadow:none}
+html[data-theme="light"] body .card .c-left.late .c-time{color:#e03030!important;-webkit-text-stroke:3px #4a505c}
+/* dnes po čase: dátum ostáva v bežnej farbe, červený je len čas */
+html body .card .c-left.late .c-date{color:var(--meno)!important;-webkit-text-stroke:0;text-shadow:none}
 /* Nasleduje v zozname kontaktov – tmavosivé pozadie (hlavička detailu sa nemení) */
 html .card .c-next,html .card .c-next.urg,html .card .c-next:not(.urg){background:#2f3541}
+
+/* iPhone: v detaile obe telefónne tlačidlá vedľa seba */
+@media(max-width:600px){
+  html body .callRow .calls,html body .callRow .calls.two{display:grid;width:100%;grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:minmax(0,1fr);gap:.4rem;justify-content:stretch}
+  html body .callRow .calls .call,html body .callRow .calls .call.main,html body .callRow .calls .call.alt{padding:.2rem .35rem;gap:.35rem;font-size:.98rem;min-width:0;width:100%;box-sizing:border-box}
+  html body .callRow .calls .call .ico{flex:none;width:.95em;height:.95em}
+  html body .callRow .calls .call span{overflow:hidden;text-overflow:clip}
+}
 </style>
 </head>
 <body>
