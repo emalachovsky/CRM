@@ -1455,9 +1455,36 @@ async function load(silent, quiet) {
     S.data = j; S.lastLoad = Date.now(); buildMap(); persist();
     if (S.sel != null && S.view === 'contacts' && !rowBy(S.sel)) S.sel = null;
     if (quiet || S.dirty) { renderChips(); renderListBody(); } else render();
-    setSync('ok'); checkLists();
+    setSync('ok'); checkLists(); sweepMeetings();
   } catch (e) { if (quiet && S.data) setSync('ok'); else { setSync('err', 'Chyba: ' + e.message); if (!silent) toast(e.message, true); } }
   finally { loading = false; }
+}
+
+/* Aktivita „Stretnutie“, ktorej termín (dátum + čas) už uplynul, sa po načítaní stránky z kontaktu zmaže (aj v Sheete) */
+let sweeping = false;
+async function sweepMeetings() {
+  if (sweeping || !S.data || !S.m.pozicia || S.dirty || pendingSaves) return;
+  sweeping = true;
+  try {
+    const T = todayISO(), now = nowHM();
+    const past = S.data.contacts.rows.filter(r => {
+      if (norm(V(r, 'pozicia')) !== 'stretnutie') return false;
+      const {d, t} = DT(r);
+      return !!d && (d < T || (d === T && !!t && t < now));
+    });
+    for (const r of past) {
+      if (S.dirty) break;
+      const vals = {[S.m.pozicia]: ''}, check = S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null;
+      try { await api('update', {sheet: 'contacts', row: r.r, values: vals, check}); }
+      catch (e) { if (e.conflict) { load(true); break; } continue; }
+      applyLocal(r, vals);
+      if (r.n && r.n[S.m.pozicia]) delete r.n[S.m.pozicia];
+    }
+    if (past.length) {
+      persist(); renderChips(); renderListBody();
+      if (S.sel != null && !S.dirty && past.some(r => r.r === S.sel)) renderDetail();
+    }
+  } finally { sweeping = false; }
 }
 
 /* ---------- toast / modal ---------- */
@@ -2863,7 +2890,7 @@ try {
 } catch (e) {}
 
 /* každú minútu prekresli zoznam – dnešné časy, ktoré uplynuli, sa zafarbia samy */
-setInterval(() => { if (S.data && S.view === 'contacts' && !S.dirty && !document.querySelector('#modal .ovl')) renderListBody(); }, 60000);
+setInterval(() => { if (S.data && S.view === 'contacts' && !S.dirty && !document.querySelector('#modal .ovl')) { renderListBody(); sweepMeetings(); } }, 60000);
 
 /* ---------- štart ---------- */
 buildMap(); render();
