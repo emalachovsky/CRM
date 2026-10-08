@@ -1172,6 +1172,18 @@ html body .nrow>label input:not(#_){height:var(--nh);min-height:var(--nh)}
   html body #fCall label input:not([type=checkbox]):not([type=radio]):not(#_),html body #fCall label textarea:not(#_){padding-left:.5rem;padding-right:.5rem}
   html body #fCall label select:not(#_){padding-left:.4rem}
 }
+
+/* ===== iPhone – Firma: Spojiť s firmou + Načítať analýzu v jednom riadku, pod tým poznámka o analýze ===== */
+@media(max-width:600px){
+  html body .firmBar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem .5rem}
+  html body .firmBar .fbL{order:1;flex:0 1 auto;min-width:0;flex-wrap:wrap}
+  html body .firmBar .fbL .chip{height:2.4rem;display:inline-flex;align-items:center;white-space:nowrap}
+  html body .firmBar .fbR{display:contents}
+  html body .firmBar .fbR .btn-an{order:2;flex:0 0 auto;margin-left:auto;height:2.4rem;min-height:2.4rem;padding:0 .9rem;font-size:.95rem;white-space:nowrap;width:auto}
+  html body .firmBar .fbR .anok{order:3;flex:1 0 100%;display:flex;align-items:center;justify-content:flex-start;gap:.3rem;background:none;border:0;box-shadow:none;padding:0 .1rem;margin:0;font-size:.9rem;font-weight:400;color:var(--muted);white-space:nowrap}
+  html body .firmBar .fbR .anok .antxt{display:inline}
+  html body .firmBar .fbR .anok .anchk{color:var(--muted)}
+}
 </style>
 </head>
 <body>
