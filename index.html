@@ -1118,8 +1118,8 @@ html .card .c-next>span{color:inherit}
 /* päť záložiek na úzkom displeji + osoby v záložke Aktivita */
 .pr2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}.pr2>label{min-width:0}
 /* riadok: tlačidlo „Ďalšia osoba“ vľavo + krátka poznámka k číslu, všetko v jednom riadku */
-.nrow{--nh:2.6rem;display:flex;align-items:flex-end;justify-content:flex-end;gap:.6rem;margin:0 0 .6rem}
-.nrow>label{flex:0 1 13rem;min-width:0;margin:0}
+.nrow{--nh:2.3rem;display:flex;align-items:flex-end;justify-content:flex-end;gap:.6rem;margin:0 0 .6rem}
+.nrow>label{flex:1 1 0;min-width:0;margin:0}
 .nrow>label input{height:var(--nh);min-height:0;box-sizing:border-box;margin:0}
 .nrow>.btn-sm{flex:0 0 auto;white-space:nowrap;margin:0;height:var(--nh);min-height:0;box-sizing:border-box;padding-top:0;padding-bottom:0;display:inline-flex;align-items:center}
 @media(max-width:600px){.tabsRow .tabs{overflow-x:auto;scrollbar-width:none}.tabsRow .tab{padding:.45rem .25rem!important;font-size:.76rem!important}}
@@ -1148,6 +1148,11 @@ html .card .c-next>span{color:inherit}
   html body .tabsRow .anbox:has(#actSlot:empty){display:none}
   .firmBar .fbR .btn-an{height:2.6rem;padding:0 .9rem;border-radius:999px;font-size:.95rem}
 }
+
+/* zúžené editovateľné polia (výška aj vnútorný odsadenie), veľkosť písma sa nemení; Meno a Funkcia rovnako vysoké */
+html body label input:not([type=checkbox]):not([type=radio]):not(#_),html body label select:not(#_){height:2.3rem;min-height:2.3rem;padding-top:.2rem;padding-bottom:.2rem;box-sizing:border-box}
+html body label textarea:not(#_){padding-top:.35rem;padding-bottom:.35rem}
+html body .nrow>label input:not(#_){height:var(--nh);min-height:var(--nh)}
 </style>
 </head>
 <body>
@@ -1585,7 +1590,7 @@ function fitChips() {
   const u = document.querySelector('.dhead .stCol .undoTop'), col = document.querySelector('.dhead .stCol');
   if (innerWidth <= 600 || !u || !col) { c.style.marginRight = ''; return; }
   const gap = parseFloat(getComputedStyle(col).columnGap) || 0;
-  c.style.marginRight = (u.offsetWidth + gap) + 'px';
+  c.style.marginRight = (-(u.offsetWidth + gap)) + 'px';
 }
 addEventListener('resize', fitChips);
 function render() {
