@@ -1153,6 +1153,25 @@ html .card .c-next>span{color:inherit}
 html body label input:not([type=checkbox]):not([type=radio]):not(#_),html body label select:not(#_){height:2.3rem;min-height:2.3rem;padding-top:.2rem;padding-bottom:.2rem;box-sizing:border-box}
 html body label textarea:not(#_){padding-top:.35rem;padding-bottom:.35rem}
 html body .nrow>label input:not(#_){height:var(--nh);min-height:var(--nh)}
+
+/* iPhone: Dátum | Čas, pod tým Dnes | Aktivita v jednom riadku; širšie rámčeky a viac miesta v poliach */
+@media(max-width:600px){
+  html body .dtRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:.6rem;row-gap:.5rem;align-items:end}
+  html body .dtRow.dtRowSingle{grid-template-columns:minmax(0,1fr)}
+  html body .dtRow .dtNarrow{display:contents}
+  html body .dtRow .dtNarrow>label{margin:0;min-width:0;width:auto;max-width:none;flex:none}
+  html body .dtRow .qd{margin:0;display:flex;align-self:end;min-width:0}
+  html body .dtRow .qd .chip{flex:1 1 auto;width:100%;height:2.3rem;min-height:0;padding:0 .4rem;font-size:.95rem;display:inline-flex;align-items:center;justify-content:center}
+  html body .dtRow>.dtAct{margin:0;width:auto;max-width:none;min-width:0;justify-self:stretch}
+  html body .dtRow .dtAct .actsel{width:100%}
+  html body #detailPane{padding-left:.3rem;padding-right:.3rem}
+  html body .dhead{margin-left:-.3rem;margin-right:-.3rem}
+  html body #fCall.win{padding:.7rem .5rem}
+  html body #fCall .omBox{padding:.5rem .5rem .1rem}
+  html body #fCall .pr2{gap:.4rem}
+  html body #fCall label input:not([type=checkbox]):not([type=radio]):not(#_),html body #fCall label textarea:not(#_){padding-left:.5rem;padding-right:.5rem}
+  html body #fCall label select:not(#_){padding-left:.4rem}
+}
 </style>
 </head>
 <body>
@@ -1961,7 +1980,7 @@ function tabHovor(r) {
   const {d, t} = DT(r), A = k => esc(S.m[k]);
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
   const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${isActLbl(ak) ? actStyle(ak) : palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" style="${palStyle(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>${['stretnutie', 'telefonat'].includes(norm(ak)) && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend') ? '<span class="calsaved">Uložené do kalendára</span>' : ''}</label>` : '';
-  const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button><button type="button" class="chip sm" data-qd="1">Zajtra</button><button type="button" class="chip sm" data-qd="7">+1 týždeň</button></div>';
+  const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button></div>';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
       <label class="dtD">Dátum${dateInp(`class="dtSmall" data-h="${A('datum')}"`, d)}</label>
       ${S.m.cas ? `<label class="dtT">Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
@@ -3313,7 +3332,7 @@ function placeAct() {
   const pane = document.getElementById('detailPane'); if (!pane) return;
   const slot = pane.querySelector('#actSlot'); if (!slot) return;
   const form = pane.querySelector('#fCall');
-  const mob = matchMedia('(max-width:600px)').matches;
+  const mob = false; /* Aktivita ostáva vedľa tlačidla Dnes aj na mobile */
   const moved = slot.querySelector('.dtAct');
   if (!form) { if (moved) moved.remove(); return; }
   const inForm = form.querySelector('.dtAct');
