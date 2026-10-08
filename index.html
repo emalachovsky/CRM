@@ -1117,6 +1117,10 @@ html .card .c-next>span{color:inherit}
 .setSec .miss .cta{margin-top:.4rem}
 /* päť záložiek na úzkom displeji + osoby v záložke Aktivita */
 .pr2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}.pr2>label{min-width:0}
+/* riadok: tlačidlo „Ďalšia osoba“ vľavo + krátka poznámka k číslu, všetko v jednom riadku */
+.nrow{display:flex;align-items:flex-end;gap:.6rem;margin:0 0 .6rem}
+.nrow>label{flex:0 1 13rem;min-width:0;margin:0}
+.nrow>.btn-sm{flex:0 0 auto;white-space:nowrap;margin:0}
 @media(max-width:600px){.tabsRow .tabs{overflow-x:auto;scrollbar-width:none}.tabsRow .tab{padding:.45rem .25rem!important;font-size:.76rem!important}}
 .grpBar{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;margin:.5rem 0 .2rem}.grpBar .gl{color:var(--muted);font-size:.82rem}
 .lnkSug{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.4rem 0;padding:.45rem .7rem;border-radius:12px;border:1px solid rgba(235,188,90,.55);background:rgba(235,188,90,.12);font-size:.9rem}
@@ -2302,18 +2306,18 @@ function persCard(o, kind, r) {
   const tel = kind === 'p2' ? pf('Telefón 2', `<input type="tel" data-h="${esc(h2)}" value="${esc(r ? V(r, 'tel2') : '')}">`) : pf('Telefón', `<input type="tel" data-of="tel" value="${esc(o.tel || '')}">`);
   return `<div class="omBox osX ${kind === 'p2' ? 'osP2' : ''}"><div class="omNo">${kind === 'p2' ? 'Osoba 2' : 'Ďalšia osoba'} ${del}</div>
     <div class="pr2">${pf('Meno', `<input type="text" data-of="meno" value="${esc(o.meno || '')}">`)}${pf('Funkcia', `<input type="text" data-of="fn" list="funkcieDl" value="${esc(o.fn || '')}">`)}</div>
-    <div class="pr2">${tel}${pf('E-mail', `<input type="email" data-of="mail" value="${esc(o.mail || '')}">`)}</div>${kind === 'p2' ? n2 : ''}</div>`;
+    <div class="pr2">${tel}${pf('E-mail', `<input type="email" data-of="mail" value="${esc(o.mail || '')}">`)}</div>${kind === 'p2' && n2 ? `<div class="nrow">${n2}</div>` : ''}</div>`;
 }
 function persBlock(r) {
   const hO = fieldHeader('osoba'), hF = fieldHeader('funkcia'), hT = fieldHeader('tel'), hE = fieldHeader('email');
   const nt = S.m.tel ? pf('Poznámka k číslu', `<input type="text" data-note="${esc(S.m.tel)}" value="${esc((r.n && r.n[S.m.tel]) || '')}">`) : '';
-  const c1 = `<div class="omBox"><div class="omNo">Osoba 1</div>
+  const c1 = `<div class="omBox">
     <div class="pr2">${pf('Meno', `<input type="text" data-h="${esc(hO)}" value="${esc(V(r, 'osoba') || V(r, 'konatel'))}">`)}${pf('Funkcia', funkciaSelect(`data-h="${esc(hF)}"`, V(r, 'funkcia')))}</div>
-    <div class="pr2">${pf('Telefón', `<input type="tel" data-h="${esc(hT)}" value="${esc(V(r, 'tel'))}">`)}${pf('E-mail', `<input type="email" data-h="${esc(hE)}" value="${esc(V(r, 'email'))}">`)}</div>${nt}</div>`;
+    <div class="pr2">${pf('Telefón', `<input type="tel" data-h="${esc(hT)}" value="${esc(V(r, 'tel'))}">`)}${pf('E-mail', `<input type="email" data-h="${esc(hE)}" value="${esc(V(r, 'email'))}">`)}</div>
+    <div class="nrow"><button type="button" class="btn-sm" data-act="addosoba">+ Ďalšia osoba</button>${nt}</div></div>`;
   const ps = parseOsoby(V(r, 'osoby'));
   const p2 = (String(V(r, 'tel2')).trim() || ps.length) ? persCard(ps[0] || {}, 'p2', r) : '';
-  return `<datalist id="funkcieDl">${FUNKCIE.map(x => `<option value="${esc(x)}">`).join('')}</datalist>${c1}<div id="osList">${p2}${ps.slice(1).map(o => persCard(o, 'x', r)).join('')}</div>
-    <button type="button" class="btn-sm" data-act="addosoba" style="margin:.3rem 0 .6rem">+ Pridať osobu</button>`;
+  return `<datalist id="funkcieDl">${FUNKCIE.map(x => `<option value="${esc(x)}">`).join('')}</datalist>${c1}<div id="osList">${p2}${ps.slice(1).map(o => persCard(o, 'x', r)).join('')}</div>`;
 }
 /* ďalšie osoby z formulára → text pre stĺpec „Ďalšie osoby“ */
 function collectOsoby(form) {
