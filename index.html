@@ -1118,9 +1118,10 @@ html .card .c-next>span{color:inherit}
 /* päť záložiek na úzkom displeji + osoby v záložke Aktivita */
 .pr2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}.pr2>label{min-width:0}
 /* riadok: tlačidlo „Ďalšia osoba“ vľavo + krátka poznámka k číslu, všetko v jednom riadku */
-.nrow{display:flex;align-items:flex-end;gap:.6rem;margin:0 0 .6rem}
+.nrow{--nh:2.6rem;display:flex;align-items:flex-end;justify-content:flex-end;gap:.6rem;margin:0 0 .6rem}
 .nrow>label{flex:0 1 13rem;min-width:0;margin:0}
-.nrow>.btn-sm{flex:0 0 auto;white-space:nowrap;margin:0}
+.nrow>label input{height:var(--nh);min-height:0;box-sizing:border-box;margin:0}
+.nrow>.btn-sm{flex:0 0 auto;white-space:nowrap;margin:0;height:var(--nh);min-height:0;box-sizing:border-box;padding-top:0;padding-bottom:0;display:inline-flex;align-items:center}
 @media(max-width:600px){.tabsRow .tabs{overflow-x:auto;scrollbar-width:none}.tabsRow .tab{padding:.45rem .25rem!important;font-size:.76rem!important}}
 .grpBar{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;margin:.5rem 0 .2rem}.grpBar .gl{color:var(--muted);font-size:.82rem}
 .lnkSug{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.4rem 0;padding:.45rem .7rem;border-radius:12px;border:1px solid rgba(235,188,90,.55);background:rgba(235,188,90,.12);font-size:.9rem}
@@ -1578,6 +1579,15 @@ function leaveNewState() {
 }
 
 /* ---------- render ---------- */
+/* čipy firiem v hlavičke posunúť doprava až k tlačidlu Stav (stĺpec pod ním je šírka tlačidla Späť) */
+function fitChips() {
+  const c = document.querySelector('.dhead .grpChips'); if (!c) return;
+  const u = document.querySelector('.dhead .stCol .undoTop'), col = document.querySelector('.dhead .stCol');
+  if (innerWidth <= 600 || !u || !col) { c.style.marginRight = ''; return; }
+  const gap = parseFloat(getComputedStyle(col).columnGap) || 0;
+  c.style.marginRight = (u.offsetWidth + gap) + 'px';
+}
+addEventListener('resize', fitChips);
 function render() {
   renderList(); renderDetail();
   document.body.classList.toggle('show-detail', S.sel != null && S.view !== 'activity');
@@ -1876,6 +1886,7 @@ function renderDetail() {
   if (S.sel == null) { p.innerHTML = '<div class="ph">Vyber kontakt zo zoznamu.</div>'; return; }
   const r = rowBy(S.sel);
   p.innerHTML = r ? contactDetail(r) : '<div class="ph">Kontakt sa nenašiel.</div>';
+  fitChips(); requestAnimationFrame(fitChips);
 }
 const urgBtnHtml = r => { const urg = isUrg(r); return S.m.dalsi ? `<button type="button" class="urgSw ${urg ? 'on' : ''}" data-urgent role="switch" aria-checked="${urg}" aria-label="Urgent"><span class="trk"><span class="knob"></span></span>${ico('alert')}</button>` : ''; };
 const delBtnHtml = () => `<button type="button" class="delSw" data-act="delcontact" aria-label="Vymazať celý kontakt" title="Vymazať celý kontakt">${ico('trash')}<span>Vymazať kontakt</span></button>`;
@@ -2314,7 +2325,7 @@ function persBlock(r) {
   const c1 = `<div class="omBox">
     <div class="pr2">${pf('Meno', `<input type="text" data-h="${esc(hO)}" value="${esc(V(r, 'osoba') || V(r, 'konatel'))}">`)}${pf('Funkcia', funkciaSelect(`data-h="${esc(hF)}"`, V(r, 'funkcia')))}</div>
     <div class="pr2">${pf('Telefón', `<input type="tel" data-h="${esc(hT)}" value="${esc(V(r, 'tel'))}">`)}${pf('E-mail', `<input type="email" data-h="${esc(hE)}" value="${esc(V(r, 'email'))}">`)}</div>
-    <div class="nrow"><button type="button" class="btn-sm" data-act="addosoba">+ Ďalšia osoba</button>${nt}</div></div>`;
+    <div class="nrow">${nt}<button type="button" class="btn-sm" data-act="addosoba">+ Ďalšia osoba</button></div></div>`;
   const ps = parseOsoby(V(r, 'osoby'));
   const p2 = (String(V(r, 'tel2')).trim() || ps.length) ? persCard(ps[0] || {}, 'p2', r) : '';
   return `<datalist id="funkcieDl">${FUNKCIE.map(x => `<option value="${esc(x)}">`).join('')}</datalist>${c1}<div id="osList">${p2}${ps.slice(1).map(o => persCard(o, 'x', r)).join('')}</div>`;
