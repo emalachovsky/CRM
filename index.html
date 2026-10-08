@@ -1129,13 +1129,15 @@ html .card .c-next>span{color:inherit}
 @keyframes spinR{to{transform:rotate(360deg)}}
 
 /* Firmy konateľa v hlavičke; Spojiť/Odpojiť a Načítať analýzu v záložke Firma */
-.dhead .grpChips{margin:0;flex:0 1 auto;max-width:45%;justify-content:flex-end;align-self:center}
+.dhead .grpChips{margin:0;flex:0 1 auto;max-width:45%;justify-content:flex-end;align-self:flex-start;align-items:flex-start;min-height:var(--sth,2.6rem)}
+.dhead .grpChips .chip{height:var(--sth,2.6rem);display:inline-flex;align-items:center}
 .firmBar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem .8rem;margin:.1rem 0 .7rem}
 .firmBar .fbL{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
 .firmBar .fbR{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:.5rem}
 @media(min-width:601px){.tabsRow .anbox{display:none}}
 @media(max-width:600px){
-  html body .dhead .grpChips{order:2;flex:1 0 100%;max-width:none;justify-content:flex-start;align-self:auto}
+  html body .dhead .grpChips{order:2;flex:1 0 100%;max-width:none;justify-content:flex-start;align-self:auto;min-height:0}
+  html body .dhead .grpChips .chip{height:auto}
   html body .tabsRow .anbox{display:block;padding-bottom:0;margin:0;width:100%}
   html body .tabsRow .anbox:has(.calsaved){padding-bottom:1.7rem}
   html body .tabsRow .anbox:has(#actSlot:empty){display:none}
@@ -2391,7 +2393,7 @@ function linkCands(r) {
 /* Firmy konateľa – v hlavičke pred tlačidlom Stav */
 function grpChips(r) {
   const g = groupOf(r); if (g.length < 2) return '';
-  return `<div class="grpBar grpChips"><span class="gl">Firmy konateľa:</span>` + g.map(x => `<button type="button" class="chip sm gsel ${x === r ? 'gon' : ''}" data-gsel="${x.r}">${esc(V(x, 'firma') || '(bez firmy)')}</button>`).join('') + `</div>`;
+  return `<div class="grpBar grpChips">` + g.map(x => `<button type="button" class="chip sm gsel ${x === r ? 'gon' : ''}" data-gsel="${x.r}">${esc(V(x, 'firma') || '(bez firmy)')}</button>`).join('') + `</div>`;
 }
 /* Záložka Firma – hore vľavo Odpojiť / Spojiť, vpravo Načítať analýzu */
 function firmBar(r) {
