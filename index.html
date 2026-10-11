@@ -498,6 +498,15 @@ input[type=tel]{color:var(--tel-g)}
 /* ===== v14 ===== */
 /* poznámka pod Nasleduje (hore) – svetložltá */
 .callnote.nxnote{color:var(--dt-yel)}
+/* kruh „Označiť na export“ vpravo hore v karte kontaktu */
+.card{position:relative}
+.expMk{position:absolute;top:.2rem;right:.3rem;z-index:3;display:flex;align-items:center;gap:.35rem;padding:.3rem;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.expMk .dot{width:14px;height:14px;border-radius:50%;border:1.5px solid #666d79;background:transparent;box-sizing:border-box;display:grid;place-items:center;font-size:10px;line-height:1;color:transparent;transition:background .12s,border-color .12s}
+.expMk .lbl{display:none;font-size:.72rem;letter-spacing:.02em;color:#fca5a5;font-weight:400!important}
+.expMk.on .dot{background:#f5c518;border-color:#f5c518;color:#1a1a1a}
+.expMk.on .lbl{display:inline}
+.card .c-top{padding-right:1.5rem}
+.card.exp .c-top{padding-right:4.2rem}
 /* polia „Poznámka k …“ v editovacom okne – sivé */
 input[data-note]{color:var(--muted)}
 /* tlačidlá Telefón – zelené tieňovanie */
@@ -1261,7 +1270,8 @@ const S = {
   map: JSON.parse(LS.getItem('crm.map') || '{}'),
   data: null, m: {}, auto: {},
   view: 'contacts', q: '', chip: 'all', sel: null, tab: (() => { try { return LS.getItem('crmTab') || 'hovor'; } catch (e) { return 'hovor'; } })(),
-  dirty: false, stSet: new Set(JSON.parse(LS.getItem('crm.stfilter') || '[]')), stOpen: false, msg: null, sy: {st: 'ok'}, limit: 150, lastLoad: 0, extraCo: new Set(), undo: null
+  dirty: false, stSet: new Set(JSON.parse(LS.getItem('crm.stfilter') || '[]')), stOpen: false, msg: null, sy: {st: 'ok'}, limit: 150, lastLoad: 0, extraCo: new Set(), undo: null,
+  expSel: new Set((() => { try { return JSON.parse(LS.getItem('crm.expsel') || '[]'); } catch (e) { return []; } })())
 };
 /* neuložené zmeny → tlačidlo „Uložiť“ sa zvýrazní (body.dirty) */
 (function () {
@@ -1553,18 +1563,19 @@ async function manualLoad() {
   for (let i = 0; i < 20 && pendingSaves; i++) await new Promise(r => setTimeout(r, 500));
   if (pendingSaves) pendingSaves = 0;
   if (loading) { setSync('sync'); return; }
-  await load(false);
+  await load(false, false, true);
   if (S.sy && S.sy.st === 'ok') toast('Načítané ✔');
 }
-async function load(silent, quiet) {
+async function load(silent, quiet, top) {
   if (loading) return;
   if (pendingSaves) { if (!silent) toast('Dokončujem ukladanie…'); return; }
   loading = true; loadT0 = Date.now(); if (!quiet) setSync('sync');
   try {
     const j = await api('read');
-    S.data = j; S.lastLoad = Date.now(); buildMap(); persist();
+    S.data = j; S.lastLoad = Date.now(); buildMap(); persist(); pruneExpSel();
     if (S.sel != null && S.view === 'contacts' && !rowBy(S.sel)) S.sel = null;
-    if (quiet || S.dirty) { renderChips(); renderListBody(); } else render();
+    if (quiet || S.dirty) { renderChips(); renderListBody(); }
+    else if (!(top && openTop())) render();   /* top: po načítaní vždy vyber prvý kontakt v zozname */
     setSync('ok'); checkLists(); sweepMeetings(); syncGroups();
   } catch (e) { if (quiet && S.data) setSync('ok'); else { setSync('err', 'Chyba: ' + e.message); if (!silent) toast(e.message, true); } }
   finally { loading = false; }
@@ -1662,6 +1673,7 @@ function renderChips() {
 function filtered() {
   const q = norm(S.q), T = todayISO();
   const rows = S.data.contacts.rows.filter(r => {
+    if (q === 'export') return S.expSel.has(r.r);   /* hľadanie „export“ = všetky kontakty s fajkou na export */
     if (S.chip === 'due') { const d = DT(r).d; if (!d || d > T) return false; }
     if (S.stSet.size) { const sv = String(V(r, 'stav')).trim(); if (sv ? !S.stSet.has(V(r, 'stav')) : !S.stSet.has('__none')) return false; }
     if (q) { if (!(r._s || (r._s = norm(Object.values(r.v).join(' ')))).includes(q)) return false; }
@@ -1673,6 +1685,30 @@ function filtered() {
   /* firmy jedného konateľa sa v zozname ukážu ako jeden kontakt */
   const seenG = new Set();
   return rows.filter(r => { const g = gidOf(r); if (!g || groupOf(r).length < 2) return true; if (seenG.has(g)) return false; seenG.add(g); return true; });
+}
+/* označenie kontaktov na export (kruh vpravo hore v karte) */
+function saveExpSel() { try { LS.setItem('crm.expsel', JSON.stringify([...S.expSel])); } catch (e) {} }
+function pruneExpSel() {
+  if (!S.data || !S.expSel.size) return;
+  const ok = new Set(S.data.contacts.rows.map(r => r.r)); let ch = false;
+  for (const id of [...S.expSel]) if (!ok.has(id)) { S.expSel.delete(id); ch = true; }
+  if (ch) saveExpSel();
+}
+function expSelRows() {
+  const out = [], seen = new Set();
+  if (!S.data) return out;
+  for (const r of S.data.contacts.rows) if (S.expSel.has(r.r)) for (const x of groupOf(r)) if (!seen.has(x.r)) { seen.add(x.r); out.push(x); }
+  return out;
+}
+function toggleExpMark(id, el) {
+  const r = rowBy(id); if (!r) return;
+  const gl = groupOf(r), on = !gl.some(x => S.expSel.has(x.r));
+  gl.forEach(x => on ? S.expSel.add(x.r) : S.expSel.delete(x.r));
+  saveExpSel();
+  const card = el.closest('.card');
+  el.classList.toggle('on', on); el.setAttribute('aria-checked', on);
+  if (card) card.classList.toggle('exp', on);
+  if (norm(S.q) === 'export') renderListBody();
 }
 /* pre export: všetky firmy spojených kontaktov, každá zvlášť */
 function exportRows() {
@@ -1686,12 +1722,13 @@ function card(r) {
   const p = phones(r).find(x => x.num);
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = isActLbl(V(r, 'pozicia'));
-  const gl = groupOf(r);
-  return `<div class="card ${c} ${gl.some(x => x.r === S.sel) ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
+  const gl = groupOf(r), expOn = gl.some(x => S.expSel.has(x.r));
+  return `<div class="card ${c} ${expOn ? 'exp' : ''} ${gl.some(x => x.r === S.sel) ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
     <div class="c-left ${c} ${c === 'today' && t && t < nowHM() ? 'late' : ''} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${gl.length > 1 ? '🔗 ' + esc(gl.map(x => V(x, 'firma') || '(bez firmy)').join(' + ')) : esc(V(r, 'firma') || '(bez firmy)')}</b></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
+    <span class="expMk ${expOn ? 'on' : ''}" data-expmk="${r.r}" role="checkbox" aria-checked="${expOn}" aria-label="Označiť na export" title="Označiť na export"><span class="lbl">Export</span><span class="dot">✓</span></span>
 </div>`;
 }
 const isUrg = r => ['ano', '1', 'true', 'x', 'urgent', 'urgentne'].includes(norm(V(r, 'urgent')));
@@ -1933,9 +1970,7 @@ const delBtnHtml = () => `<button type="button" class="delSw" data-act="delconta
 /* Nasleduje pod menom v hlavičke + pod ním poznámka k Nasleduje v jednom riadku s tlačidlom Vymazať kontakt */
 function nextHeadHtml(r) {
   const next = V(r, 'dalsi'), urg = isUrg(r);
-  const nn = String((r.n && S.m.dalsi && r.n[S.m.dalsi]) || '').trim();
-  return (next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '') +
-    `<div class="nxRow"><div class="callnote nxnote">${esc(nn)}</div></div>`;
+  return (next ? `<div class="nextCall ${urg ? 'urg' : ''}">${nextIco(next)}<span>${esc(next)}</span></div>` : '');
 }
 function callBtns(r) {
   const ps = phones(r);
@@ -2007,7 +2042,6 @@ function tabHovor(r) {
     ${dtBlock}
     ${persBlock(r)}
     ${S.m.dalsi ? `<div class="nxIn"><label>Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label><div class="nxInUrg">${urgBtnHtml(r)}</div></div>
-      <label>Poznámka k Nasleduje<input type="text" data-note="${A('dalsi')}" value="${esc((r.n && r.n[S.m.dalsi]) || '')}"></label>
       <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qnx="${esc(x)}">${x}</button>`).join('')}</div>` : ''}
     <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder=" "></textarea></label>
     <button type="button" class="btn-sm" data-act="savenote">Vložiť poznámku</button>
@@ -2824,7 +2858,8 @@ function openSettings() {
     </section>
     ${hs.length ? `<section class="setSec"><div class="gtitle">Export</div>
       <button class="cta ghost" type="button" data-act="exporttpl">Exportovať filtrované kontakty do šablóny (${S.data ? exportRows().length : 0})</button>
-      <p class="rcP">Exportuje sa to, čo máš práve vyfiltrované v zozname (Dnes/Všetky, Stav, hľadanie). Záznamy z poznámok sa prevedú na aktivity, História sa neexportuje.</p>
+      <button class="cta ghost" type="button" data-act="exportsel">Exportuj iba vybrané na export (${S.data ? expSelRows().length : 0})</button>
+      <p class="rcP">Prvé tlačidlo exportuje to, čo máš práve vyfiltrované v zozname (Dnes/Všetky, Stav, hľadanie). Druhé exportuje iba kontakty označené kruhom vpravo hore v karte; po exporte sa označenia zmažú. Záznamy z poznámok sa prevedú na aktivity, História sa neexportuje.</p>
     </section>
     <section class="setSec"><div class="gtitle">Kontrola duplicity</div>
       <button class="cta ghost" type="button" data-act="dupcheck">Kontrola duplicity (IČO a názvy)</button>
@@ -2869,9 +2904,10 @@ function dodSelect(attrs, val) {
   const opts = ['', ...DODAVATELIA, ...(cur && !m ? [cur] : [])];
   return `<select ${attrs}>${opts.map(x => `<option value="${esc(x)}" ${x === (m || cur) ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
 }
-async function exportTpl() {
+async function exportTpl(onlySel) {
   if (!S.data) return;
-  const tx = x => String(x ?? '').trim(), rows = exportRows();
+  if (onlySel && !expSelRows().length) { toast('Nie sú označené žiadne kontakty na export', true); return; }
+  const tx = x => String(x ?? '').trim(), rows = onlySel ? expSelRows() : exportRows();
   const K = [], C = [], O = [], P = [], A = [], seen = new Set(), byFirma = new Map(), cSeen = new Set();
   const omAll = (S.data.om && S.data.om.rows) || [];
   let skip = 0, omSkip = 0, pc = 0;
@@ -2927,7 +2963,7 @@ async function exportTpl() {
         body.split(/\r?\n/).map(l => l.trim()).filter(Boolean).join(' ') || 'Poznámka', x.d + ' 00:00', '', 'hotova', '', '']);
     }
   }
-  if (!K.length) { toast('Nie je čo exportovať – vyfiltrované kontakty nemajú platné IČO', true); return; }
+  if (!K.length) { toast('Nie je čo exportovať – ' + (onlySel ? 'označené' : 'vyfiltrované') + ' kontakty nemajú platné IČO', true); return; }
   try { await loadXLSX(); } catch (e) { toast(e.message, true); return; }
   const wb = XLSX.utils.book_new();
   const nv = XLSX.utils.aoa_to_sheet(TPL.navod.map(x => [x])); nv['!cols'] = [{wch: 120}]; XLSX.utils.book_append_sheet(wb, nv, 'Návod');
@@ -2935,6 +2971,7 @@ async function exportTpl() {
     const ws = XLSX.utils.aoa_to_sheet([TPL[nm], ...data]); ws['!cols'] = TPL[nm].map(h => ({wch: Math.max(14, h.length + 2)})); XLSX.utils.book_append_sheet(wb, ws, nm);
   });
   XLSX.writeFile(wb, 'import-meitn-crm-' + nowS.slice(0, 10) + '.xlsx');
+  if (onlySel) { S.expSel.clear(); saveExpSel(); renderListBody(); if ($('#fSet')) openSettings(); }   /* po exporte vybraných zmaž fajky */
   toast(`Export hotový: ${K.length} klientov, ${C.length} kontaktov, ${O.length} OM, ${P.length} prípadov, ${A.length} aktivít` + (skip ? ` · preskočené bez IČO: ${skip}` : '') + (omSkip ? ` · OM bez EIC/komodity: ${omSkip}` : ''));
 }
 
@@ -2943,6 +2980,7 @@ document.addEventListener('click', e => {
   const t = e.target;
   if (t.closest('a.qcall') || t.closest('a.call') || t.closest('a.lnk')) return;
   let el;
+  if ((el = t.closest('[data-expmk]'))) { e.stopPropagation(); toggleExpMark(Number(el.dataset.expmk), el); return; }
   if ((el = t.closest('[data-urgent]'))) { toggleUrgent(); return; }
   if ((el = t.closest('[data-themeset]'))) { setTheme(el.dataset.themeset); return; }
   if ((el = t.closest('[data-gsel]'))) { openSel(+el.dataset.gsel); return; }
@@ -2989,6 +3027,7 @@ document.addEventListener('click', e => {
     else if (a === 'undodel') undoDelete();
     else if (a === 'dupcheck') dupReport();
     else if (a === 'exporttpl') exportTpl();
+    else if (a === 'exportsel') exportTpl(true);
     else if (a === 'addosoba') { const l = $('#osList'), rr = rowBy(S.sel); if (l) { const has2 = l.querySelector('.osP2'); l.insertAdjacentHTML('beforeend', persCard({}, has2 ? 'x' : 'p2', has2 ? null : rr)); const c = l.lastElementChild.querySelector('input'); if (c) c.focus(); markDirty(); } }
     else if (a === 'delosoba') { const c = el.closest('.osX'); if (c) { const t2 = c.classList.contains('osP2') && c.querySelector('[data-h]'); const h = t2 && !t2.dataset.h.startsWith('__new__') ? t2.dataset.h : ''; if (h) c.outerHTML = `<input type="hidden" data-h="${esc(h)}" value="">`; else c.remove(); markDirty(); } }
     else if (a === 'linkopen') { const b = $('#linkBox'); if (b) { b.style.display = b.style.display === 'none' ? '' : 'none'; const q = $('#linkQ'); if (q && b.style.display === '') q.focus(); } }
@@ -3028,7 +3067,7 @@ document.addEventListener('click', e => {
     else if (a === 'quickcfg') {
       const u = (($('#sUrlQuick') || {}).value || '').trim();
       if (!/^https:\/\/script\.google\.com\//.test(u)) { toast('Vlož celú URL web aplikácie (…/exec)', true); return; }
-      S.cfg = {url: u, token: ''}; LS.setItem('crm.cfg', JSON.stringify(S.cfg)); render(); load();
+      S.cfg = {url: u, token: ''}; LS.setItem('crm.cfg', JSON.stringify(S.cfg)); render(); load(false, false, true);
     }
     else if (a === 'copycfg') {
       const link = location.origin + location.pathname + '#cfg=' + btoa(JSON.stringify(S.cfg));
@@ -3041,7 +3080,7 @@ document.addEventListener('submit', e => {
   ({fCall: saveCall, fAll: saveAll, fComp: saveFirma, fNew: saveNew, fOm: saveOmTab}[f.id] || (() => {}))(f);
   if (f.id === 'fSet') {
     S.cfg = {url: CRM_URL || $('#sUrl').value.trim(), token: ''};
-    LS.setItem('crm.cfg', JSON.stringify(S.cfg)); closeModal(); load();
+    LS.setItem('crm.cfg', JSON.stringify(S.cfg)); closeModal(); load(false, false, true);
   }
 });
 document.addEventListener('input', e => {
@@ -3373,8 +3412,8 @@ try {
 setInterval(() => { if (S.data && S.view === 'contacts' && !S.dirty && !document.querySelector('#modal .ovl')) { renderListBody(); } }, 60000);
 
 /* ---------- štart ---------- */
-buildMap(); render();
-if (!S.cfg.url) openSettings(); else load();
+buildMap(); if (!(S.data && openTop())) render();
+if (!S.cfg.url) openSettings(); else load(false, false, true);
 </script>
 </body>
 </html>
