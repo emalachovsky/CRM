@@ -1508,7 +1508,11 @@ async function apiCore(action, payload = {}) {
     try {
       const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), isRead ? 90000 : 60000);
       let res; try { res = await fetch(S.cfg.url, {method: 'POST', redirect: 'follow', cache: 'no-store', body, signal: ctl.signal}); } catch (e) { throw new Error(e.name === 'AbortError' ? 'Server neodpovedal včas' : e.message); } finally { clearTimeout(to); }
-      const txt = await res.text();
+      let txt = await res.text();
+      // iPad/iPhone: POST sa po presmerovaní zmenil na GET a server vrátil len „CRM API beží“ → zopakujeme cez GET (?q=…)
+      if (/CRM API b/.test(txt) && body.length < 6000) {
+        try { const r2 = await fetch(S.cfg.url + (S.cfg.url.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(body), {redirect: 'follow', cache: 'no-store'}); txt = await r2.text(); res = r2; } catch (e2) {}
+      }
       let j; try { j = JSON.parse(txt); } catch (e) {
         last = new Error(res.status === 404 || /ppConfig/.test(txt)
           ? 'Apps Script nenájdený (404) – skontroluj URL nasadenia (Nasadiť → Spravovať nasadenia → Kto má prístup: Ktokoľvek) a zadaj ju v Nastaveniach alebo v CRM_URL.'
