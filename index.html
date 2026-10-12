@@ -2481,6 +2481,67 @@ async function saveAll(form) {
   if (!editDupConfirm(r, form)) return;
   commitBg(r, {vals, act: actFor(r, changeTyp(vals, ''), '', vals)});
 }
+
+/* ---------- Uložiť = uloží naraz VŠETKY záložky s neuloženými zmenami (aktuálnu aj odložené) ---------- */
+function omChanges(r, form) {
+  const list = [];
+  (omRowsFor(r) || []).forEach(o => {
+    const ch = {};
+    form.querySelectorAll(`[data-omrow="${o.r}"]`).forEach(el => {
+      const f = el.dataset.omf, v = el.value.trim();
+      if (omCmp(f, o[f]) !== omCmp(f, v)) ch[f] = f === 'spotreba' ? (v === '' ? '' : r3(num(v))) : v;
+    });
+    if (Object.keys(ch).length) list.push({row: o.r, cislo: o.cislo, komodita: o.komodita, o: ch});
+  });
+  return list;
+}
+async function saveEverything() {
+  const r = rowBy(S.sel); if (!r) return;
+  const forms = [];
+  const held = (S._st && S._st.row === S.sel) ? S._st.tabs : {};
+  Object.keys(held).forEach(k => { const f = held[k].querySelector('form'); if (f) forms.push(f); });   /* odložené záložky */
+  const cur = document.querySelector('#tabBody form'); if (cur) forms.push(cur);                          /* aktuálna záložka ide posledná – pri rovnakom poli vyhrá */
+  const vals = {}, notes = {}, om = [];
+  let note = '', hasCall = false, hasAll = false;
+  try {
+    for (const f of forms) {
+      if (f.id === 'fOm') { omChanges(r, f).forEach(x => om.push(x)); continue; }
+      if (!['fCall', 'fAll', 'fComp'].includes(f.id)) continue;
+      if (f.id !== 'fCall' && !editDupConfirm(r, f)) return;
+      const all = collect(f);
+      if (f.id === 'fCall') {
+        hasCall = true;
+        const ci = f.querySelector('#callNote'); note = ci ? ci.value.trim() : '';
+        const os = collectOsoby(f); if (os !== serOsoby(parseOsoby(V(r, 'osoby')))) all[fieldHeader('osoby')] = os;
+        Object.assign(notes, collectNotes(f, r));
+      }
+      if (f.id === 'fAll') hasAll = true;
+      if (f.id !== 'fComp') syncKonatel(r, all);
+      const v = changedOnly(r, await materializeNewCols(all));
+      if (f.id === 'fComp') syncOsobaFromKonatel(r, v);
+      Object.assign(vals, v);
+    }
+  } catch (e) { toast(e.message, true); return; }
+  if (note && S.m.pozn) {
+    const old = (S.m.pozn in vals ? String(specVal(vals[S.m.pozn]) ?? '') : String(V(r, 'pozn'))).trim();
+    const line = `📅 ${dmy()}\n${note}\n${SEP}`;
+    vals[S.m.pozn] = old ? line + '\n' + old : line;
+  }
+  if (!Object.keys(vals).length && !note && !Object.keys(notes).length && !om.length) { saveMsg('Nič na uloženie'); return; }
+  if (hasCall) {
+    /* spojené firmy jedného konateľa: aktivita, osoby a telefóny sa uložia do všetkých */
+    groupOf(r).filter(x => x !== r).forEach(sb => {
+      const sv = {};
+      ['datum', 'cas', 'dalsi', 'pozicia', 'urgent', 'tel', 'tel2', 'email', 'osoba', 'funkcia', 'osoby'].forEach(k => { const h = S.m[k]; if (h && h in vals) sv[h] = vals[h]; });
+      if (note && S.m.pozn) { const line = `📅 ${dmy()}\n${note}\n${SEP}`, old = V(sb, 'pozn').trim(); sv[S.m.pozn] = old ? line + '\n' + old : line; }
+      if (Object.keys(sv).length || Object.keys(notes).length) quietUpdate(sb, sv, actFor(sb, changeTyp(sv, note), note, sv), notes);
+    });
+  }
+  let typ = (Object.keys(vals).length || note) ? changeTyp(vals, note) : '';
+  if (om.length) typ = typ ? typ + ' + OM' : 'OM';
+  S._st = null;   /* všetko sa ukladá → odložené záložky sa zahodia (po uložení sa vykreslia čerstvé) */
+  commitBg(r, {vals, notes, om, act: actFor(r, typ || 'Úprava', note, vals), stay: !hasCall && !hasAll});
+}
 /* ---------- osoby v záložke Aktivita ---------- */
 /* Osoba 1 = stĺpce Kontaktná osoba / Funkcia / Telefón / E-mail (meno = konateľ). Osoba 2 = telefón 2 + riadok 1 v stĺpci „Ďalšie osoby“.
    Osoby 3+ = ďalšie riadky v „Ďalšie osoby“. Riadok = „Meno | Funkcia | Telefón | E-mail“ */
@@ -3368,7 +3429,7 @@ document.addEventListener('click', e => {
       S.pressUntil = Date.now() + 1100;
       document.querySelectorAll('.saveTop').forEach(b => { b.classList.add('pressed'); b.textContent = 'Ukladám…'; });
       setTimeout(() => document.querySelectorAll('.saveTop').forEach(b => { b.classList.remove('pressed'); b.textContent = 'Uložiť'; }), 1100);
-      if (f) f.requestSubmit();
+      if (f) f.requestSubmit(); else if (stashTabs().length) saveEverything();
     }
     else if (a === 'clearhist') clearHist();
     else if (a === 'omreload') { const rr = rowBy(S.sel); if (rr) { delete S.om[omKey(rr)]; $('#tabBody').innerHTML = tabBody(rr); } }
@@ -3401,6 +3462,7 @@ document.addEventListener('click', e => {
 document.addEventListener('submit', e => {
   e.preventDefault(); const f = e.target;
   if (isLocked() && f.closest && f.closest('#detailPane')) { lockToast(); return; }
+  if (['fCall', 'fAll', 'fComp', 'fOm'].includes(f.id) && f.closest('#detailPane') && stashTabs().length) { saveEverything(); return; }   /* sú neuložené aj iné záložky → ulož všetky */
   ({fCall: saveCall, fAll: saveAll, fComp: saveFirma, fNew: saveNew, fOm: saveOmTab}[f.id] || (() => {}))(f);
   if (f.id === 'fSet') {
     S.cfg = {url: CRM_URL || $('#sUrl').value.trim(), token: ''};
