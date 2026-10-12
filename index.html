@@ -1285,11 +1285,12 @@ html body .card .c-sub .meno,html body .card .meno{color:#fff!important}
 html body .dhead .sub{color:#fff!important}
 html[data-theme="light"] body .card .c-sub .meno,html[data-theme="light"] body .card .meno,html[data-theme="light"] body .dhead .sub{color:var(--meno)!important}
 
-/* tlačidlá volania – číslo hore, meno pod ním oranžovo */
+/* tlačidlá volania – tmavozelené, číslo hore, meno pod ním v "štítku" */
+html body a.call.main,html body a.call.alt,html body .call.alt,html body .call.main{background:linear-gradient(160deg,#14502e 0%,#0c3a22 55%,#082a18 100%)!important;border:1px solid #2f9e5c!important;color:#f2fff6!important;box-shadow:inset 0 1px 0 rgba(160,255,200,.18),0 0 12px rgba(47,158,92,.25),0 5px 14px rgba(0,0,0,.45)!important}
+html body .call .ico{color:#7dffb0}
 html body .call .cTx{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;min-width:0}
-html body .call .cTx b{font-weight:750}
-html body .call .cTx small{display:block;margin-top:.12rem;font-size:.62em;font-weight:400!important;color:#ff9a4a!important;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-html[data-theme="light"] body .call .cTx small{color:#d9680f!important}
+html body .call .cTx b{font-weight:750;color:#fff}
+html body .call .cTx small{display:inline-block;margin-top:.22rem;padding:.04rem .5rem .06rem;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,176,102,.35);font-size:.62em;font-weight:400;letter-spacing:.07em;text-transform:uppercase;color:#ffc58a!important;text-shadow:0 0 6px rgba(255,150,50,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 html body .call,html body .call.main,html body .call.alt{min-height:2.5rem;height:auto;padding-top:.3rem;padding-bottom:.3rem}
 
 /* mierny glow na ľavom štítku STRETNUTIE */
