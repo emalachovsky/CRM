@@ -1279,6 +1279,21 @@ html body .c-left .badge.actnote.meet.meet>span,html body .c-left .badge.actnote
 /* meno kontaktnej osoby pod názvom firmy – menšie písmo, iná farba */
 html body .card .c-sub .meno,html body .card .meno{color:var(--pur)!important;font-size:.88rem!important;font-weight:500!important;letter-spacing:.01em}
 html body .dhead .sub{color:var(--pur)!important;font-size:.95rem!important;font-weight:500!important;letter-spacing:.01em}
+
+/* meno kontaktnej osoby pod názvom firmy aj v hlavičke detailu – späť biele */
+html body .card .c-sub .meno,html body .card .meno{color:#fff!important}
+html body .dhead .sub{color:#fff!important}
+html[data-theme="light"] body .card .c-sub .meno,html[data-theme="light"] body .card .meno,html[data-theme="light"] body .dhead .sub{color:var(--meno)!important}
+
+/* tlačidlá volania – číslo hore, meno pod ním oranžovo */
+html body .call .cTx{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;min-width:0}
+html body .call .cTx b{font-weight:750}
+html body .call .cTx small{display:block;margin-top:.12rem;font-size:.62em;font-weight:400!important;color:#ff9a4a!important;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html[data-theme="light"] body .call .cTx small{color:#d9680f!important}
+html body .call,html body .call.main,html body .call.alt{min-height:2.5rem;height:auto;padding-top:.3rem;padding-bottom:.3rem}
+
+/* mierny glow na ľavom štítku STRETNUTIE */
+html body .c-left .badge.actnote.meet{box-shadow:0 0 8px 1px rgba(255,170,40,.55),0 0 18px 3px rgba(255,150,30,.28)!important}
 </style>
 </head>
 <body>
