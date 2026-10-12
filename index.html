@@ -1249,6 +1249,36 @@ html[data-theme="light"] body .setSec>.gtitle{border-bottom-color:#b3bfdc}
 #lockBar{display:none;position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:9999;background:#f0a84f;color:#1a1a1a;padding:.5rem 1rem;border-radius:999px;font-size:.9rem;box-shadow:0 4px 14px rgba(0,0,0,.35);pointer-events:none;white-space:nowrap}
 body.locked #lockBar{display:block}
 body.locked #detailPane :is(input,textarea,select,button,.urgSw,.delSw):not(a):not([data-tab]):not([data-act="back"]):not([data-gsel]):not([data-open]){pointer-events:none!important;opacity:.55}
+
+/* vybraný kontakt – silnejší glow pozdĺž bočných pásikov + tieň z jasného (svietiaceho) okraja do tmavej vo vnútri karty */
+html body .card.card.sel{--sg:#6f9be0;
+  box-shadow:
+    -7px 0 12px -5px color-mix(in srgb,var(--sg) 70%,transparent),
+     7px 0 12px -5px color-mix(in srgb,var(--sg) 70%,transparent),
+    -14px 0 22px -12px color-mix(in srgb,var(--sg) 45%,transparent),
+     14px 0 22px -12px color-mix(in srgb,var(--sg) 45%,transparent),
+    inset 14px 0 14px -8px color-mix(in srgb,var(--sg) 55%,transparent),
+    inset -14px 0 14px -8px color-mix(in srgb,var(--sg) 55%,transparent)!important}
+html body .card.card.sel.fut{--sg:#6f9be0}
+html body .card.card.sel.over{--sg:#ff4d55}
+html body .card.card.sel.today{--sg:#2bb8f5}
+html body .card.card.sel.act{--sg:#ffd21f}
+html body .card.card.sel.klient{--sg:#4fd065}
+html[data-theme="light"] body .card.card.sel{
+  box-shadow:
+    -6px 0 10px -4px color-mix(in srgb,var(--sg) 60%,transparent),
+     6px 0 10px -4px color-mix(in srgb,var(--sg) 60%,transparent),
+    inset 12px 0 12px -8px color-mix(in srgb,var(--sg) 35%,transparent),
+    inset -12px 0 12px -8px color-mix(in srgb,var(--sg) 35%,transparent)!important}
+
+
+/* štítok STRETNUTIE nad dátumom – žlto-oranžový podklad, tmavšie písmo */
+html body .c-left .badge.actnote.meet{background:linear-gradient(135deg,#ffd75e 0%,#ffa733 100%)!important;border:1px solid #d98200!important;color:#2a1600!important;font-weight:700;box-shadow:0 0 10px rgba(255,170,40,.45)!important}
+html body .c-left .badge.actnote.meet.meet>span,html body .c-left .badge.actnote.meet .ico{color:#2a1600!important}
+
+/* meno kontaktnej osoby pod názvom firmy – menšie písmo, iná farba */
+html body .card .c-sub .meno,html body .card .meno{color:var(--pur)!important;font-size:.88rem!important;font-weight:500!important;letter-spacing:.01em}
+html body .dhead .sub{color:var(--pur)!important;font-size:.95rem!important;font-weight:500!important;letter-spacing:.01em}
 </style>
 </head>
 <body>
@@ -1816,7 +1846,7 @@ function card(r) {
   const act = isActLbl(V(r, 'pozicia'));
   const gl = groupOf(r), expOn = gl.some(x => S.expSel.has(x.r));
   return `<div class="card ${c} ${expOn ? 'exp' : ''} ${gl.some(x => x.r === S.sel) ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
-    <div class="c-left ${c} ${c === 'today' && t && t < nowHM() ? 'late' : ''} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
+    <div class="c-left ${c} ${c === 'today' && t && t < nowHM() ? 'late' : ''} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}${norm(V(r, 'pozicia')) === 'stretnutie' ? ' meet' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${gl.length > 1 ? '🔗 ' + esc(gl.map(x => V(x, 'firma') || '(bez firmy)').join(' + ')) : esc(V(r, 'firma') || '(bez firmy)')}</b></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
@@ -2070,7 +2100,8 @@ function callBtns(r) {
   if (!ps.length) return `<div class="callRow"><div class="empty" style="margin:0">Žiadne telefónne číslo.</div>${urgMob}</div>`;
   return `<div class="callRow"><div class="calls ${ps.length > 1 ? 'two' : ''}">` + ps.map(p => {
     const main = p.k === 'tel', extra = [p.label, p.note].filter(Boolean).join(' · ');
-    const inner = `${ico('phone')}<span>${esc(p.shown || p.label)}</span>`;
+    const who = String(p.k === 'tel2' ? ((parseOsoby(V(r, 'osoby'))[0] || {}).meno || '') : (V(r, 'osoba') || V(r, 'konatel') || '')).trim();
+    const inner = `${ico('phone')}<span class="cTx"><b>${esc(p.shown || p.label)}</b>${who ? `<small>${esc(who)}</small>` : ''}</span>`;
     return `<div>${p.num ? `<a class="call ${main ? 'main' : 'alt'}" href="tel:${esc(p.num)}">${inner}</a>` : `<div class="call alt">${inner}</div>`}
       ${extra ? `<div class="callnote">${esc(extra)}</div>` : ''}</div>`;
   }).join('') + '</div>' + urgMob + '</div>';
