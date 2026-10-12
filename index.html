@@ -1305,11 +1305,28 @@ html body .lhead .ib.refresh .ico{width:62%;height:62%;position:relative;filter:
 html body .lhead .ib.refresh:active{filter:brightness(1.2);transform:scale(.93)}
 html body .lhead .ib.refresh.spin{color:#fff!important;border-color:#cfe8a0!important;box-shadow:0 0 0 1px #e9f5d0 inset,0 0 10px 2px rgba(150,220,60,.85),0 0 22px 4px rgba(150,220,60,.45)}
 /* text „Načítané“ bližšie k ikonke načítania */
-html body .lhead .ltitle .sync{margin-right:-.4rem;gap:.3rem}
+html body .lhead .ltitle .sync{margin-right:-.3rem;gap:.3rem}
+/* text sa zalomí presne na šírku slov – bez prázdneho miesta vpravo, takže je tesne pri ikonke */
+html body .lhead .ltitle .sync .stx.fit{width:min-content;text-align:left}
 /* tlačidlo obnovenia stránky – tmavobordové, svetlá šípka a tenký text */
 html body .ib.reloadpg{width:2.4rem;height:2.4rem;padding:0;border-radius:.7rem;color:#f1dde1;border:1px solid rgba(230,150,170,.35);background:linear-gradient(145deg,#6a1a30,#3d0c1b);box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,200,215,.15)}
 html body .ib.reloadpg .ico{width:96%;height:96%}
 html body .ib.reloadpg:active{transform:scale(.92);filter:brightness(1.25)}
+
+/* ===== iPhone: v hlavičke 1. riadok = CRM, Kontakty, +, R, nastavenia; 2. riadok = Načítané + zelená ikonka; väčšie ikony ===== */
+.lbr{display:none}
+@media(max-width:600px){
+  html body .lhead .ltitle{flex-wrap:wrap;row-gap:0;column-gap:.5rem;margin-bottom:.35rem}
+  html body .lhead .ltitle .lbr{display:block;flex:0 0 100%;height:0;order:5}
+  html body .lhead .ltitle .sync{order:6;margin-left:auto;margin-right:0;margin-top:.45rem;font-size:.95rem;gap:.4rem;line-height:1.1}
+  html body .lhead .ltitle .sync .stx.fit{width:auto;white-space:nowrap}
+  html body .lhead .ltitle .sync .dot{width:.7rem;height:.7rem}
+  html body .lhead .ltitle .ib.refresh{order:7;margin-top:.45rem}
+  html body .lhead .ib{width:2.7rem;height:2.7rem}
+  html body .lhead .ib.refresh{width:3rem;height:3rem}
+  html body .lhead .ib.reloadpg{width:2.7rem;height:2.7rem}
+  html body .lhead .ib.add .ico,html body .lhead .ib[data-nav="settings"] .ico{width:1.4rem;height:1.4rem}
+}
 </style>
 </head>
 <body>
@@ -1707,7 +1724,7 @@ function paintSync() {
   const el = $('#sync'); if (!el) return; const sy = S.sy || {st: 'ok'};
   const tm = S.lastLoad ? new Date(S.lastLoad).toLocaleTimeString('sk-SK', {hour: '2-digit', minute: '2-digit'}) : '';
   const t = sy.st === 'ok' ? (tm ? 'Načítané ' + tm : 'Z pamäte') : sy.st === 'sync' ? 'Načítavam…' : (sy.msg || 'Chyba');
-  el.innerHTML = `<span class="dot ${sy.st}"></span>${esc(t)}`;
+  el.innerHTML = `<span class="dot ${sy.st}"></span><span class="stx${sy.st === 'err' ? '' : ' fit'}">${esc(t)}</span>`;
   const rb = $('#refreshBtn'); if (rb) rb.classList.toggle('spin', sy.st === 'sync');
 }
 /* ručné načítanie (ikona ⟳): vždy sa spustí – zaseknuté načítanie / ukladanie sa pustí a dáta sa načítajú nanovo */
@@ -1815,7 +1832,7 @@ function renderList() {
       : `<div class="setupBox big"><div class="gtitle">Pripojenie</div><p class="rcP">Vlož URL Apps Script web aplikácie (…/exec). Apka pridaná na plochu iPhonu si údaje z Safari neberie, preto ju treba zadať aj tu.</p><input type="url" id="sUrlQuick" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"><button type="button" class="cta" data-act="quickcfg">Uložiť a načítať</button></div>`;
     return;
   }
-  p.innerHTML = `<div class="lhead"><div class="ltitle"><span class="logo">CRM</span><h1>Kontakty</h1><span class="cnt" id="cnt"></span><button class="ib add" data-act="add" aria-label="Pridať">${ico('plus')}</button><span class="sp"></span><div class="sync" id="sync"></div>
+  p.innerHTML = `<div class="lhead"><div class="ltitle"><span class="logo">CRM</span><h1>Kontakty</h1><span class="cnt" id="cnt"></span><button class="ib add" data-act="add" aria-label="Pridať">${ico('plus')}</button><span class="sp"></span><span class="lbr"></span><div class="sync" id="sync"></div>
     <button class="ib refresh" id="refreshBtn" data-act="refresh" aria-label="Obnoviť" title="Načítať znova"><svg class="ico" viewBox="0 0 24 24" fill="#fff" stroke="none"><g fill="none" stroke="#fff" stroke-width="2.7"><path d="M16.3 5.86A7.5 7.5 0 0 0 4.76 13.94"/><path d="M7.7 18.14A7.5 7.5 0 0 0 19.24 10.06"/></g><path d="M7.66 13.16 5.54 16.84 1.86 14.72z"/><path d="M16.34 10.84 18.46 7.16 22.14 9.28z"/></svg></button>
     <button class="ib reloadpg" data-act="reloadpage" aria-label="Obnoviť stránku" title="Obnoviť stránku (ako Option+Cmd+R)"><svg class="ico" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M74.4 79.1A38 38 0 1 1 79.1 25.6" stroke-width="3"/><path d="M80.2 17 82 28.5 71 24.7" stroke-width="3"/><text x="50" y="65" text-anchor="middle" fill="currentColor" stroke="none" font-size="46" font-weight="200" style="font-family:-apple-system,'Helvetica Neue',Helvetica,Arial,sans-serif">R</text></svg></button><button class="ib" data-nav="settings" aria-label="Nastavenia">${ico('gear')}</button></div>
     <div class="qrow"><input id="q" type="search" placeholder="Hľadať…" value="${esc(S.q)}" autocomplete="off" style="margin:0">
@@ -3015,6 +3032,13 @@ function openTop() {
   if (S.view !== 'contacts' || !S.data) return false;
   const rows = filtered(); if (!rows.length) return false;
   S.limit = Math.max(S.limit, 150);
+  /* iPhone (jeden panel): po otvorení / načítaní ostane základná obrazovka = zoznam, detail sa sám neotvorí */
+  if (innerWidth < 900) {
+    S._st = null; S.sel = null; S.dirty = false; S.msg = null; S.undo = null;
+    if (history.state && history.state.d) { S.skipPop = true; history.back(); setTimeout(() => { S.skipPop = false; }, 600); }
+    render();
+    return true;
+  }
   openSel(rows[0].r);
   return true;
 }
