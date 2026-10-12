@@ -1193,6 +1193,62 @@ html body .nrow>label input:not(#_){height:var(--nh);min-height:var(--nh)}
   html body .firmBar .fbR .anok .antxt{display:inline}
   html body .firmBar .fbR .anok .anchk{color:var(--muted)}
 }
+
+/* --- modré tlačidlá: tmavá modrá s obrysom a tieňom; po stlačení viditeľná zmena --- */
+html body .cta:not(.stick):not(.saveTop):not(.ghost),
+html body .setSec .cta,
+html body .setSec .cta.ghost,
+html body .btn-sm:not([data-act="savenote"]),
+html body .btn-an,
+html body .ib.add{background:linear-gradient(145deg,#24488f 0%,#13306b 55%,#0c2150 100%)!important;background-clip:border-box!important;border:1.5px solid #5b8fe6!important;color:#fff!important;
+  box-shadow:0 5px 14px rgba(4,12,36,.6),0 1px 3px rgba(0,0,0,.45),inset 0 1px 0 rgba(170,205,255,.28),inset 0 -2px 4px rgba(0,0,0,.28)!important;
+  text-shadow:0 1px 2px rgba(0,0,0,.45);transition:transform .08s ease,background .12s ease,box-shadow .12s ease,border-color .12s ease}
+html[data-theme="light"] body .cta:not(.stick):not(.saveTop):not(.ghost),html[data-theme="light"] body .setSec .cta,html[data-theme="light"] body .btn-sm:not([data-act="savenote"]),html[data-theme="light"] body .btn-an,html[data-theme="light"] body .ib.add{box-shadow:0 5px 12px rgba(20,45,100,.35),0 1px 2px rgba(0,0,0,.25),inset 0 1px 0 rgba(170,205,255,.3),inset 0 -2px 4px rgba(0,0,0,.25)!important}
+html body .cta:not(.stick):not(.saveTop):not(.ghost):hover:not(:disabled),
+html body .setSec .cta:hover:not(:disabled),
+html body .setSec .cta.ghost:hover:not(:disabled),
+html body .btn-sm:not([data-act="savenote"]):hover:not(:disabled),
+html body .btn-an:hover:not(:disabled),
+html body .ib.add:hover:not(:disabled){border-color:#86b0f5!important;background:linear-gradient(145deg,#2b55a8 0%,#183a7e 55%,#102a63 100%)!important}
+html body .cta:not(.stick):not(.saveTop):not(.ghost):active:not(:disabled),
+html body .setSec .cta:active:not(:disabled),
+html body .setSec .cta.ghost:active:not(:disabled),
+html body .btn-sm:not([data-act="savenote"]):active:not(:disabled),
+html body .btn-an:active:not(:disabled),
+html body .ib.add:active:not(:disabled),
+html body .cta:not(.stick):not(.saveTop):not(.ghost).tapped,
+html body .setSec .cta.tapped,
+html body .setSec .cta.ghost.tapped,
+html body .btn-sm:not([data-act="savenote"]).tapped,
+html body .btn-an.tapped,
+html body .ib.add.tapped{background:linear-gradient(145deg,#3f7be0 0%,#2559bd 55%,#1a428f 100%)!important;border-color:#d4e4ff!important;transform:scale(.95);
+  box-shadow:0 0 0 3px rgba(120,170,255,.55),inset 0 3px 8px rgba(0,0,20,.55)!important}
+
+/* --- Nastavenia: výraznejšie rámčeky odsekov + prepínač režimu --- */
+html body .setSec{border:1.5px solid #46556f;background:color-mix(in srgb,var(--card) 93%,#fff);box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+html[data-theme="light"] body .setSec{border-color:#8d9cc0;background:color-mix(in srgb,var(--card) 70%,#fff)}
+html body .setSec>.gtitle{border-bottom-color:#3a4760}
+html[data-theme="light"] body .setSec>.gtitle{border-bottom-color:#b3bfdc}
+.themeSw{position:relative;flex:none;width:4.1rem;height:2.1rem;margin-right:.6rem;padding:0;border-radius:999px;cursor:pointer;
+  border:1.5px solid #46556f;background:linear-gradient(135deg,#0d1424,#1b2740);box-shadow:inset 0 2px 5px rgba(0,0,0,.55);transition:background .25s,border-color .25s}
+.themeSw .tsI{position:absolute;top:50%;transform:translateY(-50%);font-size:.95rem;line-height:1;pointer-events:none;transition:opacity .25s}
+.themeSw .tsI.m{left:.55rem;color:#cfd8ee}
+.themeSw .tsI.s{right:.5rem;color:#f5c518}
+.themeSw .tsK{position:absolute;top:50%;left:.2rem;width:1.5rem;height:1.5rem;margin-top:-.75rem;border-radius:50%;background:linear-gradient(145deg,#e6ecfa,#9fb0d4);
+  box-shadow:0 2px 5px rgba(0,0,0,.55);transition:left .25s cubic-bezier(.3,1.2,.5,1),background .25s}
+.themeSw[aria-checked="true"]{background:linear-gradient(135deg,#8fc4ff,#d6e8ff);border-color:#7f9cd0;box-shadow:inset 0 2px 4px rgba(40,70,130,.35)}
+.themeSw[aria-checked="true"] .tsK{left:calc(100% - 1.7rem);background:linear-gradient(145deg,#fff,#ffe9a8)}
+.themeSw[aria-checked="false"] .tsI.m,.themeSw[aria-checked="true"] .tsI.s{opacity:0}
+.themeSw:active .tsK{width:1.8rem}
+.themeSw:active[aria-checked="true"] .tsK{left:calc(100% - 2rem)}
+
+/* záložka s neuloženými zmenami */
+.tab.ed::after{content:"";display:inline-block;width:.5rem;height:.5rem;margin-left:.4rem;border-radius:50%;background:#e5484d;box-shadow:0 0 0 2px rgba(229,72,77,.28);vertical-align:middle}
+
+/* zámok editácie počas načítavania */
+#lockBar{display:none;position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:9999;background:#f0a84f;color:#1a1a1a;padding:.5rem 1rem;border-radius:999px;font-size:.9rem;box-shadow:0 4px 14px rgba(0,0,0,.35);pointer-events:none;white-space:nowrap}
+body.locked #lockBar{display:block}
+body.locked #detailPane :is(input,textarea,select,button,.urgSw,.delSw):not(a):not([data-tab]):not([data-act="back"]):not([data-gsel]):not([data-open]){pointer-events:none!important;opacity:.55}
 </style>
 </head>
 <body>
@@ -1205,6 +1261,7 @@ html body .nrow>label input:not(#_){height:var(--nh);min-height:var(--nh)}
 <div id="toast"></div>
 <div id="undoBar"></div>
 <div id="modal"></div>
+<div id="lockBar">Načítavam údaje… úpravy sú dočasne zamknuté</div>
 
 <script>
 /* =========================================================
@@ -1273,10 +1330,36 @@ const S = {
   dirty: false, stSet: new Set(JSON.parse(LS.getItem('crm.stfilter') || '[]')), stOpen: false, msg: null, sy: {st: 'ok'}, limit: 150, lastLoad: 0, extraCo: new Set(), undo: null,
   expSel: new Set((() => { try { return JSON.parse(LS.getItem('crm.expsel') || '[]'); } catch (e) { return []; } })())
 };
+/* odložené (neuložené) záložky aktuálneho kontaktu: {row, tabs: {názov: <div s presunutým obsahom>}} */
+function stashGet() { if (!S._st || S._st.row !== S.sel) S._st = {row: S.sel, tabs: {}}; return S._st; }
+function stashTabs() { return S._st && S._st.row === S.sel ? Object.keys(S._st.tabs) : []; }
+function syncTabDots() { document.querySelectorAll('.tab[data-tab]').forEach(b => b.classList.toggle('ed', !!(S.dirty && S.dTabs && S.dTabs.has(b.dataset.tab)))); }
+function switchTab(tab, el) {
+  const tb = $('#tabBody'); if (!tb || tab === S.tab) return;
+  const st = stashGet(), from = S.tab;
+  if (S.dirty && S.dTabs.has(from)) {   /* záložka má neuložené zmeny → obsah sa len odloží, nič sa nezahodí */
+    const hold = document.createElement('div');
+    while (tb.firstChild) hold.appendChild(tb.firstChild);
+    st.tabs[from] = hold;
+  }
+  S.tab = tab; try { LS.setItem('crmTab', S.tab); } catch (e) {}
+  const back = st.tabs[tab];
+  if (back) { tb.innerHTML = ''; while (back.firstChild) tb.appendChild(back.firstChild); delete st.tabs[tab]; }
+  else tb.innerHTML = tabBody(rowBy(S.sel));
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === el));
+  const keep = new Set(Object.keys(st.tabs)); if (back) keep.add(tab);
+  S.dTabs = keep; S.dirty = keep.size > 0; if (keep.size) syncTabDots();
+}
 /* neuložené zmeny → tlačidlo „Uložiť“ sa zvýrazní (body.dirty) */
 (function () {
   let d = false;
-  Object.defineProperty(S, 'dirty', {get: () => d, set: v => { d = !!v; if (document.body) document.body.classList.toggle('dirty', d); syncUndo(); }, enumerable: true, configurable: true});
+  /* neuložené zmeny na iných záložkách (odložené v S._st) držia príznak „neuložené“ aj po uložení aktuálnej záložky */
+  S.dTabs = new Set();
+  Object.defineProperty(S, 'dirty', {get: () => d, set: v => {
+    v = !!v;
+    if (!v) { if (S._st && S._st.tabs) delete S._st.tabs[S.tab]; const o = stashTabs(); S.dTabs = new Set(o); v = o.length > 0; }
+    d = v; if (document.body) document.body.classList.toggle('dirty', d); syncUndo(); syncTabDots();
+  }, enumerable: true, configurable: true});
   let u = null;
   Object.defineProperty(S, 'undo', {get: () => u, set: v => { u = v; syncUndo(); }, enumerable: true, configurable: true});
 })();
@@ -1544,7 +1627,16 @@ async function apiCore(action, payload = {}) {
   }
   throw last;
 }
-let loading = false, loadT0 = 0;
+let loading = false, loadT0 = 0, lockLoad = false;
+/* počas načítania dát (okrem tichého obnovenia zoznamu) sa dá len prezerať – inak by sa neuložená zmena po načítaní stratila */
+const isLocked = () => lockLoad && loading && Date.now() - loadT0 < 20000;
+function paintLock() {
+  const on = isLocked(); document.body.classList.toggle('locked', on);
+  if (on) { const a = document.activeElement; if (a && a.closest && a.closest('#detailPane') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) a.blur(); }
+}
+setInterval(paintLock, 400);
+let lockT = 0;
+function lockToast() { if (Date.now() - lockT > 1500) { lockT = Date.now(); toast('Načítavam údaje – úpravy sú zamknuté, počkaj chvíľu'); } }
 function persist() {
   try { LS.setItem('crm.cache', JSON.stringify(S.data, (k, v) => k === '_s' ? undefined : v)); } catch (e) {}
 }
@@ -1569,7 +1661,7 @@ async function manualLoad() {
 async function load(silent, quiet, top) {
   if (loading) return;
   if (pendingSaves) { if (!silent) toast('Dokončujem ukladanie…'); return; }
-  loading = true; loadT0 = Date.now(); if (!quiet) setSync('sync');
+  loading = true; loadT0 = Date.now(); lockLoad = !quiet; paintLock(); if (!quiet) setSync('sync');
   try {
     const j = await api('read');
     S.data = j; S.lastLoad = Date.now(); buildMap(); persist(); pruneExpSel();
@@ -1578,7 +1670,7 @@ async function load(silent, quiet, top) {
     else if (!(top && openTop())) render();   /* top: po načítaní vždy vyber prvý kontakt v zozname */
     setSync('ok'); checkLists(); sweepMeetings(); syncGroups();
   } catch (e) { if (quiet && S.data) setSync('ok'); else { setSync('err', 'Chyba: ' + e.message); if (!silent) toast(e.message, true); } }
-  finally { loading = false; }
+  finally { loading = false; lockLoad = false; paintLock(); }
 }
 
 /* Aktivita „Stretnutie“ / „Telefonát“, ktorej termín (dátum + čas) už uplynul, sa po načítaní stránky z kontaktu zmaže (aj v Sheete) */
@@ -2003,7 +2095,7 @@ function contactDetail(r) {
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
 </div>
-    <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div class="anbox"><div id="actSlot"></div></div></div>
+    <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''} ${S.dirty && S.dTabs.has(k) ? 'ed' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div class="anbox"><div id="actSlot"></div></div></div>
     <div id="tabBody">${tabBody(r)}</div>`;
 }
 function tabBody(r) {
@@ -2193,7 +2285,8 @@ function syncUndo() {
 function undoAvailable() { return S.dirty || (S.undo && S.undo.row === S.sel); }
 const undoBtnHtml = () => '';
 function markDirty() {
-  if (S.dirty) return;
+  S.dTabs.add(S.tab);
+  if (S.dirty) { syncTabDots(); return; }
   S.dirty = true;
 }
 async function undoLast() {
@@ -2264,11 +2357,24 @@ function commitBg(r, o) {
   const prevOm = om.map(it => { const x = omRowByNo(it.row); return x ? {x, old: {...x}} : null; }).filter(Boolean);
   const revertOm = () => prevOm.forEach(p => Object.assign(p.x, p.old));
   om.forEach(it => { const x = omRowByNo(it.row); if (x) Object.assign(x, it.o); });
+  /* zmena dátumu alebo času = kontakt sa v zozname presunie, preto si pred zmenou zapamätaj, kto je v zozname hneď za ním */
+  const dtChanged = !o.stay && S.view === 'contacts' && ((S.m.datum && S.m.datum in vals) || (S.m.cas && S.m.cas in vals));
+  let nextAfter = null;
+  if (dtChanged) {
+    const lst = filtered(), i0 = lst.findIndex(x => x.r === r.r || groupOf(x).includes(r));
+    if (i0 >= 0 && lst[i0 + 1]) nextAfter = lst[i0 + 1].r;
+  }
   setUndo(r, vals); applyLocal(r, vals); if (hasN) applyNotes(r, notes);
   const actRow = pushActivity(act); persist(); S.dirty = false;
   renderChips(); renderListBody();
   if (o.stay) { renderDetail(); saveMsg(o.msg || 'Uložené ✔'); }
-  else if (!openTop()) renderDetail();
+  else if (dtChanged && nextAfter != null && rowBy(nextAfter)) { S.limit = Math.max(S.limit, 150); openSel(nextAfter); }
+  else {
+    /* bežné uloženie: ostať na otvorenom kontakte (aj s pozíciou posunu) */
+    const dp = $('#detailPane'), sc = dp ? dp.scrollTop : 0;
+    renderDetail(); if (dp) dp.scrollTop = sc;
+    saveMsg(o.msg || 'Uložené ✔'); revealSel();
+  }
   pendingSaves++;
   (async () => {
     let j, err;
@@ -2778,6 +2884,7 @@ function dupReport() {
 
 /* ---------- navigácia ---------- */
 function openSel(id) {
+  S._st = null;
   S.sel = id; if (!['hovor', 'firma', 'om', 'udaje', 'hist'].includes(S.tab)) { try { S.tab = LS.getItem('crmTab'); } catch (e) {} } if (!['hovor', 'firma', 'om', 'udaje', 'hist'].includes(S.tab)) S.tab = 'hovor'; S.dirty = false; S.msg = null; S.undo = null;
   if (innerWidth < 900 && !(history.state && history.state.d)) history.pushState({d: 1}, '');
   render(); $('#detailPane').scrollTop = 0;
@@ -2828,6 +2935,7 @@ function setTheme(t) {
   try { localStorage.setItem('crmTheme', t); } catch (e) {}
   const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#f0f2f5' : '#0a0e14';
   document.querySelectorAll('[data-themeset]').forEach(b => b.classList.toggle('on', b.dataset.themeset === t));
+  document.querySelectorAll('[data-themetoggle]').forEach(b => b.setAttribute('aria-checked', t === 'light'));
 }
 /* kontrola: údaje v CRM bez stĺpca v Sheete a stĺpce v Sheete bez údaja v CRM */
 function unmappedHtml(hs) {
@@ -2845,10 +2953,9 @@ function unmappedHtml(hs) {
 }
 function openSettings() {
   const hs = S.data ? S.data.contacts.headers : [];
-  modal(`<div class="mhead"><h2>Nastavenia</h2><button class="ib" data-act="close">${ico('x')}</button></div>
-    <section class="setSec"><div class="gtitle">Vzhľad</div>
-      <div class="seg"><button type="button" data-themeset="dark" class="${themeNow() === 'dark' ? 'on' : ''}">☾ Tmavý</button><button type="button" data-themeset="light" class="${themeNow() === 'light' ? 'on' : ''}">☀ Svetlý</button></div>
-    </section>
+  modal(`<div class="mhead"><h2>Nastavenia</h2>
+    <button type="button" class="themeSw" data-themetoggle role="switch" aria-checked="${themeNow() === 'light'}" aria-label="Svetlý / tmavý režim" title="Svetlý / tmavý režim"><span class="tsI m">☾</span><span class="tsI s">☀</span><span class="tsK"></span></button>
+    <button class="ib" data-act="close">${ico('x')}</button></div>
     <section class="setSec"><div class="gtitle">Pripojenie</div>
       <form id="fSet" autocomplete="off">
         <label>URL Apps Script web aplikácie (…/exec)<input type="url" id="sUrl" value="${esc(S.cfg.url || '')}" placeholder="https://script.google.com/macros/s/…/exec"></label>
@@ -2856,6 +2963,7 @@ function openSettings() {
         <button class="cta ghost" type="button" data-act="copycfg">Skopírovať odkaz pre iné zariadenie</button>
       </form>
     </section>
+    ${tplSectionHtml()}
     ${hs.length ? `<section class="setSec"><div class="gtitle">Export</div>
       <button class="cta ghost" type="button" data-act="exporttpl">Exportovať filtrované kontakty do šablóny (${S.data ? exportRows().length : 0})</button>
       <button class="cta ghost" type="button" data-act="exportsel">Exportuj iba vybrané na export (${S.data ? expSelRows().length : 0})</button>
@@ -2878,7 +2986,161 @@ function openSettings() {
 }
 
 /* ---------- export do šablóny Meitn CRM ---------- */
-const TPL = {"navod": ["Import údajov do Meitn CRM", null, "Ako na to", "1. Vyplň hárky Klienti, Kontakty, Odberné miesta, Prípady a Aktivity (nemusíš všetky, len tie, čo potrebuješ). Hlavičky ani názvy hárkov nemeň.", "2. Hárky sa prepájajú cez IČO klienta. Prípad a aktivita sa k odbernému miestu a prípadu pripájajú cez EIC/POD a Kód importu.", "3. V CRM klikni hore na Import, vyber tento súbor, skontroluj náhľad a klikni Importovať.", "4. Ak náhľad ukáže chyby, oprav riadky podľa hlášky (hárok + číslo riadka) a súbor nahraj znova. Pri chybe sa nezapíše nič.", null, "Pravidlá", "• Všetko, čo importuješ, bude patriť tebe. Klient s IČO, ktoré už v CRM je a patrí inému obchodníkovi, sa neimportuje (požiadaj o prístup).", "• Ak klient s IČO už je tvoj, doplnia sa mu odberné miesta, kontakty, prípady a aktivity. Jeho údaje (názov, adresa…) sa neprepisujú.", "• Všetky prípady vstupujú na začiatok procesu (čakáme na podklady). Kroky a výhry nastavuje CRM podľa postupu, nie import.", "• Povinné polia majú v hlavičke hviezdičku (*). Ostatné údaje, ktoré CRM pred žiadosťou o ponuku vyžaduje, môžeš doplniť neskôr priamo v klientovi.", "• Desatinné čísla píš s bodkou (12.5). Dátumy ako RRRR-MM-DD (2027-01-01) alebo D.M.RRRR, dátum a čas ako RRRR-MM-DD HH:MM.", "• Rovnaký súbor sa nedá importovať dvakrát. Neprázdne riadky sa spracujú všetky, prázdne sa preskočia.", null, "Doterajší dodávateľ (presne takto)", "ELGAS, ENERGIE 2, Energetika Slovensko, a.s., Lama Energy, MET, MVM, Magna Energia, Rightpower, SPP, SSE, VSE, ZSE", null, "Hárky a stĺpce", "Klienti — Jeden riadok = jeden klient. IČO je kľúč, podľa ktorého sa k nemu pripoja ostatné hárky.", "   IČO* — 6 až 10 číslic, bez medzier", "   Názov*", "   Stav — prázdne = prospekt  [prospekt / klient]", "   DIČ", "   IČ DPH", "   Register — napr. OR OS Košice I, oddiel Sro, vložka č. 1234/V", "   Ulica", "   Mesto", "   PSČ", "   Korešpondenčná adresa", "   Banka", "   BIC", "   IBAN", "   Fakturačný e-mail — na doručovanie faktúr; prázdne = e-mail konateľa", "   Poznámka", null, "Kontakty — Kontaktné osoby klienta. Jeden riadok = jedna osoba.", "   IČO klienta*", "   Meno a priezvisko*", "   Funkcia — napr. konateľ", "   Telefón", "   E-mail", "   Hlavná osoba  [ano / nie]", "   Podpisuje — ano = osoba sa pripojí ako podpisujúca ku všetkým prípadom klienta z tohto súboru  [ano / nie]", null, "Odberné miesta — Odberné miesta klienta. Jeden riadok = jedno odberné miesto (EIC alebo POD).", "   IČO klienta*", "   Komodita*  [EE / PL]", "   EIC/POD*", "   Adresa odberného miesta", "   Ročná spotreba (MWh)", "   Tarifa — napr. C2-X3, X3-C2, X2; napätie (NN/VN) sa určí z tarify, X2 = VN", "   Istič (A) — pri NN", "   MRK (kW) — pri VN", "   RK (kW) — pri VN", "   Periodicita RK  [mesacna / trojmesacna / dvanastmesacna]", "   Typ merania  [A / C]", "   Fázy — pri NN  [1 / 3]", "   Doterajší dodávateľ", "   Koniec zmluvy — RRRR-MM-DD alebo D.M.RRRR", "   Poznámka", null, "Prípady — Obchodné prípady. Všetky vstupujú na začiatok procesu (čakáme na podklady). Jeden riadok = jedna komodita.", "   Kód importu* — vlastný kód len pre tento súbor, napr. P1, P2 (na prepojenie s aktivitami)", "   IČO klienta*", "   Komodita*  [EE / PL]", "   Predmet — prázdne = Zmena dodávateľa EE/PL", "   Produkt  [FIX / SPOT]", "   EIC/POD odberných miest — viac oddeľ bodkočiarkou; musia byť v hárku Odberné miesta alebo už v CRM", "   Objem (MWh/rok)", "   Cena FIX (€/MWh)", "   Marža SPOT (€/MWh)", "   Zmluva od", "   Zmluva do", "   Doterajší dodávateľ — presne podľa zoznamu v hárku Návod", "   Poznámka", null, "Aktivity — Hovory, stretnutia, úlohy a ďalšie záznamy ku klientovi (voliteľne k prípadu).", "   IČO klienta*", "   Kód prípadu — kód z hárka Prípady, ak sa aktivita týka prípadu", "   Typ*  [uloha / stretnutie / telefonat / udalost / list]", "   Predmet*", "   Od* — RRRR-MM-DD HH:MM alebo D.M.RRRR HH:MM", "   Do", "   Stav — prázdne = naplánovaná  [naplanovana / hotova]", "   Výsledok", "   Poznámka"], "Klienti": ["IČO*", "Názov*", "Stav", "DIČ", "IČ DPH", "Register", "Ulica", "Mesto", "PSČ", "Korešpondenčná adresa", "Banka", "BIC", "IBAN", "Fakturačný e-mail", "Poznámka"], "Kontakty": ["IČO klienta*", "Meno a priezvisko*", "Funkcia", "Telefón", "E-mail", "Hlavná osoba", "Podpisuje"], "Odberné miesta": ["IČO klienta*", "Komodita*", "EIC/POD*", "Adresa odberného miesta", "Ročná spotreba (MWh)", "Tarifa", "Istič (A)", "MRK (kW)", "RK (kW)", "Periodicita RK", "Typ merania", "Fázy", "Doterajší dodávateľ", "Koniec zmluvy", "Poznámka"], "Prípady": ["Kód importu*", "IČO klienta*", "Komodita*", "Predmet", "Produkt", "EIC/POD odberných miest", "Objem (MWh/rok)", "Cena FIX (€/MWh)", "Marža SPOT (€/MWh)", "Zmluva od", "Zmluva do", "Doterajší dodávateľ", "Poznámka"], "Aktivity": ["IČO klienta*", "Kód prípadu", "Typ*", "Predmet*", "Od*", "Do", "Stav", "Výsledok", "Poznámka"]};
+/* ---------- šablóna exportu: načítaná z xlsx, uložená v prehliadači ---------- */
+const TPL_DEF = {"navodName": "Návod", "navod": ["Import údajov do Meitn CRM", null, "Ako na to", "1. Vyplň hárky Klienti, Kontakty, Odberné miesta, Prípady a Aktivity (nemusíš všetky, len tie, čo potrebuješ). Hlavičky ani názvy hárkov nemeň.", "2. Hárky sa prepájajú cez IČO klienta. Prípad a aktivita sa k odbernému miestu a prípadu pripájajú cez EIC/POD a Kód importu.", "3. V CRM klikni hore na Import, vyber tento súbor, skontroluj náhľad a klikni Importovať.", "4. Ak náhľad ukáže chyby, oprav riadky podľa hlášky (hárok + číslo riadka) a súbor nahraj znova. Pri chybe sa nezapíše nič.", null, "Pravidlá", "• Všetko, čo importuješ, bude patriť tebe. Klient s IČO, ktoré už v CRM je a patrí inému obchodníkovi, sa neimportuje (požiadaj o prístup).", "• Ak klient s IČO už je tvoj, doplnia sa mu odberné miesta, kontakty, prípady a aktivity. Jeho údaje (názov, adresa…) sa neprepisujú.", "• Všetky prípady vstupujú na začiatok procesu (čakáme na podklady). Kroky a výhry nastavuje CRM podľa postupu, nie import.", "• Povinné polia majú v hlavičke hviezdičku (*). Ostatné údaje, ktoré CRM pred žiadosťou o ponuku vyžaduje, môžeš doplniť neskôr priamo v klientovi.", "• Desatinné čísla píš s bodkou (12.5). Dátumy ako RRRR-MM-DD (2027-01-01) alebo D.M.RRRR, dátum a čas ako RRRR-MM-DD HH:MM.", "• Rovnaký súbor sa nedá importovať dvakrát. Neprázdne riadky sa spracujú všetky, prázdne sa preskočia.", null, "Doterajší dodávateľ (presne takto)", "ELGAS; ENERGIE 2; Energetika Slovensko, a.s. (VSE, Košice); Energetika Slovensko, a.s. (ZSE, Bratislava); Lama Energy; MET; MVM; Magna Energia; Rightpower; SPP; SSE", null, "Hárky a stĺpce", "Klienti — Jeden riadok = jeden klient. IČO je kľúč, podľa ktorého sa k nemu pripoja ostatné hárky.", "   IČO* — 6 až 10 číslic, bez medzier", "   Názov*", "   Stav — prázdne = prospekt  [prospekt / klient]", "   DIČ", "   IČ DPH", "   Register — napr. OR OS Košice I, oddiel Sro, vložka č. 1234/V", "   Ulica", "   Mesto", "   PSČ", "   Korešpondenčná adresa", "   Banka", "   BIC", "   IBAN", "   Fakturačný e-mail — na doručovanie faktúr; prázdne = e-mail konateľa", "   Poznámka", null, "Kontakty — Kontaktné osoby klienta. Jeden riadok = jedna osoba.", "   IČO klienta*", "   Meno a priezvisko*", "   Funkcia — napr. konateľ", "   Telefón", "   E-mail", "   Hlavná osoba  [ano / nie]", "   Podpisuje — ano = osoba sa pripojí ako podpisujúca ku všetkým prípadom klienta z tohto súboru  [ano / nie]", null, "Odberné miesta — Odberné miesta klienta. Jeden riadok = jedno odberné miesto (EIC alebo POD).", "   IČO klienta*", "   Komodita*  [EE / PL]", "   EIC/POD*", "   Adresa odberného miesta", "   Ročná spotreba (MWh)", "   Tarifa — napr. C2-X3, X3-C2, X2; napätie (NN/VN) sa určí z tarify, X2 = VN", "   Istič (A) — pri NN", "   MRK (kW) — pri VN", "   RK (kW) — pri VN", "   Periodicita RK  [mesacna / trojmesacna / dvanastmesacna]", "   Typ merania  [A / C]", "   Fázy — pri NN  [1 / 3]", "   Doterajší dodávateľ", "   Koniec zmluvy — RRRR-MM-DD alebo D.M.RRRR", "   Poznámka", null, "Prípady — Obchodné prípady. Všetky vstupujú na začiatok procesu (čakáme na podklady). Jeden riadok = jedna komodita.", "   Kód importu* — vlastný kód len pre tento súbor, napr. P1, P2 (na prepojenie s aktivitami)", "   IČO klienta*", "   Komodita*  [EE / PL]", "   Predmet — prázdne = Zmena dodávateľa EE/PL", "   Produkt  [FIX / SPOT]", "   EIC/POD odberných miest — viac oddeľ bodkočiarkou; musia byť v hárku Odberné miesta alebo už v CRM", "   Objem (MWh/rok)", "   Cena FIX (€/MWh)", "   Marža SPOT (€/MWh)", "   Zmluva od", "   Zmluva do", "   Doterajší dodávateľ — presne podľa zoznamu v hárku Návod", "   Poznámka", null, "Aktivity — Hovory, stretnutia, úlohy a ďalšie záznamy ku klientovi (voliteľne k prípadu).", "   IČO klienta*", "   Kód prípadu — kód z hárka Prípady, ak sa aktivita týka prípadu", "   Typ*  [uloha / stretnutie / telefonat / udalost / list]", "   Predmet*", "   Od* — RRRR-MM-DD HH:MM alebo D.M.RRRR HH:MM", "   Do", "   Stav — prázdne = naplánovaná  [naplanovana / hotova]", "   Výsledok", "   Poznámka"], "sheets": [["Klienti", ["IČO*", "Názov*", "Stav", "DIČ", "IČ DPH", "Register", "Ulica", "Mesto", "PSČ", "Korešpondenčná adresa", "Banka", "BIC", "IBAN", "Fakturačný e-mail", "Poznámka"]], ["Kontakty", ["IČO klienta*", "Meno a priezvisko*", "Funkcia", "Telefón", "E-mail", "Hlavná osoba", "Podpisuje"]], ["Odberné miesta", ["IČO klienta*", "Komodita*", "EIC/POD*", "Adresa odberného miesta", "Ročná spotreba (MWh)", "Tarifa", "Istič (A)", "MRK (kW)", "RK (kW)", "Periodicita RK", "Typ merania", "Fázy", "Doterajší dodávateľ", "Koniec zmluvy", "Poznámka"]], ["Prípady", ["Kód importu*", "IČO klienta*", "Komodita*", "Predmet", "Produkt", "EIC/POD odberných miest", "Objem (MWh/rok)", "Cena FIX (€/MWh)", "Marža SPOT (€/MWh)", "Zmluva od", "Zmluva do", "Doterajší dodávateľ", "Poznámka"]], ["Aktivity", ["IČO klienta*", "Kód prípadu", "Typ*", "Predmet*", "Od*", "Do", "Stav", "Výsledok", "Poznámka"]]]};
+const TPL_KEY = 'crm.exptpl';
+const hKey = h => norm(String(h).replace(/\*/g, ''));
+function tplSaved() {
+  try { const j = JSON.parse(LS.getItem(TPL_KEY) || 'null'); if (j && Array.isArray(j.sheets) && j.sheets.length && Array.isArray(j.navod)) return j; } catch (e) {}
+  return null;
+}
+function tplActive() { return tplSaved() || Object.assign({name: 'vstavaná šablóna', builtin: true}, TPL_DEF); }
+/* z workbooku vytiahne hárok Návod (stĺpec A) a hlavičky (1. riadok) ostatných hárkov */
+function tplParse(wb, fname) {
+  const DATA_SH = ['klienti', 'kontakty', 'odberne miesta', 'pripady', 'aktivity'];
+  /* Návod = hárok s názvom Návod, inak prvý hárok súboru (ak to nie je dátový hárok) */
+  const nvName = wb.SheetNames.find(n => norm(n) === 'navod') || (wb.SheetNames[0] && !DATA_SH.includes(norm(wb.SheetNames[0])) ? wb.SheetNames[0] : undefined);
+  const navod = [];
+  if (nvName) {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[nvName], {header: 1, defval: null, blankrows: true});
+    rows.forEach(r => { const v = (r || []).find(c => c !== null && c !== undefined && String(c).trim() !== ''); navod.push(v === null || v === undefined || String(v).trim() === '' ? null : String(v)); });
+    while (navod.length && navod[navod.length - 1] === null) navod.pop();
+  }
+  const sheets = [];
+  for (const n of wb.SheetNames) {
+    if (n === nvName) continue;
+    const r1 = (XLSX.utils.sheet_to_json(wb.Sheets[n], {header: 1, defval: '', blankrows: false})[0] || []).map(x => String(x).trim());
+    while (r1.length && !r1[r1.length - 1]) r1.pop();
+    if (r1.length) sheets.push([n, r1]);
+  }
+  if (!sheets.some(s => norm(s[0]) === 'klienti')) throw new Error('V súbore chýba hárok „Klienti“ – je to správna šablóna exportu?');
+  if (!navod.length) throw new Error('V súbore chýba hárok „Návod“ s pokynmi.');
+  return {name: fname || 'šablóna.xlsx', loaded: Date.now(), navodName: nvName || 'Návod', navod, sheets};
+}
+/* pokyny z hárka Návod: zoznam dodávateľov, povinné stĺpce (*) a povolené hodnoty v [hranatých zátvorkách] */
+function tplRules(t) {
+  const R = {sup: [], cols: {}};
+  const sh = t.sheets.map(s => norm(s[0])), hdrs = {};
+  t.sheets.forEach(([n, h]) => hdrs[norm(n)] = new Set(h.map(hKey)));
+  let sec = '', supNext = false;
+  for (const raw of t.navod) {
+    const ln = String(raw ?? '');
+    if (!ln.trim()) { supNext = false; continue; }
+    const indent = /^\s/.test(ln);
+    if (supNext) { supNext = false; R.sup = ln.split(ln.includes(';') ? ';' : ',').map(x => x.trim()).filter(Boolean); continue; }
+    if (!indent && sec && !sh.includes(norm(ln.split(/\s[—–]\s/)[0])) && hdrs[sec].has(hKey(ln.split(/\s[—–]\s/)[0].trim()))) { /* stĺpec aj bez odsadenia */ }
+    else if (!indent) {
+      if (/^doterajsi dodavatel/.test(norm(ln))) { supNext = true; sec = ''; continue; }
+      const nm = norm(ln.split(/\s[—–]\s/)[0]);
+      sec = sh.includes(nm) ? nm : '';
+      continue;
+    }
+    if (!sec) continue;
+    const body = ln.trim(), br = body.match(/\[([^\]]+)\]\s*$/);
+    const head = body.replace(/\[[^\]]*\]\s*$/, '').trim();
+    const name = head.split(/\s[—–]\s/)[0].trim();
+    if (!name) continue;
+    const rest = head.slice(name.length), nr = norm(rest);
+    const dm = rest.match(/RRRR-MM-DD|D{1,2}\.\s*M{1,2}\.\s*RRRR/i);
+    const dg = nr.match(/(\d+) (?:az |do )?(\d+) cislic/) || nr.match(/(\d+) cislic/), mx = nr.match(/(?:max|maximalne|najviac) (\d+) znak/);
+    (R.cols[sec] = R.cols[sec] || {})[hKey(name)] = {req: /\*\s*$/.test(name), allowed: br ? br[1].split('/').map(x => x.trim()).filter(Boolean) : null,
+      date: dm ? (/^RRRR/i.test(dm[0]) ? 'iso' : 'dmy') : null, time: /HH:MM/i.test(rest),
+      digits: dg ? [+dg[1], +(dg[2] || dg[1])] : null, max: mx ? +mx[1] : null};
+  }
+  return R;
+}
+/* desatinný oddeľovač podľa Návodu (riadok o desatinných číslach): príklad (12.5 / 12,5), inak slovo bodka/čiarka; bez pokynu = bodka */
+function tplDecimal(t) {
+  for (const ln of t.navod) {
+    const n = norm(ln || ''); if (!/desatin/.test(n)) continue;
+    const m = String(ln).match(/\d+([.,])\d+/); if (m) return m[1];
+    const c = [];
+    for (const [w, sep] of [['bodk', '.'], ['ciark', ',']]) { const i = n.indexOf(w); if (i >= 0 && !/(nie|nepouzi\w*|bez)\s+(s\s+|so\s+)?$/.test(n.slice(Math.max(0, i - 14), i))) c.push([i, sep]); }
+    if (c.length) return c.sort((a, b) => a[0] - b[0])[0][1];
+  }
+  return '.';
+}
+/* všeobecný formát dátumu z Návodu (riadok o dátumoch): iso = RRRR-MM-DD, dmy = DD.MM.RRRR; bez pokynu = iso */
+function tplDateFmt(t) {
+  for (const ln of t.navod) {
+    const s = String(ln ?? ''); if (!/datum/.test(norm(s))) continue;
+    const m = s.match(/RRRR-MM-DD|D{1,2}\.\s*M{1,2}\.\s*RRRR|\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{4}/i);
+    if (m) return /^(RRRR|\d{4}-)/i.test(m[0]) ? 'iso' : 'dmy';
+  }
+  return 'iso';
+}
+/* dátum (RRRR-MM-DD alebo D.M.RRRR, voliteľne s časom) → {d: ISO, t: HH:MM}; null = neplatný */
+function tplParseDate(v) {
+  const s = String(v ?? '').trim();
+  if (!/^(\d{4}-\d{2}-\d{2}|\d{1,2}\.\s*\d{1,2}\.\s*\d{4})(?:[ T]+\d{1,2}:\d{2}(?::\d{2})?(?:\.\d+)?Z?)?$/.test(s)) return null;
+  const d = isoDate(s), t = isoTime(s.replace(/^(\d{4}-\d{2}-\d{2}|\d{1,2}\.\s*\d{1,2}\.\s*\d{4})/, ''));
+  const dt = new Date(d + 'T00:00:00'); if (!d || isNaN(dt) || iso(dt) !== d) return null;
+  return {d, t};
+}
+function tplNum(v) {
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  const s = String(v ?? '').replace(/[\s\u00a0]/g, '');
+  return /^-?\d+(?:[.,]\d+)?$/.test(s) ? parseFloat(s.replace(',', '.')) : null;
+}
+/* hodnota → jedna z povolených hodnôt z Návodu; null = nerozpoznaná */
+function tplEnum(v, allowed) {
+  const n = norm(v); if (!n) return '';
+  const al = allowed.map(norm), i = al.indexOf(n);
+  if (i >= 0) return allowed[i];
+  if (al.includes('ee') && al.includes('pl')) {
+    if (n.startsWith('elektr') || n === 'el') return allowed[al.indexOf('ee')];
+    if (n.startsWith('plyn') || n === 'gas') return allowed[al.indexOf('pl')];
+  }
+  if (al.includes('ano') && al.includes('nie')) {
+    if (['a', 'yes', 'true', '1'].includes(n)) return allowed[al.indexOf('ano')];
+    if (['n', 'no', 'false', '0'].includes(n)) return allowed[al.indexOf('nie')];
+  }
+  return null;
+}
+/* dodávateľ z CRM → presne taký zápis, aký je v zozname v Návode (napr. VSE → „Energetika Slovensko, a.s. (VSE, Košice)“) */
+let EXP_SUP = [], EXP_DODMISS = 0;
+function tplDodMap(x, list) {
+  const nx = norm(x); if (!nx) return '';
+  const ex = list.find(e => norm(e) === nx); if (ex) return ex;
+  const ents = list.map(e => ({e, n: norm(e), base: norm(e.replace(/\([^)]*\)/g, '')), par: ((e.match(/\(([^)]*)\)/) || [])[1] || '').split(',').map(norm).filter(Boolean)}));
+  const m = matchDod(x);
+  if (m) {
+    const nm = norm(m), c = ents.filter(o => o.n === nm || o.base === nm || o.par.includes(nm));
+    if (c.length === 1) return c[0].e;
+  }
+  const c2 = ents.filter(o => o.par.some(p => (' ' + nx + ' ').includes(' ' + p + ' ')));
+  return c2.length === 1 ? c2[0].e : '';
+}
+function tplInfoHtml() {
+  const t = tplActive(), R = tplRules(t), defH = {};
+  TPL_DEF.sheets.forEach(([n, h]) => defH[norm(n)] = h.map(hKey));
+  const unk = t.sheets.map(([n, h]) => [n, h.filter(x => !(defH[norm(n)] || []).includes(hKey(x)))]).filter(x => x[1].length);
+  const nReq = Object.values(R.cols).reduce((a, c) => a + Object.values(c).filter(x => x.req).length, 0);
+  const nEnum = Object.values(R.cols).reduce((a, c) => a + Object.values(c).filter(x => x.allowed).length, 0);
+  return `<div class="miss ${t.builtin ? '' : 'okm'}"><b>${t.builtin ? 'Zatiaľ nie je načítaná žiadna šablóna – použije sa predvolená' : '✔ Načítaná šablóna: ' + esc(t.name)}</b>${t.loaded ? ' · ' + esc(new Date(t.loaded).toLocaleString('sk-SK')) : ''}
+    <ul><li>Hárky: ${t.sheets.map(([n, h]) => esc(n) + ' (' + h.length + ' stĺpcov)').join(', ')}</li>
+    <li>Z Návodu: desatinný oddeľovač <b>${tplDecimal(t) === ',' ? 'čiarka (12,5)' : 'bodka (12.5)'}</b>, dátumy ${tplDateFmt(t) === 'dmy' ? 'DD.MM.RRRR' : 'RRRR-MM-DD'}</li>
+    <li>Pokyny z hárka Návod: ${nReq} povinných polí, ${nEnum} stĺpcov s pevnými hodnotami, ${R.sup.length} dodávateľov v zozname</li>
+    ${unk.length ? '<li>CRM nevie vyplniť (zostanú prázdne): ' + unk.map(([n, h]) => esc(n) + ': ' + h.map(esc).join(', ')).join(' · ') + '</li>' : ''}</ul></div>`;
+}
+function tplSectionHtml() {
+  return `<section class="setSec"><div class="gtitle">Šablóna exportu</div>
+    ${tplInfoHtml()}
+    <button class="cta ghost" type="button" data-act="tplload">Načítať šablónu exportu…</button>
+    <input type="file" id="tplFile" accept=".xlsx,.xls" style="display:none">
+    <p class="rcP">Vyber súbor šablóny (xlsx). Uloží sa v tomto prehliadači a export ju použije: rovnaké hárky a stĺpce, hodnoty podľa pokynov z hárka Návod (povinné polia, povolené hodnoty, zoznam dodávateľov).</p>
+  </section>`;
+}
+async function tplImport(file) {
+  try {
+    toast('Čítam šablónu…'); await loadXLSX();
+    const wb = XLSX.read(await file.arrayBuffer(), {type: 'array'});
+    const t = tplParse(wb, file.name);
+    LS.setItem(TPL_KEY, JSON.stringify(t));
+    toast('Šablóna uložená: ' + file.name);
+    if ($('#fSet')) openSettings();
+  } catch (e) { toast(e.message || 'Šablónu sa nepodarilo načítať', true); }
+}
 const DODAVATELIA = ['ELGAS', 'MVM', 'VSE', 'MET', 'SPP', 'ENERGIE 2', 'ZSE', 'Energetika Slovensko, a.s.', 'SSE', 'Lama Energy', 'Magna Energia', 'Rightpower'];
 const TPL_DOD = DODAVATELIA;
 const DOD_ALIAS = {'ELGAS': ['elgas'], 'MVM': ['mvm'], 'VSE': ['vse', 'vychodoslovenska energetika', 'vychodoslovenska'], 'MET': ['met', 'met slovakia'],
@@ -2898,7 +3160,10 @@ function pickDod(list) {
   const cnt = new Map(); (Array.isArray(list) ? list : [list]).forEach(x => { const m = matchDod(x); if (m) cnt.set(m, (cnt.get(m) || 0) + 1); });
   let best = '', c = 0; cnt.forEach((v, k) => { if (v > c) { c = v; best = k; } }); return best;
 }
-function tplDod(x) { return matchDod(x); }
+function tplDod(x) {
+  if (!EXP_SUP.length) return matchDod(x);
+  const r = tplDodMap(x, EXP_SUP); if (!r && String(x || '').trim()) EXP_DODMISS++; return r;
+}
 function dodSelect(attrs, val) {
   const cur = String(val || '').trim(), m = matchDod(cur);
   const opts = ['', ...DODAVATELIA, ...(cur && !m ? [cur] : [])];
@@ -2911,11 +3176,16 @@ async function exportTpl(onlySel) {
   const K = [], C = [], O = [], P = [], A = [], seen = new Set(), byFirma = new Map(), cSeen = new Set();
   const omAll = (S.data.om && S.data.om.rows) || [];
   let skip = 0, omSkip = 0, pc = 0;
+  const T = tplActive(), RU = tplRules(T); EXP_SUP = RU.sup;
+  const DEC = tplDecimal(T), DFMT = tplDateFmt(T);
+  const icoR = ((RU.cols.klienti || {})[hKey('IČO')] || {}).digits, icoRe = icoR ? new RegExp('^\\d{' + icoR[0] + ',' + icoR[1] + '}$') : /^\d{6,10}$/;
+  /* ak má šablóna v hárku Prípady stĺpec „Stará cena“, súčasná cena ide tam (nie do Cena FIX / Marža SPOT) */
+  const oldCol = (T.sheets.find(([n]) => norm(n) === 'pripady') || [0, []])[1].some(h => /^stara cena/.test(hKey(h))); EXP_DODMISS = 0;
   const kom = o => { const n = norm(o.komodita); return n.startsWith('elektr') ? 'EE' : n.startsWith('plyn') ? 'PL' : ''; };
   const komN = c => c === 'EE' ? 'Elektrina' : c === 'PL' ? 'Plyn' : '';
   for (const r of rows) {
     const ico = tx(V(r, 'ico')).replace(/\s+/g, ''), firma = tx(V(r, 'firma'));
-    if (!/^\d{6,10}$/.test(ico) || !firma) { skip++; continue; }
+    if (!icoRe.test(ico) || !firma) { skip++; continue; }
     if (!seen.has(ico)) {
       seen.add(ico); byFirma.set(norm(firma), ico);
       K.push([ico, firma, norm(V(r, 'stav')) === 'klient' ? 'klient' : 'prospekt', tx(V(r, 'dic')), tx(V(r, 'icdph')), tx(V(r, 'register')), tx(V(r, 'ulica')), tx(V(r, 'mesto')), tx(V(r, 'psc')), '', '', '', '', '', '']);
@@ -2923,16 +3193,16 @@ async function exportTpl(onlySel) {
       for (const o of mine) {
         if (!kom(o) || !tx(o.eic)) { omSkip++; continue; }
         const sp = num(o.spotreba);
-        O.push([ico, komN(kom(o)), tx(o.eic), tx(o.adresa), isFinite(sp) && tx(o.spotreba) !== '' ? sp : '', tx(o.sadzba), tx(o.istic), '', '', '', '', '', tplDod(o.dodavatel), isoDate(o.koniec) || tx(o.koniec), '']);
+        O.push([ico, kom(o), tx(o.eic), tx(o.adresa), isFinite(sp) && tx(o.spotreba) !== '' ? sp : '', tx(o.sadzba), tx(o.istic), '', '', '', '', '', tplDod(o.dodavatel), isoDate(o.koniec) || tx(o.koniec), '']);
       }
       for (const [kc, k] of [['EE', 'el'], ['PL', 'pl']]) {
         const g = s => tx(V(r, k + '_' + s));
         if (!(g('sp') || g('dod') || g('kon') || g('cs') || g('druh'))) continue;
         const sp = num(g('sp')), dr = norm(g('druh'));
         const cs = num(g('cs')), csOk = g('cs') && isFinite(cs), isSpot = dr.includes('spot') && !dr.includes('fix');
-        P.push(['P' + (++pc), ico, komN(kc), kc, dr.includes('fix') ? 'FIX' : dr.includes('spot') ? 'SPOT' : '',
+        P.push(['P' + (++pc), ico, kc, '', dr.includes('fix') ? 'FIX' : dr.includes('spot') ? 'SPOT' : '',
           mine.filter(o => kom(o) === kc && tx(o.eic)).map(o => tx(o.eic)).join('; '),
-          g('sp') && isFinite(sp) ? sp : '', csOk && !isSpot ? cs : '', csOk && isSpot ? cs : '', '', isoDate(g('kon')) || g('kon'), tplDod(g('dod')), '']);
+          g('sp') && isFinite(sp) ? sp : '', csOk && !isSpot && !oldCol ? cs : '', csOk && isSpot && !oldCol ? cs : '', '', isoDate(g('kon')) || g('kon'), tplDod(g('dod')), '', csOk ? cs : '']);
       }
     }
     const os = tx(V(r, 'osoba')), kn = tx(konatelShown(r));
@@ -2966,16 +3236,67 @@ async function exportTpl(onlySel) {
   if (!K.length) { toast('Nie je čo exportovať – ' + (onlySel ? 'označené' : 'vyfiltrované') + ' kontakty nemajú platné IČO', true); return; }
   try { await loadXLSX(); } catch (e) { toast(e.message, true); return; }
   const wb = XLSX.utils.book_new();
-  const nv = XLSX.utils.aoa_to_sheet(TPL.navod.map(x => [x])); nv['!cols'] = [{wch: 120}]; XLSX.utils.book_append_sheet(wb, nv, 'Návod');
-  [['Klienti', K], ['Kontakty', C], ['Odberné miesta', O], ['Prípady', P], ['Aktivity', A]].forEach(([nm, data]) => {
-    const ws = XLSX.utils.aoa_to_sheet([TPL[nm], ...data]); ws['!cols'] = TPL[nm].map(h => ({wch: Math.max(14, h.length + 2)})); XLSX.utils.book_append_sheet(wb, ws, nm);
-  });
+  const nv = XLSX.utils.aoa_to_sheet(T.navod.map(x => [x])); nv['!cols'] = [{wch: 120}]; XLSX.utils.book_append_sheet(wb, nv, T.navodName || 'Návod');
+  const DEFH = {}; TPL_DEF.sheets.forEach(([n, h]) => DEFH[norm(n)] = h);
+  const DATA = {klienti: K, kontakty: C, 'odberne miesta': O, pripady: P, aktivity: A};
+  const cnt = {}; let reqSkip = 0, enumBad = 0;
+  const fmtNum = n => String(Math.round(n * 1e6) / 1e6).replace('.', DEC);
+  const isNumH = h => /\((?:mwh|kwh|kw|a|€\/mwh|eur\/mwh|€\/kwh)[^)]*\)\s*\*?$/i.test(String(h).trim()) || /^stara cena/.test(hKey(h));
+  const isDateH = h => /^(koniec zmluvy|zmluva od|zmluva do|od|do)$/.test(hKey(h));
+  for (const [nm, hs] of T.sheets) {
+    const key = norm(nm), dh = DEFH[key], cr = RU.cols[key] || {}, out = [];
+    const idx = hs.map(h => key === 'pripady' && /^stara cena/.test(hKey(h)) ? 13 : (dh ? dh.findIndex(d => hKey(d) === hKey(h)) : -1));
+    for (const row of (DATA[key] || [])) {
+      const line = hs.map((h, j) => {
+        let v = idx[j] >= 0 ? row[idx[j]] : '';
+        const rl = cr[hKey(h)];
+        const has = v !== '' && v != null && String(v).trim() !== '';
+        if (rl && rl.allowed && has) { const e = tplEnum(v, rl.allowed); if (e === null) { enumBad++; v = ''; } else v = e; }
+        /* dátumy: formát podľa Návodu (stĺpec, inak všeobecný); neplatný dátum = prázdne */
+        else if (has && ((rl && rl.date) || isDateH(h))) {
+          const pd = tplParseDate(v), fm = (rl && rl.date) || DFMT;
+          if (!pd) { enumBad++; v = ''; }
+          else {
+            const dd = fm === 'dmy' ? pd.d.slice(8) + '.' + pd.d.slice(5, 7) + '.' + pd.d.slice(0, 4) : pd.d;
+            v = dd + ((rl && rl.time) || /^(od|do)$/.test(hKey(h)) ? ' ' + (pd.t || '00:00') : '');
+          }
+        }
+        /* čísla: desatinný oddeľovač podľa Návodu, zapísané ako text (Excel ho nepreformátuje); neplatné číslo = prázdne */
+        else if (has && isNumH(h)) { const n = tplNum(v); if (n === null) { enumBad++; v = ''; } else v = fmtNum(n); }
+        else if (typeof v === 'number') v = isFinite(v) ? fmtNum(v) : '';
+        /* dĺžky z Návodu (napr. 6 až 10 číslic, max. N znakov) */
+        if (rl && has && v !== '') {
+          if (rl.digits) { const dv = String(v).replace(/\s+/g, ''); if (new RegExp('^\\d{' + rl.digits[0] + ',' + rl.digits[1] + '}$').test(dv)) v = dv; else { enumBad++; v = ''; } }
+          if (rl.max && String(v).length > rl.max) { enumBad++; v = ''; }
+        }
+        return v;
+      });
+      if (hs.some((h, j) => (/\*/.test(h) || (cr[hKey(h)] && cr[hKey(h)].req)) && String(line[j] ?? '').trim() === '')) { reqSkip++; continue; }
+      out.push(line);
+    }
+    cnt[key] = out.length;
+    const ws = XLSX.utils.aoa_to_sheet([hs, ...out]); ws['!cols'] = hs.map(h => ({wch: Math.max(14, h.length + 2)})); XLSX.utils.book_append_sheet(wb, ws, nm);
+  }
   XLSX.writeFile(wb, 'import-meitn-crm-' + nowS.slice(0, 10) + '.xlsx');
   if (onlySel) { S.expSel.clear(); saveExpSel(); renderListBody(); if ($('#fSet')) openSettings(); }   /* po exporte vybraných zmaž fajky */
-  toast(`Export hotový: ${K.length} klientov, ${C.length} kontaktov, ${O.length} OM, ${P.length} prípadov, ${A.length} aktivít` + (skip ? ` · preskočené bez IČO: ${skip}` : '') + (omSkip ? ` · OM bez EIC/komodity: ${omSkip}` : ''));
+  toast(`Export hotový: ${cnt.klienti || 0} klientov, ${cnt.kontakty || 0} kontaktov, ${cnt['odberne miesta'] || 0} OM, ${cnt.pripady || 0} prípadov, ${cnt.aktivity || 0} aktivít` + (skip ? ` · preskočené bez IČO: ${skip}` : '') + (omSkip ? ` · OM bez EIC/komodity: ${omSkip}` : '') + (reqSkip ? ` · riadky bez povinného poľa: ${reqSkip}` : '') + (EXP_DODMISS ? ` · dodávateľ mimo zoznamu (vynechaný): ${EXP_DODMISS}` : '') + (enumBad ? ` · hodnoty nesedia s Návodom (nechané prázdne): ${enumBad}` : '') + ` · desatinný oddeľovač: ${DEC === ',' ? 'čiarka' : 'bodka'}`);
 }
 
 /* ---------- udalosti ---------- */
+/* zámok počas načítavania: v detaile povolené len prezeranie (záložky, späť, odkazy, prepnutie firmy) */
+const LOCK_OK = 'a, [data-tab], [data-act="back"], [data-gsel], [data-nav], [data-gotoact], [data-open]';
+const inLockedDetail = e => isLocked() && e.target && e.target.closest && e.target.closest('#detailPane');
+document.addEventListener('click', e => {
+  if (!inLockedDetail(e) || e.target.closest(LOCK_OK)) return;
+  e.stopPropagation(); e.preventDefault(); lockToast();
+}, true);
+['keydown', 'beforeinput', 'paste', 'cut', 'drop'].forEach(ev => document.addEventListener(ev, e => {
+  if (!inLockedDetail(e) || !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if (ev === 'keydown' && ['Tab', 'Escape'].includes(e.key)) return;
+  e.preventDefault(); e.stopPropagation(); lockToast();
+}, true));
+document.addEventListener('focusin', e => { if (inLockedDetail(e) && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) e.target.blur(); }, true);
+document.addEventListener('change', e => { if (inLockedDetail(e)) { e.stopPropagation(); e.preventDefault(); } }, true);
 document.addEventListener('click', e => {
   const t = e.target;
   if (t.closest('a.qcall') || t.closest('a.call') || t.closest('a.lnk')) return;
@@ -2983,10 +3304,11 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-expmk]'))) { e.stopPropagation(); toggleExpMark(Number(el.dataset.expmk), el); return; }
   if ((el = t.closest('[data-urgent]'))) { toggleUrgent(); return; }
   if ((el = t.closest('[data-themeset]'))) { setTheme(el.dataset.themeset); return; }
+  if ((el = t.closest('[data-themetoggle]'))) { setTheme(themeNow() === 'light' ? 'dark' : 'light'); return; }
   if ((el = t.closest('[data-gsel]'))) { openSel(+el.dataset.gsel); return; }
   if ((el = t.closest('[data-linkto]'))) { const o = rowBy(+el.dataset.linkto); if (o) linkRows(rowBy(S.sel), [o]); return; }
   if ((el = t.closest('[data-nav]'))) { if (el.dataset.nav === 'settings') { openSettings(); if (S.cfg.url) load(true).then(() => { if ($('#fSet') && !$('#sUrl').matches(':focus')) openSettings(); }); } return; }
-  if ((el = t.closest('[data-tab]'))) { S.tab = el.dataset.tab; try { LS.setItem('crmTab', S.tab); } catch (e) {} $('#tabBody').innerHTML = tabBody(rowBy(S.sel)); document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === el)); S.dirty = false; return; }
+  if ((el = t.closest('[data-tab]'))) { switchTab(el.dataset.tab, el); return; }
   if (S.stOpen && !t.closest('.chips')) { S.stOpen = false; renderChips(); }
   if ((el = t.closest('[data-stpop]'))) { S.stOpen = !S.stOpen; renderChips(); return; }
   if ((el = t.closest('[data-stall]'))) { S.stSet.clear(); saveStFilter(); S.limit = 150; renderChips(); renderListBody(); return; }
@@ -3026,6 +3348,7 @@ document.addEventListener('click', e => {
     else if (a === 'delcontact') deleteContact();
     else if (a === 'undodel') undoDelete();
     else if (a === 'dupcheck') dupReport();
+    else if (a === 'tplload') { const fi = $('#tplFile'); if (fi) fi.click(); }
     else if (a === 'exporttpl') exportTpl();
     else if (a === 'exportsel') exportTpl(true);
     else if (a === 'addosoba') { const l = $('#osList'), rr = rowBy(S.sel); if (l) { const has2 = l.querySelector('.osP2'); l.insertAdjacentHTML('beforeend', persCard({}, has2 ? 'x' : 'p2', has2 ? null : rr)); const c = l.lastElementChild.querySelector('input'); if (c) c.focus(); markDirty(); } }
@@ -3077,6 +3400,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('submit', e => {
   e.preventDefault(); const f = e.target;
+  if (isLocked() && f.closest && f.closest('#detailPane')) { lockToast(); return; }
   ({fCall: saveCall, fAll: saveAll, fComp: saveFirma, fNew: saveNew, fOm: saveOmTab}[f.id] || (() => {}))(f);
   if (f.id === 'fSet') {
     S.cfg = {url: CRM_URL || $('#sUrl').value.trim(), token: ''};
@@ -3085,7 +3409,7 @@ document.addEventListener('submit', e => {
 });
 document.addEventListener('input', e => {
   const t = e.target;
-  if (t.id === 'anFile') return;
+  if (t.id === 'anFile' || t.id === 'tplFile') return;
   if (t.id === 'linkQ') { linkSearch(t.value); return; }
   if (t.id === 'q') { S.q = t.value; S.limit = 150; renderListBody(); return; }
   if (t.closest('#fNew')) { newDupCheck(t.closest('#fNew')); return; }
@@ -3094,6 +3418,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target;
+  if (t.id === 'tplFile') { const f = t.files && t.files[0]; t.value = ''; if (f) tplImport(f); return; }
   if (t.id === 'anFile') { const f = t.files && t.files[0]; t.value = ''; if (f) importAnalysis(f); return; }
   if (t.dataset.stsel !== undefined) { saveStav(t); return; }
   if (t.dataset.fn !== undefined) {
@@ -3273,6 +3598,16 @@ function parseAnalysis(wb) {
       if (k && cust[k] === undefined) { const v = r.slice(c + 1).find(x => txt(x) !== ''); if (v !== undefined) cust[k] = txt(v); }
     }
   });
+  // súhrn z hlavičky (riadky nad prvou tabuľkou): štítok v stĺpci A, hodnota v stĺpci C
+  const hdr = {};
+  rows.slice(0, heads[0]).forEach(r => {
+    const t = norm(r[0]); if (!t) return;
+    const kd = t.includes('elektr') ? 'el' : t.includes('plyn') ? 'pl' : null; if (!kd) return;
+    const wh = t.includes('priemer') && t.includes('cen') ? 'cs' : t.includes('spotreb') ? 'sp' : null; if (!wh) return;
+    hdr[kd + '_' + wh] = nn(r[2]);
+  });
+  // „neuvedená“, „–“ a pod. nie je hodnota
+  const clean = x => { const t = txt(x), n = norm(t); return (!n || /^(neuved|nie je|n a$|nezn)/.test(n)) ? '' : t; };
   const out = {cust, el: null, pl: null, om: []};
   heads.forEach((hi, n) => {
     let kind = null;
@@ -3282,7 +3617,7 @@ function parseAnalysis(wb) {
     if (!kind) kind = n === 0 ? 'el' : 'pl';
     const hr = rows[hi].map(norm);
     const col = (pat, d) => { const i = hr.findIndex(h => h.includes(pat)); return i >= 0 ? i : d; };
-    const cD = col('dodavatel', 2), cS = col('spotreba', 9), cC = col('cena', 11), cK = col('druh', 10), cV = col('do kedy', 8);
+    const cD = col('dodavatel', 2), cS = col('spotreba', 11), cC = col('cena komodity', col('cena', 13)), cK = col('druh', 12), cV = col('koniec viazanosti', col('do kedy', 10));
     const data = []; let sum = null;
     for (let i = hi + 1; i < rows.length; i++) {
       const r = rows[i];
@@ -3303,15 +3638,17 @@ function parseAnalysis(wb) {
         adresa: cAdr.map(i => txt(r[i])).filter(Boolean).join(', '),
         spotreba: nn(r[cS]) > 0 || nn(r[cS]) === 0 ? r3(nn(r[cS])) : '',
         dodavatel: matchDod(txt(r[cD])) || txt(r[cD]),
-        sadzba: cSad >= 0 ? txt(r[cSad]) : '',
-        istic: kind === 'el' && cIst >= 0 ? txt(r[cIst]) : '',
-        koniec: kd || txt(kv)
+        sadzba: cSad >= 0 ? clean(r[cSad]) : '',
+        istic: kind === 'el' && cIst >= 0 ? clean(r[cIst]) : '',
+        koniec: kd || clean(kv)
       });
     });
     let sp = sum ? nn(sum[cS]) : NaN;
     if (!(sp > 0)) sp = data.reduce((a, r) => a + (nn(r[cS]) || 0), 0);
     let price = sum ? nn(sum[cC]) : NaN;
-    if (!(price > 0)) {
+    if (kind + '_sp' in hdr) sp = hdr[kind + '_sp'];
+    if (kind + '_cs' in hdr) price = hdr[kind + '_cs'];
+    if (!(price > 0) && !((kind + '_cs') in hdr)) {
       const ok = data.filter(r => nn(r[cS]) > 0 && nn(r[cC]) > 0), fix = ok.filter(r => /fix/.test(norm(r[cK])));
       const base = fix.length ? fix : ok, w = base.reduce((a, r) => a + nn(r[cS]), 0);
       price = w ? base.reduce((a, r) => a + nn(r[cS]) * nn(r[cC]), 0) / w : NaN;
@@ -3321,7 +3658,7 @@ function parseAnalysis(wb) {
     const kons = data.map(r => xd(r[cV])).filter(Boolean).sort();
     const kon = kons[0] || (data.some(r => /neurcit/.test(norm(r[cV]))) ? 'neurčitá' : '');
     const druh = [...new Set(data.map(r => { const t = norm(r[cK]); return t.includes('fix') ? 'Fix' : t.includes('spot') ? 'Spot' : t.includes('kombi') ? 'Kombi' : txt(r[cK]); }).filter(Boolean))].join('/');
-    out[kind] = {dod, druh, sp, cs: price, kon, oms: data.length};
+    out[kind] = {dod, druh, sp: sp > 0 ? sp : NaN, cs: price > 0 ? price : NaN, kon, oms: data.length};
   });
   if (!out.el && !out.pl) throw new Error('V súbore som nenašiel údaje o odberných miestach');
   return out;
@@ -3375,8 +3712,9 @@ async function importAnalysis(file) {
     setUndo(r, real);
     const local = {}; for (const h in real) local[h] = typeof real[h] === 'number' ? fmtDec(real[h]) : real[h];
     applyLocal(r, local); pushActivity(actFor(r, 'Analýza načítaná', '', real)); persist();
-    S.dirty = false; S.tab = 'firma'; renderChips(); renderListBody(); renderDetail();
-    const bits = []; if (A.el) bits.push(`elektrina ${fmtDec(A.el.sp)} MWh · ${fmtDec(A.el.cs)} €/MWh`); if (A.pl) bits.push(`plyn ${fmtDec(A.pl.sp)} MWh · ${fmtDec(A.pl.cs)} €/MWh`);
+    S.tab = 'firma'; S.dirty = false; renderChips(); renderListBody(); renderDetail();
+    const bits = []; const bt = (n, x) => n + ' ' + [isFinite(x.sp) ? fmtDec(x.sp) + ' MWh' : 'spotreba chýba', isFinite(x.cs) ? fmtDec(x.cs) + ' €/MWh' : 'cena chýba'].join(' · ');
+    if (A.el) bits.push(bt('elektrina', A.el)); if (A.pl) bits.push(bt('plyn', A.pl));
     if (omOk && A.om.length) bits.push(A.om.length + ' OM' + (S.omRes && S.omRes.added != null ? ` (${S.omRes.skipped || 0} už existovalo, ${S.omRes.added} nových${S.omRes.filled ? ', doplnené sadzba/istič: ' + S.omRes.filled : ''})` : '')); toast('Analýza načítaná: ' + bits.join(' | '));
   } catch (e) { toast(e.message || String(e), true); if (e.conflict) load(true); }
   finally { document.querySelectorAll('.btn-an').forEach(b => b.disabled = false); }
@@ -3414,6 +3752,13 @@ setInterval(() => { if (S.data && S.view === 'contacts' && !S.dirty && !document
 /* ---------- štart ---------- */
 buildMap(); if (!(S.data && openTop())) render();
 if (!S.cfg.url) openSettings(); else load(false, false, true);
+
+/* viditeľné „stlačenie“ modrých tlačidiel (aj pri rýchlom kliknutí/dotyku) */
+document.addEventListener('click', e => {
+  const b = e.target.closest('.cta:not(.stick):not(.saveTop):not(.ghost), .setSec .cta, .btn-sm:not([data-act="savenote"]), .btn-an, .ib.add');
+  if (!b || b.disabled) return;
+  b.classList.add('tapped'); setTimeout(() => b.classList.remove('tapped'), 550);
+}, true);
 </script>
 </body>
 </html>
