@@ -1313,18 +1313,29 @@ html body .ib.reloadpg{width:2.4rem;height:2.4rem;padding:0;border-radius:.7rem;
 html body .ib.reloadpg .ico{width:96%;height:96%}
 html body .ib.reloadpg:active{transform:scale(.92);filter:brightness(1.25)}
 
-/* ===== iPhone: v hlavičke 1. riadok = CRM, Kontakty, +, R, nastavenia; 2. riadok = Načítané + zelená ikonka; väčšie ikony ===== */
-.lbr{display:none}
+/* ===== hlavička zoznamu – iPhone, iPad aj Mac: 1. riadok = CRM, Kontakty, +, zelená ikonka načítania, R, nastavenia; 2. riadok = hľadanie + Načítané ===== */
+.lbr{display:block;flex:0 0 100%;height:0;order:5}
+html body .lhead .ltitle{flex-wrap:wrap;row-gap:0;column-gap:.5rem;margin-bottom:.4rem}
+html body .lhead .ltitle .qrow{order:6;flex:1 1 0;min-width:0;margin:.45rem 0 0}
+html body .lhead .ltitle .qrow input{height:2.4rem;width:100%}
+html body .lhead .ltitle .sync{order:6;margin:.45rem 0 0;font-size:1rem;gap:.45rem;line-height:1.1;flex:none}
+html body .lhead .ltitle .sync .stx.fit{width:auto;white-space:nowrap;text-align:left}
+html body .lhead .ltitle .sync .dot{width:.75rem;height:.75rem}
+html body .lhead .ltitle .ib.refresh{order:0;margin-top:0}
+html body .lhead .ib{width:2.4rem;height:2.4rem;flex:none}
+html body .lhead .ib.refresh{width:2.3rem;height:2.3rem}
+html body .lhead .ib.reloadpg{width:2.4rem;height:2.4rem}
+html body .lhead .ib.add .ico,html body .lhead .ib[data-nav="settings"] .ico{width:1.3rem;height:1.3rem}
 @media(max-width:600px){
-  html body .lhead .ltitle{flex-wrap:wrap;row-gap:0;column-gap:.4rem;margin-bottom:.35rem}
-  html body .lhead .ltitle .lbr{display:block;flex:0 0 100%;height:0;order:5}
-  html body .lhead .ltitle .sync{order:6;margin-left:auto;margin-right:0;margin-top:.4rem;font-size:.92rem;gap:.4rem;line-height:1.1}
-  html body .lhead .ltitle .sync .stx.fit{width:auto;white-space:nowrap}
+  html body .lhead .ltitle{column-gap:.35rem;margin-bottom:.35rem}
+  html body .lhead .ltitle .qrow{margin-top:.4rem}
+  html body .lhead .ltitle .qrow input{height:2.2rem}
+  html body .lhead .ltitle .sync{margin-top:.4rem;font-size:.85rem;gap:.35rem}
+  html body .lhead .ltitle .sync .stx.fit{width:min-content;white-space:normal}
   html body .lhead .ltitle .sync .dot{width:.7rem;height:.7rem}
-  html body .lhead .ltitle .ib.refresh{order:7;margin-top:.4rem}
-  html body .lhead .ib{width:2.3rem;height:2.3rem;flex:none}
-  html body .lhead .ib.refresh{width:2.2rem;height:2.2rem}
-  html body .lhead .ib.reloadpg{width:2.3rem;height:2.3rem}
+  html body .lhead .ib{width:2.2rem;height:2.2rem}
+  html body .lhead .ib.refresh{width:2.1rem;height:2.1rem}
+  html body .lhead .ib.reloadpg{width:2.2rem;height:2.2rem}
   html body .lhead .ib.add .ico,html body .lhead .ib[data-nav="settings"] .ico{width:1.25rem;height:1.25rem}
   html body .lhead .ltitle .logo{font-size:1.6rem;margin-right:0}
   html body .lhead .ltitle h1{font-size:1.05rem;white-space:nowrap}
@@ -1841,8 +1852,15 @@ function renderList() {
     </div>
     <div class="chips" id="chips"></div></div><div id="listBody"></div>`;
   renderChips(); renderListBody();
-  paintSync();
+  paintSync(); placeQrow();
 }
+/* okienko hľadania je (na iPhone, iPade aj Macu) v druhom riadku pred textom „Načítané“ */
+function placeQrow() {
+  const lh = document.querySelector('#listPane .lhead'); if (!lh) return;
+  const q = lh.querySelector('.qrow'), lt = lh.querySelector('.ltitle'); if (!q || !lt) return;
+  if (q.parentNode !== lt) lt.insertBefore(q, document.getElementById('sync'));
+}
+try { matchMedia('(max-width:600px)').addEventListener('change', placeQrow); } catch (e) {}
 function renderChips() {
   const el = $('#chips'); if (!el) return;
   const n = S.stSet.size;
