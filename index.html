@@ -1368,6 +1368,12 @@ html body .lhead .ib.add .ico,html body .lhead .ib[data-nav="settings"] .ico{wid
   html body .lhead .ltitle .logo{font-size:1.6rem;margin-right:0}
   html body .lhead .ltitle h1{font-size:1.05rem;white-space:nowrap}
 }
+/* OM: koniec viazanosti – dátum biely */
+html:not([data-theme="light"]) #fOm input[data-omf="koniec"],html:not([data-theme="light"]) #fOm .dwrap input[type=date],
+html:not([data-theme="light"]) #fOm input[data-omf="koniec"]::-webkit-datetime-edit,html:not([data-theme="light"]) #fOm input[data-omf="koniec"]::-webkit-datetime-edit-fields-wrapper,
+html:not([data-theme="light"]) #fOm input[data-omf="koniec"]::-webkit-datetime-edit-day-field,html:not([data-theme="light"]) #fOm input[data-omf="koniec"]::-webkit-datetime-edit-month-field,
+html:not([data-theme="light"]) #fOm input[data-omf="koniec"]::-webkit-datetime-edit-year-field,html:not([data-theme="light"]) #fOm input[data-omf="koniec"]::-webkit-datetime-edit-text{color:#fff!important;-webkit-text-fill-color:#fff!important;opacity:1}
+html:not([data-theme="light"]) #fOm .dsh{color:#fff!important}
 </style>
 </head>
 <body>
@@ -2405,7 +2411,10 @@ function snapshotPrev(row, vals) {
   for (const h in vals) {
     const cur = row.v[h] ?? '';
     const spec = vals[h];
-    o[h] = (spec && typeof spec === 'object') ? {t: spec.t, v: spec.t === 'd' ? isoDate(cur) : isoTime(cur)} : cur;
+    if (spec && typeof spec === 'object') {
+      const pv = spec.t === 'd' ? isoDate(cur) : isoTime(cur);
+      o[h] = (!pv && String(cur).trim()) ? cur : {t: spec.t, v: pv};   /* textová hodnota (napr. „neurčitá“) sa pri Späť vráti ako text, nie vymaže */
+    } else o[h] = cur;
   }
   return o;
 }
@@ -2429,9 +2438,11 @@ async function undoLast() {
   if (S.dirty) { S.dirty = false; $('#tabBody').innerHTML = tabBody(rowBy(S.sel)); return; }
   if (!S.undo) return;
   const r = rowBy(S.undo.row); if (!r) { S.undo = null; return; }
-  const vals = S.undo.prev, undo = S.undo; S.undo = null;
+  const vals = S.undo.prev, undo = S.undo, omB = undo.om || []; S.undo = null;
   try {
-    const j = await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: actFor(r, 'Späť (zrušenie úpravy)', '', vals), check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    const j = await api('update', {sheet: 'contacts', row: r.r, values: vals, om: omB, activity: actFor(r, 'Späť (zrušenie úpravy)', '', vals), check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    if (omB.length && j && !j.lost && j.om !== omB.length) throw new Error('Server je na starej verzii API – OM sa nevrátili. Nasaď novú verziu CRM_API.gs.');
+    omB.forEach(it => { const x = omRowByNo(it.row); if (x) Object.assign(x, it.o); });
     if (j && j.calNote !== undefined && S.m.pozicia) applyNotes(r, {[S.m.pozicia]: j.calNote});
     applyLocal(r, vals); pushActivity(actFor(r, 'Späť (zrušenie úpravy)', '', vals)); persist();
     renderChips(); renderListBody(); renderDetail(); saveMsg('Vrátené späť ✔');
@@ -2501,9 +2512,13 @@ function commitBg(r, o) {
     if (i0 >= 0 && lst[i0 + 1]) nextAfter = lst[i0 + 1].r;
   }
   setUndo(r, vals); applyLocal(r, vals); if (hasN) applyNotes(r, notes);
+  /* Späť vráti aj OM zmenené v poslednom kroku */
+  const omU = om.map(it => { const p = prevOm.find(q => q.x.r === it.row); if (!p) return null; const o = {}; for (const f in it.o) o[f] = p.old[f] ?? ''; return {row: it.row, cislo: it.cislo, komodita: it.komodita, o}; }).filter(Boolean);
+  if (omU.length) S.undo = {row: r.r, prev: (S.undo && S.undo.row === r.r) ? S.undo.prev : {}, om: omU};
   const actRow = pushActivity(act); persist(); S.dirty = false;
   renderChips(); renderListBody();
-  if (o.stay) { renderDetail(); saveMsg(o.msg || 'Uložené ✔'); }
+  if (o.quiet) { S.dirty = false; saveMsg(o.msg || 'Uložené ✔'); }   /* bez prekreslenia – ostane kurzor v poli OM */
+  else if (o.stay) { renderDetail(); saveMsg(o.msg || 'Uložené ✔'); }
   else if (dtChanged && nextAfter != null && rowBy(nextAfter)) { S.limit = Math.max(S.limit, 150); openSel(nextAfter); }
   else {
     /* bežné uloženie: ostať na otvorenom kontakte (aj s pozíciou posunu) */
@@ -2657,8 +2672,8 @@ async function saveEverything() {
       if (Object.keys(sv).length || Object.keys(notes).length) quietUpdate(sb, sv, actFor(sb, changeTyp(sv, note), note, sv), notes);
     });
   }
+  if (om.length) { const ov = omFirmVals(r, om.map(x => ({row: x.row, o: x.o, komodita: x.komodita}))); for (const h in ov) if (!(h in vals)) vals[h] = ov[h]; }
   let typ = (Object.keys(vals).length || note) ? changeTyp(vals, note) : '';
-  if (om.length) typ = typ ? typ + ' + OM' : 'OM';
   S._st = null;   /* všetko sa ukladá → odložené záložky sa zahodia (po uložení sa vykreslia čerstvé) */
   commitBg(r, {vals, notes, om, act: actFor(r, typ || 'Úprava', note, vals), stay: !hasCall && !hasAll});
 }
@@ -3776,7 +3791,7 @@ function omHtml(r) {
 
 /* ---------- súhrn OM → firma (spotreba = súčet, dodávateľ, najbližší koniec viazanosti) ---------- */
 const omKindOf = o => /^plyn/.test(norm(o.komodita)) ? 'pl' : 'el';
-function omFirmVals(r, pending) {
+function omFirmVals(r, pending, all) {
   /* pending = [{row, o:{...zmeny}}] – zmeny, ktoré sa ešte nezapísali do S.data.om */
   const vals = {}, rows = omRowsFor(r) || [];
   const pm = new Map((pending || []).map(it => [it.row, it.o || {}]));
@@ -3796,6 +3811,7 @@ function omFirmVals(r, pending) {
     if (ds.length) put(g + '_kon', {t: 'd', v: ds[0]});
     else if (L.some(o => /neurcit/.test(norm(o.koniec)))) put(g + '_kon', 'neurčitá');
   }
+  if (all) return vals;
   /* len skutočné zmeny oproti firme */
   const out = {};
   for (const h in vals) {
@@ -3807,6 +3823,27 @@ function omFirmVals(r, pending) {
   }
   return out;
 }
+
+/* zmena v záložke OM sa hneď prejaví v záložke Firma (bez uloženia, červená bodka); uloží sa spolu tlačidlom Uložiť */
+function syncFirmaFromOm(form) {
+  const r = rowBy(S.sel); if (!r || !form) return;
+  const ch = omChanges(r, form); if (!ch.length) return;
+  const vals = omFirmVals(r, ch.map(x => ({row: x.row, o: x.o, komodita: x.komodita})), true);
+  if (!Object.keys(vals).length) return;
+  const st = stashGet();
+  let hold = st.tabs.firma;
+  if (!hold) { hold = document.createElement('div'); hold.innerHTML = companyBlock(r) + '<div id="editDup"></div>'; st.tabs.firma = hold; }
+  for (const h in vals) {
+    const el = [...hold.querySelectorAll('[data-h]')].find(x => x.dataset.h === h); if (!el) continue;
+    let v = specVal(vals[h]);
+    if (el.dataset.t === 'd') { v = isoDate(v) || ''; const w = el.closest('.dwrap'); if (w) { w.classList.toggle('has', !!v); const d = w.querySelector('.dsh'); if (d) d.textContent = showD(v); } }
+    else if (/^(el|pl)_sp$/.test(Object.keys(S.m).find(k => S.m[k] === h) || '') && isFinite(num(v))) v = fmtDec(num(v));
+    el.value = v;
+  }
+  S.dTabs.add('firma'); S.dirty = true; syncTabDots();
+}
+document.addEventListener('input', e => { const t = e.target; if (t && t.dataset && t.dataset.omf !== undefined && ['spotreba', 'dodavatel', 'koniec'].includes(t.dataset.omf)) syncFirmaFromOm(t.closest('#fOm')); });
+document.addEventListener('change', e => { const t = e.target; if (t && t.dataset && t.dataset.omf !== undefined && ['spotreba', 'dodavatel', 'koniec'].includes(t.dataset.omf)) syncFirmaFromOm(t.closest('#fOm')); });
 function saveOmTab(form) {
   const r = rowBy(S.sel); if (!r) return;
   const list = [];
@@ -3822,7 +3859,7 @@ function saveOmTab(form) {
   /* zmeny z OM sa hneď prepíšu aj do firmy */
   const pend = list.map(it => ({row: it.row, o: it.o, komodita: it.komodita}));
   const vals = omFirmVals(r, pend);
-  commitBg(r, {vals, om: list, act: actFor(r, 'OM', '', Object.keys(vals).length ? vals : null), stay: true, msg: 'OM uložené ✔' + (Object.keys(vals).length ? ' · firma aktualizovaná' : '')});
+  commitBg(r, {vals, om: list, act: actFor(r, 'Úprava', '', Object.keys(vals).length ? vals : null), stay: true});
 }
 
 /* ---------- načítanie analýzy z xlsx ---------- */
