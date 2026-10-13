@@ -1040,6 +1040,14 @@ html .dhead .nextCall:not(.urg){background:linear-gradient(90deg,#e9edf3,#d3dae5
 html:not([data-theme="light"]) #fAll .dwrap.has input[type=date],html:not([data-theme="light"]) #fComp .dwrap.has input[type=date],html:not([data-theme="light"]) #fNew .dwrap.has input[type=date]{color:#fff!important;-webkit-text-fill-color:#fff}
 .dupWarn{margin:.2rem 0 .8rem}
 
+/* Detail kontaktu na desktope: hlavička + tlačidlá + záložky sú pevné, rolovať sa len obsah záložky */
+.dfix{display:contents}
+@media(min-width:900px){
+  .dfix{display:block;position:sticky;top:0;z-index:20;margin:0 -1.1rem;padding:0 1.1rem;background:var(--panel);border-radius:20px 20px 0 0}
+  .dfix .tabsRow{margin-bottom:.5rem;padding-top:.2rem}
+  .dfix::after{content:"";position:absolute;left:0;right:0;bottom:-.9rem;height:.9rem;pointer-events:none;background:linear-gradient(180deg,var(--panel),transparent)}
+}
+
 /* ===== iPad / tablet (dotykové zariadenia nad 600px): hlavička detailu ako na iPhone ===== */
 @media(min-width:601px) and (pointer:coarse){
   /* tlačidlo Späť je vždy vidieť (na desktope s myšou ostáva skryté) */
@@ -2198,12 +2206,12 @@ function contactDetail(r) {
   setStateW();
   const em = V(r, 'email'), web = String(V(r, 'web') || '').trim(), webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
   const tabs = [['hovor', 'Aktivita'], ['firma', 'Firma'], ['om', 'OM'], ['udaje', 'Všetky údaje']];
-  return `<div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
+  return `<div class="dfix"><div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
     <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div>${nextHeadHtml(r)}</div>${grpChips(r)}${savemsgHtml()}<div class="stCol">${stSelect(V(r, 'stav'))}${saveGrpHtml()}</div></div>
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
 </div>
-    <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''} ${S.dirty && S.dTabs.has(k) ? 'ed' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div class="anbox"><div id="actSlot"></div></div></div>
+    <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''} ${S.dirty && S.dTabs.has(k) ? 'ed' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div class="anbox"><div id="actSlot"></div></div></div></div>
     <div id="tabBody">${tabBody(r)}</div>`;
 }
 function tabBody(r) {
@@ -3686,6 +3694,11 @@ function omRowsFor(r) {
   return all.filter(o => omMatch(o, ico, nz));
 }
 const omCmp = (f, x) => f === 'spotreba' ? (isFinite(num(x)) ? r3(num(x)) : '') : String(x ?? '').trim();
+/* dodávateľ firmy pre komoditu OM (použije sa, ak OM nemá vlastného) */
+function omFirmDod(o) {
+  const r = rowBy(S.sel); if (!r) return '';
+  return matchDod(V(r, /^plyn/.test(norm(o.komodita)) ? 'pl_dod' : 'el_dod'));
+}
 function omEdit(rows) {
   return rows.map(o => {
     const a = f => `data-omrow="${o.r}" data-omf="${f}"`;
@@ -3696,7 +3709,7 @@ function omEdit(rows) {
       <label>EIC/POD<input type="text" ${a('eic')} value="${esc(omVal(o.eic))}"></label>
       <label>Adresa OM<input type="text" ${a('adresa')} value="${esc(omVal(o.adresa))}"></label>
       <label>Spotreba (MWh/rok)<input type="text" inputmode="decimal" ${a('spotreba')} value="${esc(sp)}"></label>
-      <label>Dodávateľ${dodSelect(a('dodavatel'), omVal(o.dodavatel))}</label>
+      <label>Dodávateľ${dodSelect(a('dodavatel'), omVal(o.dodavatel) || omFirmDod(o))}</label>
       <label>Distribučná sadzba<input type="text" ${a('sadzba')} value="${esc(omVal(o.sadzba))}"></label>
       ${/^plyn/.test(norm(o.komodita)) ? '' : `<label>Hlavný istič<input type="text" ${a('istic')} value="${esc(omVal(o.istic))}"></label>`}
       <label>Koniec viazanosti${koInp}</label></div>`;
@@ -3845,7 +3858,7 @@ function parseAnalysis(wb) {
         eic: cE >= 0 ? txt(r[cE]) : '',
         adresa: cAdr.map(i => txt(r[i])).filter(Boolean).join(', '),
         spotreba: nn(r[cS]) > 0 || nn(r[cS]) === 0 ? r3(nn(r[cS])) : '',
-        dodavatel: matchDod(txt(r[cD])) || txt(r[cD]),
+        dodavatel: matchDod(txt(r[cD])),
         sadzba: cSad >= 0 ? clean(r[cSad]) : '',
         istic: kind === 'el' && cIst >= 0 ? clean(r[cIst]) : '',
         koniec: kd || clean(kv)
@@ -3861,8 +3874,9 @@ function parseAnalysis(wb) {
       const base = fix.length ? fix : ok, w = base.reduce((a, r) => a + nn(r[cS]), 0);
       price = w ? base.reduce((a, r) => a + nn(r[cS]) * nn(r[cC]), 0) / w : NaN;
     }
-    const dodRaw = [...new Set(data.map(r => txt(r[cD])).filter(Boolean))].join(', ');
-    const dod = pickDod(data.map(r => txt(r[cD]))) || dodRaw;
+    const dod = pickDod(data.map(r => txt(r[cD])));
+    // dodávateľ OM = dodávateľ firmy (jeden zápis zo zoznamu pre celú komoditu)
+    if (dod) out.om.slice(out.om.length - data.length).forEach(o => { o.dodavatel = dod; });
     const kons = data.map(r => xd(r[cV])).filter(Boolean).sort();
     const kon = kons[0] || (data.some(r => /neurcit/.test(norm(r[cV]))) ? 'neurčitá' : '');
     const druh = [...new Set(data.map(r => { const t = norm(r[cK]); return t.includes('fix') ? 'Fix' : t.includes('spot') ? 'Spot' : t.includes('kombi') ? 'Kombi' : txt(r[cK]); }).filter(Boolean))].join('/');
@@ -3914,6 +3928,11 @@ async function importAnalysis(file) {
     }
     put('an_ok', {t: 'd', v: todayISO()});
     const real = await materializeNewCols(vals);
+    // dodávateľ OM sa vždy berie z firmy (to, čo sa práve zapísalo do firmy, inak čo tam už je)
+    for (const g of ['el', 'pl']) {
+      const fd = matchDod((A[g] && A[g].dod) || V(r, g + '_dod')), kn = g === 'el' ? 'Elektrina' : 'Plyn';
+      A.om.forEach(o => { if (o.komodita === kn) o.dodavatel = fd; });
+    }
     const omOk = await saveOm(r, A.om, A.cust);
     await api('update', {sheet: 'contacts', row: r.r, values: real, activity: actFor(r, 'Analýza načítaná', '', real),
       check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
