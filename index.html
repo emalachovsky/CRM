@@ -243,6 +243,7 @@ input[readonly]{opacity:.7}
   --blue:#4c9eff; --blue-d:#4c9eff; --acc:#4c9eff; --acc-d:#2f7fe0; --acc-tx:#fff; --teal:#4c9eff; --teal-d:#2f7fe0;
   --el-bg:rgba(76,158,255,.12); --el-bd:rgba(76,158,255,.32); --el-tx:#4c9eff;
   --gas-bg:rgba(245,208,74,.12); --gas-bd:rgba(245,208,74,.32); --gas-tx:#f5d04a;
+  --gr-bg:rgba(160,170,185,.10); --gr-bd:rgba(160,170,185,.30); --gr-tx:#aab3c0;
   --ok:#3fb950; --ok-bg:rgba(63,185,80,.12); --ok-bd:rgba(63,185,80,.35);
   --orange:#f0a84f; --red:#f85149; --green:#3fb950;
   --glow:rgba(76,158,255,.08); --shadow:0 4px 12px rgba(0,0,0,.35); --shadow-lg:0 8px 24px rgba(0,0,0,.4);
@@ -254,6 +255,7 @@ html[data-theme="light"]{
   --blue:#1a5fb4; --blue-d:#1a5fb4; --acc:#1a5fb4; --acc-d:#154a8f; --acc-tx:#fff; --teal:#1a5fb4; --teal-d:#154a8f;
   --el-bg:#eaf3fc; --el-bd:#a8ccee; --el-tx:#1a5fb4;
   --gas-bg:#fdf6d8; --gas-bd:#e8d070; --gas-tx:#8a6c00;
+  --gr-bg:#f1f3f6; --gr-bd:#cfd4dc; --gr-tx:#5a6270;
   --ok:#1e7a3c; --ok-bg:#e3f3e8; --ok-bd:#9ed0b0;
   --orange:#8a5c00; --red:#c0202a; --green:#1e7a3c;
   --glow:rgba(26,95,180,.06); --shadow:0 4px 12px rgba(0,0,0,.08); --shadow-lg:0 8px 24px rgba(0,0,0,.10);
@@ -321,6 +323,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0
 .cg.el{background:var(--el-bg);border-color:var(--el-bd)} .cg.el::before{background:linear-gradient(90deg,var(--blue),transparent)} .cg.el .gtitle{color:var(--el-tx);font-size:.95rem}
 .cg.gas{background:var(--gas-bg);border-color:var(--gas-bd)} .cg.gas::before{background:linear-gradient(90deg,var(--gas-tx),transparent)} .cg.gas .gtitle{color:var(--gas-tx);font-size:.95rem}
 .cg .gtitle .gi{margin-right:.35rem;font-size:1.05em}
+.cg.basic,.cg.grey{background:var(--gr-bg);border-color:var(--gr-bd)} .cg.basic::before,.cg.grey::before{background:linear-gradient(90deg,var(--gr-tx),transparent)} .cg.basic .gtitle,.cg.grey .gtitle{color:var(--gr-tx);font-size:.95rem}
 .addcols{background:var(--gas-bg);border-color:var(--gas-bd)}
 .saveOut{background:color-mix(in srgb,var(--red) 12%,transparent);border-color:var(--red);color:var(--red)}
 #toast{background:var(--raise);border-color:var(--acc);color:var(--text)} #toast.err{border-color:var(--red)}
@@ -507,6 +510,13 @@ input[type=tel]{color:var(--tel-g)}
 .expMk.on .lbl{display:inline}
 .card .c-top{padding-right:1.5rem}
 .card.exp .c-top{padding-right:4.2rem}
+/* stav exportu v karte: tmavosivý zápis „Export CR ✓“, po oboch exportoch „Exportované“ */
+.expMk .xd{font-size:.72rem;letter-spacing:.02em;color:#5f6671;font-weight:400!important;white-space:nowrap;pointer-events:none}
+html[data-theme="light"] .expMk .xd{color:#8b919b}
+html[data-theme="light"] .expDone{color:#a3a9b3}
+.expDone{position:absolute;top:.2rem;right:.3rem;z-index:3;padding:.3rem;font-size:.72rem;letter-spacing:.02em;color:#79808b;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.card.xd1 .c-top{padding-right:8rem}
+.card.xd2 .c-top{padding-right:5.5rem}
 /* polia „Poznámka k …“ v editovacom okne – sivé */
 input[data-note]{color:var(--muted)}
 /* tlačidlá Telefón – zelené tieňovanie */
@@ -1037,7 +1047,7 @@ html input[data-note],html .callnote,html .callnote.nxnote,html .nxRow .callnote
 /* Nasleduje hore pod menom – svetlejšie modré okno, žltý text */
 html .dhead .nextCall:not(.urg){background:linear-gradient(90deg,#e9edf3,#d3dae5);border-color:#aab6c8;color:#0b3d91}
 /* dátum v ostatných záložkách – po doplnení biely (v Hovore ostáva žltý) */
-html:not([data-theme="light"]) #fAll .dwrap.has input[type=date],html:not([data-theme="light"]) #fComp .dwrap.has input[type=date],html:not([data-theme="light"]) #fNew .dwrap.has input[type=date]{color:#fff!important;-webkit-text-fill-color:#fff}
+html:not([data-theme="light"]) #fOm .dwrap.has input[type=date],html:not([data-theme="light"]) #fOm input[data-omf="koniec"],html:not([data-theme="light"]) #fAll .dwrap.has input[type=date],html:not([data-theme="light"]) #fComp .dwrap.has input[type=date],html:not([data-theme="light"]) #fNew .dwrap.has input[type=date]{color:#fff!important;-webkit-text-fill-color:#fff}
 .dupWarn{margin:.2rem 0 .8rem}
 
 /* Detail kontaktu na desktope: hlavička + tlačidlá + záložky sú pevné, rolovať sa len obsah záložky */
@@ -1157,6 +1167,16 @@ html .card .c-next>span{color:inherit}
 .firmBar .fbL{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
 .firmBar .fbR{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:.5rem}
 @media(min-width:601px){.tabsRow .anbox{display:none}}
+/* Firma (počítač): Spojiť s firmou + oznam o analýze + Načítať analýzu sú v riadku so záložkami, zarovnané doprava */
+#firmTop{display:none}
+@media(min-width:601px){
+  #firmTop{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:.4rem .5rem;margin:0 0 .4rem auto}
+  #firmTop:empty{display:none}
+  html body .firmBar{margin:0;gap:0}
+  html body .firmBar .fbL,html body .firmBar .anok,html body .firmBar .btn-an{display:none!important}
+  html body #firmTop .anok{font-size:.72rem;padding:.22rem .6rem}
+  html body #firmTop .anok .antxt{display:none}
+}
 @media(max-width:600px){
   html body .dhead .grpChips{order:2;flex:1 0 100%;max-width:none;justify-content:flex-start;align-self:auto;min-height:0}
   html body .dhead .grpChips .chip{height:auto}
@@ -1428,6 +1448,7 @@ const S = {
   data: null, m: {}, auto: {},
   view: 'contacts', q: '', chip: 'all', sel: null, tab: (() => { try { return LS.getItem('crmTab') || 'hovor'; } catch (e) { return 'hovor'; } })(),
   dirty: false, stSet: new Set(JSON.parse(LS.getItem('crm.stfilter') || '[]')), stOpen: false, msg: null, sy: {st: 'ok'}, limit: 150, lastLoad: 0, extraCo: new Set(), undo: null,
+  expDone: (() => { try { const o = JSON.parse(LS.getItem('crm.expdone') || '{}'); return {cr: new Set(o.cr || []), full: new Set(o.full || [])}; } catch (e) { return {cr: new Set(), full: new Set()}; } })(),
   expSel: new Set((() => { try { return JSON.parse(LS.getItem('crm.expsel') || '[]'); } catch (e) { return []; } })())
 };
 /* odložené (neuložené) záložky aktuálneho kontaktu: {row, tabs: {názov: <div s presunutým obsahom>}} */
@@ -1447,6 +1468,7 @@ function switchTab(tab, el) {
   if (back) { tb.innerHTML = ''; while (back.firstChild) tb.appendChild(back.firstChild); delete st.tabs[tab]; }
   else tb.innerHTML = tabBody(rowBy(S.sel));
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === el));
+  syncFirmTop();
   const keep = new Set(Object.keys(st.tabs)); if (back) keep.add(tab);
   S.dTabs = keep; S.dirty = keep.size > 0; if (keep.size) syncTabDots();
 }
@@ -1894,6 +1916,7 @@ function filtered() {
   return rows.filter(r => { const g = gidOf(r); if (!g || groupOf(r).length < 2) return true; if (seenG.has(g)) return false; seenG.add(g); return true; });
 }
 /* označenie kontaktov na export (kruh vpravo hore v karte) */
+function saveExpDone() { try { LS.setItem('crm.expdone', JSON.stringify({cr: [...S.expDone.cr], full: [...S.expDone.full]})); } catch (e) {} }
 function saveExpSel() { try { LS.setItem('crm.expsel', JSON.stringify([...S.expSel])); } catch (e) {} }
 function pruneExpSel() {
   if (!S.data || !S.expSel.size) return;
@@ -1930,12 +1953,15 @@ function card(r) {
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = isActLbl(V(r, 'pozicia'));
   const gl = groupOf(r), expOn = gl.some(x => S.expSel.has(x.r));
-  return `<div class="card ${c} ${expOn ? 'exp' : ''} ${gl.some(x => x.r === S.sel) ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
+  const dCr = gl.some(x => S.expDone.cr.has(x.r)), dFu = gl.some(x => S.expDone.full.has(x.r)), dBoth = dFu;
+  const xdTxt = dCr ? 'Export CR ✓' : dFu ? 'Export DÁTA ✓' : '';
+  const xdCls = dBoth ? 'exp xd2' : (expOn ? 'exp' : '') + (xdTxt ? ' xd1' : '');
+  return `<div class="card ${c} ${xdCls} ${gl.some(x => x.r === S.sel) ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
     <div class="c-left ${c} ${c === 'today' && t && t < nowHM() ? 'late' : ''} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}${norm(V(r, 'pozicia')) === 'stretnutie' ? ' meet' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${gl.length > 1 ? '🔗 ' + esc(gl.map(x => V(x, 'firma') || '(bez firmy)').join(' + ')) : esc(V(r, 'firma') || '(bez firmy)')}</b></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
-    <span class="expMk ${expOn ? 'on' : ''}" data-expmk="${r.r}" role="checkbox" aria-checked="${expOn}" aria-label="Označiť na export" title="Označiť na export"><span class="lbl">Export</span><span class="dot">✓</span></span>
+    ${dBoth ? `<span class="expDone" data-expreset="${r.r}" title="Exportované – klepnutím vrátiť stav pred exportom">Exportované</span>` : `<span class="expMk ${expOn ? 'on' : ''}" data-expmk="${r.r}" role="checkbox" aria-checked="${expOn}" aria-label="Označiť na export" title="Označiť na export">${xdTxt ? `<span class="xd">${xdTxt}</span>` : ''}<span class="lbl">Export</span><span class="dot">✓</span></span>`}
 </div>`;
 }
 const isUrg = r => ['ano', '1', 'true', 'x', 'urgent', 'urgentne'].includes(norm(V(r, 'urgent')));
@@ -2205,20 +2231,20 @@ function timeSelect(a, val) {
 function contactDetail(r) {
   setStateW();
   const em = V(r, 'email'), web = String(V(r, 'web') || '').trim(), webHref = web ? (/^https?:\/\//i.test(web) ? web : 'https://' + web) : '';
-  const tabs = [['hovor', 'Aktivita'], ['firma', 'Firma'], ['om', 'OM'], ['udaje', 'Všetky údaje']];
+  const tabs = [['hovor', 'Aktivita'], ['firma', 'Firma'], ['om', 'OM'], ['udaje', 'Všetko']];
   return `<div class="dfix"><div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
     <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div>${nextHeadHtml(r)}</div>${grpChips(r)}${savemsgHtml()}<div class="stCol">${stSelect(V(r, 'stav'))}${saveGrpHtml()}</div></div>
     ${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
 </div>
-    <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''} ${S.dirty && S.dTabs.has(k) ? 'ed' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div class="anbox"><div id="actSlot"></div></div></div></div>
+    <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''} ${S.dirty && S.dTabs.has(k) ? 'ed' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div id="firmTop">${firmTopInner(r)}</div><div class="anbox"><div id="actSlot"></div></div></div>${firmBar(r)}</div>
     <div id="tabBody">${tabBody(r)}</div>`;
 }
 function tabBody(r) {
+  syncFirmTop(r);
   const h = tabBodyInner(r);
   const dup = (S.tab === 'firma' || S.tab === 'udaje') ? '<div id="editDup"></div>' : '';
-  const top = S.tab === 'firma' ? firmBar(r) : '';
-  return (S.tab === 'om') ? h : top + dup + h + `<div class="delWrap">${delBtnHtml()}</div>`;
+  return (S.tab === 'om') ? h : dup + h + `<div class="delWrap">${delBtnHtml()}</div>`;
 }
 function tabBodyInner(r) {
   if (S.tab === 'hovor') return tabHovor(r);
@@ -2239,12 +2265,14 @@ function tabHovor(r) {
     </div>
     ${actBlock}</div>` : (actBlock ? `<div class="dtRow dtRowSingle">${actBlock}</div>` : '');
   return `<form id="fCall" class="win pad" autocomplete="off">
+    <div class="cg grey">
     ${dtBlock}
     ${persBlock(r)}
     ${S.m.dalsi ? `<div class="nxIn"><label>Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label><div class="nxInUrg">${urgBtnHtml(r)}</div></div>
       <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qnx="${esc(x)}">${x}</button>`).join('')}</div>` : ''}
     <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder=" "></textarea></label>
     <button type="button" class="btn-sm" data-act="savenote">Vložiť poznámku</button>
+    </div>
     <div id="notesBox">${notesHtml(r)}</div>
     </form>`;
 }
@@ -2277,7 +2305,7 @@ function tabAll(r) {
   const el = grp(['el_dod', 'el_druh', 'el_sp', 'el_cs', 'el_kon']), pl = grp(['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']);
   const lab = h => `<label>${esc(h.replace(/^__new__/, ''))}${fieldInput(h, r.v[h] ?? '')}</label>`;
   const box = (cls, title, list) => list.length ? `<div class="cg ${cls}"><div class="gtitle">${title}</div>${list.map(lab).join('')}</div>` : '';
-  return `<form id="fAll" class="win pad" autocomplete="off">${orderedHeaders().filter(h => !el.includes(h) && !pl.includes(h)).map(lab).join('')}${box('el', '<span class="gi">⚡</span>Elektrina', el)}${box('gas', '<span class="gi">🔥</span>Plyn', pl)}
+  return `<form id="fAll" class="win pad" autocomplete="off">${box('grey', 'Ostatné', orderedHeaders().filter(h => !el.includes(h) && !pl.includes(h)))}${box('el', '<span class="gi">⚡</span>Elektrina', el)}${box('gas', '<span class="gi">🔥</span>Plyn', pl)}
     </form>`;
 }
 
@@ -2743,10 +2771,19 @@ function grpChips(r) {
   const g = groupOf(r); if (g.length < 2) return '';
   return `<div class="grpBar grpChips">` + g.map(x => `<button type="button" class="chip sm gsel ${x === r ? 'gon' : ''}" data-gsel="${x.r}">${esc(V(x, 'firma') || '(bez firmy)')}</button>`).join('') + `</div>`;
 }
+/* Firma: ovládacie prvky v riadku záložiek (počítač) */
+function firmTopInner(r) {
+  const unl = groupOf(r).length > 1 ? `<button type="button" class="chip sm" data-act="unlink">Odpojiť</button>` : '';
+  return `${unl}<button type="button" class="chip sm" data-act="linkopen">🔗 Spojiť s firmou</button>${anBadge(r)}<button type="button" class="btn-an" data-act="loadan">Načítať analýzu</button>`;
+}
+function syncFirmTop(r) {
+  const ft = document.getElementById('firmTop'); if (!ft) return;
+  r = r || rowBy(S.sel); ft.innerHTML = r ? firmTopInner(r) : '';
+}
 /* Záložka Firma – hore vľavo Odpojiť / Spojiť, vpravo Načítať analýzu */
 function firmBar(r) {
   const g = groupOf(r), cands = linkCands(r);
-  const unl = g.length > 1 ? `<button type="button" class="chip sm" data-act="unlink">Odpojiť túto firmu</button>` : '';
+  const unl = g.length > 1 ? `<button type="button" class="chip sm" data-act="unlink">Odpojiť</button>` : '';
   const sug = cands.map(c => `<div class="lnkSug"><span>Konateľ <b>${esc(c.d)}</b> je aj pri <b>${esc(V(c.o, 'firma'))}</b>.</span><button type="button" class="btn-sm" data-act="linkyes" data-cand="${c.o.r}">Spojiť</button><button type="button" class="chip sm" data-act="linkno" data-cand="${c.o.r}">Nie</button></div>`).join('');
   return `<div class="firmBar"><div class="fbL">${unl}<button type="button" class="chip sm" data-act="linkopen">🔗 Spojiť s firmou</button></div><div class="fbR">${anBadge(r)}<button type="button" class="btn-an" data-act="loadan">Načítať analýzu</button><input type="file" id="anFile" accept=".xlsx,.xls" style="display:none"></div></div>${sug}<div id="linkBox" style="display:none"><input type="text" id="linkQ" placeholder="Hľadať firmu, IČO alebo konateľa…" autocomplete="off"><div id="linkRes"></div></div>`;
 }
@@ -3108,7 +3145,7 @@ function unmappedHtml(hs) {
     <button class="cta ghost" type="button" data-act="addcols">Vytvoriť tieto stĺpce v Sheete</button></div>`;
   if (off.length) html += `<div class="miss"><b>Vypnuté (nepoužité) údaje (${off.length}):</b><ul>${off.map(f => `<li>${esc(f.label)}</li>`).join('')}</ul></div>`;
   if (noField.length) html += `<div class="miss"><b>Stĺpce v Sheete, ktoré CRM nepoužíva ako samostatné pole (${noField.length}):</b><ul>${noField.map(h => `<li>${esc(h)}</li>`).join('')}</ul>
-    Vidno ich len v záložke „Všetky údaje“.</div>`;
+    Vidno ich len v záložke „Všetko“.</div>`;
   return html + '</section>';
 }
 function openSettings() {
@@ -3345,9 +3382,9 @@ function tplDod(x) {
   const r = tplDodMap(x, EXP_SUP); if (!r && String(x || '').trim()) EXP_DODMISS++; return r;
 }
 function dodSelect(attrs, val) {
-  const cur = String(val || '').trim(), m = matchDod(cur);
-  const opts = ['', ...DODAVATELIA, ...(cur && !m ? [cur] : [])];
-  return `<select ${attrs}>${opts.map(x => `<option value="${esc(x)}" ${x === (m || cur) ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
+  const cur = DODAVATELIA.includes(String(val || '').trim()) ? String(val).trim() : '';   /* len presný názov zo zoznamu */
+  const opts = ['', ...DODAVATELIA];
+  return `<select ${attrs}>${opts.map(x => `<option value="${esc(x)}" ${x === cur ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
 }
 /* Export CR = rovnaký generátor, ale podľa šablóny CR (základ): Klienti + Prípady */
 async function exportCR(onlySel) { return exportTpl(onlySel, 'cr'); }
@@ -3359,7 +3396,7 @@ async function exportTpl(onlySel, kind) {
   const tx = x => String(x ?? '').trim(), rows = onlySel ? expSelRows() : exportRows();
   const K = [], C = [], O = [], P = [], A = [], seen = new Set(), byFirma = new Map(), cSeen = new Set();
   const omAll = (S.data.om && S.data.om.rows) || [];
-  let skip = 0, omSkip = 0, pc = 0, crGuess = 0;
+  let skip = 0, omSkip = 0, pc = 0, crGuess = 0; const doneIds = [];
   const T = tplActive(kind), RU = tplRules(T); EXP_SUP = RU.sup;
   const nextDay = v => { const pd = tplParseDate(v); if (!pd) return ''; const dt = new Date(pd.d + 'T00:00:00'); dt.setDate(dt.getDate() + 1); return iso(dt); };
   const DEC = tplDecimal(T), DFMT = tplDateFmt(T);
@@ -3371,6 +3408,7 @@ async function exportTpl(onlySel, kind) {
   for (const r of rows) {
     const ico = tx(V(r, 'ico')).replace(/\s+/g, ''), firma = tx(V(r, 'firma'));
     if (!icoRe.test(ico) || !firma) { skip++; continue; }
+    doneIds.push(r.r);
     if (!seen.has(ico)) {
       seen.add(ico); byFirma.set(norm(firma), ico);
       K.push([ico, tx(V(r, 'obch')) || firma, norm(V(r, 'stav')) === 'klient' ? 'klient' : 'prospekt', tx(V(r, 'dic')), tx(V(r, 'icdph')), '', tx(V(r, 'register')), tx(V(r, 'ulica')), tx(V(r, 'mesto')), tx(V(r, 'psc')), '', '', '', '', '', '']);
@@ -3378,7 +3416,7 @@ async function exportTpl(onlySel, kind) {
       for (const o of mine) {
         if (!kom(o) || !tx(o.eic)) { omSkip++; continue; }
         const sp = num(o.spotreba);
-        O.push([ico, kom(o), tx(o.eic), tx(o.adresa), isFinite(sp) && tx(o.spotreba) !== '' ? sp : '', tx(o.sadzba), tx(o.istic), '', '', '', '', '', tplDod(o.dodavatel), isoDate(o.koniec) || tx(o.koniec) || isoDate(V(r, kom(o) === 'EE' ? 'el_kon' : 'pl_kon')) || tx(V(r, kom(o) === 'EE' ? 'el_kon' : 'pl_kon')), '']);
+        O.push([ico, kom(o), tx(o.eic), tx(o.adresa), isFinite(sp) && tx(o.spotreba) !== '' ? sp : '', tx(o.sadzba), tx(o.istic), '', '', '', '', '', tplDod(o.dodavatel) || tplDod(V(r, kom(o) === 'EE' ? 'el_dod' : 'pl_dod')), isoDate(o.koniec) || tx(o.koniec) || isoDate(V(r, kom(o) === 'EE' ? 'el_kon' : 'pl_kon')) || tx(V(r, kom(o) === 'EE' ? 'el_kon' : 'pl_kon')), '']);
       }
       for (const [kc, k] of [['EE', 'el'], ['PL', 'pl']]) {
         const g = s => tx(V(r, k + '_' + s));
@@ -3398,7 +3436,7 @@ async function exportTpl(onlySel, kind) {
         const cs = num(g('cs')), csOk = g('cs') && isFinite(cs), isSpot = dr.includes('spot') && !dr.includes('fix');
         P.push(['P' + (++pc), ico, kc, '', dr.includes('fix') ? 'FIX' : dr.includes('spot') ? 'SPOT' : '',
           mine.filter(o => kom(o) === kc && tx(o.eic)).map(o => tx(o.eic)).join('; '),
-          g('sp') && isFinite(sp) ? sp : '', csOk && !isSpot && !oldCol ? cs : '', csOk && isSpot && !oldCol ? cs : '', kind === 'cr' ? nextDay(g('kon')) : '', kind === 'cr' ? '' : (isoDate(g('kon')) || g('kon')), tplDod(g('dod')), '', csOk ? cs : '']);
+          g('sp') && isFinite(sp) ? sp : '', csOk && !isSpot && !oldCol ? cs : '', csOk && isSpot && !oldCol ? cs : '', (() => { const t0 = iso(new Date()), ds = mine.filter(o => kom(o) === kc).map(o => nextDay(o.koniec)).filter(Boolean).sort(); return ds.find(d => d > t0) || ds[0] || nextDay(g('kon')); })(), kind === 'cr' ? '' : (isoDate(g('kon')) || g('kon')), tplDod(g('dod')), '', csOk ? cs : '']);
       }
     }
     const os = tx(V(r, 'osoba')), kn = tx(konatelShown(r));
@@ -3489,6 +3527,10 @@ async function exportTpl(onlySel, kind) {
     const ws = XLSX.utils.aoa_to_sheet([hs, ...out]); ws['!cols'] = hs.map(h => ({wch: Math.max(14, h.length + 2)})); XLSX.utils.book_append_sheet(wb, ws, nm);
   }
   XLSX.writeFile(wb, (kind === 'cr' ? 'import-cr-' : 'import-meitn-crm-') + nowS.slice(0, 10) + '.xlsx');
+  /* zápis do kontaktov: Export CR ✓ / Export DÁTA ✓; ak sú hotové oba, kruh zmizne a ostane „Exportované“ */
+  { const set = S.expDone[kind === 'cr' ? 'cr' : 'full'];
+    doneIds.forEach(id => { set.add(id); /* po Exporte CR aj DÁTA sa kruh odznačí */ S.expSel.delete(id); });
+    saveExpDone(); saveExpSel(); renderListBody(); }
   toast(`${kind === 'cr' ? 'Export CR' : 'Export'} hotový: ${cnt.klienti || 0} klientov, ${cnt.kontakty || 0} kontaktov, ${cnt['odberne miesta'] || 0} OM, ${cnt.pripady || 0} prípadov, ${cnt.aktivity || 0} aktivít` + (skip ? ` · preskočené bez IČO: ${skip}` : '') + (omSkip ? ` · OM bez EIC/komodity: ${omSkip}` : '') + (reqSkip ? ` · riadky bez povinného poľa: ${reqSkip}` : '') + (crGuess ? ` · produkt neznámy, nastavené FIX: ${crGuess}` : '') + (EXP_DODMISS ? ` · dodávateľ mimo zoznamu (vynechaný): ${EXP_DODMISS}` : '') + (enumBad ? ` · hodnoty nesedia s Návodom (nechané prázdne): ${enumBad}` : '') + ` · desatinný oddeľovač: ${DEC === ',' ? 'čiarka' : 'bodka'}`);
 }
 
@@ -3511,6 +3553,7 @@ document.addEventListener('click', e => {
   const t = e.target;
   if (t.closest('a.qcall') || t.closest('a.call') || t.closest('a.lnk')) return;
   let el;
+  if ((el = t.closest('[data-expreset]'))) { e.stopPropagation(); const r0 = rowBy(Number(el.dataset.expreset)); if (!r0 || !confirm('Vrátiť stav pred exportom?\n\nOdstráni sa označenie „Exportované“ aj „Export CR ✓“ a kontakt bude možné znova označiť na export.')) return; if (r0) groupOf(r0).forEach(x => { S.expDone.cr.delete(x.r); S.expDone.full.delete(x.r); }); saveExpDone(); renderListBody(); return; }
   if ((el = t.closest('[data-expmk]'))) { e.stopPropagation(); toggleExpMark(Number(el.dataset.expmk), el); return; }
   if ((el = t.closest('[data-urgent]'))) { toggleUrgent(); return; }
   if ((el = t.closest('[data-themeset]'))) { setTheme(el.dataset.themeset); return; }
@@ -3709,7 +3752,7 @@ function omEdit(rows) {
       <label>EIC/POD<input type="text" ${a('eic')} value="${esc(omVal(o.eic))}"></label>
       <label>Adresa OM<input type="text" ${a('adresa')} value="${esc(omVal(o.adresa))}"></label>
       <label>Spotreba (MWh/rok)<input type="text" inputmode="decimal" ${a('spotreba')} value="${esc(sp)}"></label>
-      <label>Dodávateľ${dodSelect(a('dodavatel'), omVal(o.dodavatel) || omFirmDod(o))}</label>
+      <label>Dodávateľ${dodSelect(a('dodavatel'), DODAVATELIA.includes(omVal(o.dodavatel)) ? omVal(o.dodavatel) : omFirmDod(o))}</label>
       <label>Distribučná sadzba<input type="text" ${a('sadzba')} value="${esc(omVal(o.sadzba))}"></label>
       ${/^plyn/.test(norm(o.komodita)) ? '' : `<label>Hlavný istič<input type="text" ${a('istic')} value="${esc(omVal(o.istic))}"></label>`}
       <label>Koniec viazanosti${koInp}</label></div>`;
@@ -3730,6 +3773,40 @@ function omHtml(r) {
   return `<form id="fOm" class="win pad" autocomplete="off">` + grp('el', 'Elektrina', '⚡', 'el') + grp('pl', 'Plyn', '🔥', 'gas') +
     (other.length ? `<div class="cg basic"><div class="gtitle">Ostatné</div>${omEdit(other)}</div>` : '') + `</form>`;
 }
+
+/* ---------- súhrn OM → firma (spotreba = súčet, dodávateľ, najbližší koniec viazanosti) ---------- */
+const omKindOf = o => /^plyn/.test(norm(o.komodita)) ? 'pl' : 'el';
+function omFirmVals(r, pending) {
+  /* pending = [{row, o:{...zmeny}}] – zmeny, ktoré sa ešte nezapísali do S.data.om */
+  const vals = {}, rows = omRowsFor(r) || [];
+  const pm = new Map((pending || []).map(it => [it.row, it.o || {}]));
+  for (const g of ['el', 'pl']) {
+    const L = rows.filter(o => omKindOf(o) === g).map(o => ({...o, ...(pm.get(o.r) || {})}));
+    if (!L.length) continue;
+    const put = (k, v) => { const h = fieldHeader(k); if (h) vals[h] = v; };
+    /* spotreba = súčet všetkých OM danej komodity */
+    const tot = L.reduce((q, o) => q + (num(o.spotreba) || 0), 0);
+    if (L.some(o => omVal(o.spotreba) !== '')) put(g + '_sp', r3(tot));
+    /* dodávateľ: zmenený v tomto uložení má prednosť, inak najčastejší z OM */
+    const chg = (pending || []).filter(it => it.o && 'dodavatel' in it.o && omKindOf(it) === g).map(it => matchDod(it.o.dodavatel)).filter(Boolean);
+    const dod = chg.length ? chg[chg.length - 1] : pickDod(L.map(o => o.dodavatel));
+    if (dod) put(g + '_dod', dod);
+    /* koniec viazanosti = najskorší dátum z OM; ak žiadny dátum a niektoré sú neurčité → „neurčitá“ */
+    const ds = L.map(o => isoDate(omVal(o.koniec))).filter(Boolean).sort();
+    if (ds.length) put(g + '_kon', {t: 'd', v: ds[0]});
+    else if (L.some(o => /neurcit/.test(norm(o.koniec)))) put(g + '_kon', 'neurčitá');
+  }
+  /* len skutočné zmeny oproti firme */
+  const out = {};
+  for (const h in vals) {
+    const nv = specVal(vals[h]), ov = r.v[h];
+    const same = /kon/i.test(h) && isoDate(nv) ? isoDate(ov) === isoDate(nv)
+      : isFinite(num(nv)) && isFinite(num(ov)) && String(nv) !== '' && String(ov ?? '') !== '' ? r3(num(nv)) === r3(num(ov))
+      : String(ov ?? '').trim() === String(nv ?? '').trim();
+    if (!same) out[h] = vals[h];
+  }
+  return out;
+}
 function saveOmTab(form) {
   const r = rowBy(S.sel); if (!r) return;
   const list = [];
@@ -3742,7 +3819,10 @@ function saveOmTab(form) {
     if (Object.keys(ch).length) list.push({row: o.r, cislo: o.cislo, komodita: o.komodita, o: ch});
   });
   if (!list.length) { saveMsg('Nič na uloženie'); return; }
-  commitBg(r, {vals: {}, om: list, act: actFor(r, 'OM', '', null), stay: true, msg: 'OM uložené ✔'});
+  /* zmeny z OM sa hneď prepíšu aj do firmy */
+  const pend = list.map(it => ({row: it.row, o: it.o, komodita: it.komodita}));
+  const vals = omFirmVals(r, pend);
+  commitBg(r, {vals, om: list, act: actFor(r, 'OM', '', Object.keys(vals).length ? vals : null), stay: true, msg: 'OM uložené ✔' + (Object.keys(vals).length ? ' · firma aktualizovaná' : '')});
 }
 
 /* ---------- načítanie analýzy z xlsx ---------- */
@@ -3867,7 +3947,7 @@ function parseAnalysis(wb) {
     let sp = sum ? nn(sum[cS]) : NaN;
     if (!(sp > 0)) sp = data.reduce((a, r) => a + (nn(r[cS]) || 0), 0);
     let price = sum ? nn(sum[cC]) : NaN;
-    if (kind + '_sp' in hdr) sp = hdr[kind + '_sp'];
+    { const omSp = data.reduce((q, r) => q + (nn(r[cS]) || 0), 0); if (omSp > 0) sp = r3(omSp); else if (kind + '_sp' in hdr) sp = hdr[kind + '_sp']; }   /* sumár do firmy = súčet OM */
     if (kind + '_cs' in hdr) price = hdr[kind + '_cs'];
     if (!(price > 0) && !((kind + '_cs') in hdr)) {
       const ok = data.filter(r => nn(r[cS]) > 0 && nn(r[cC]) > 0), fix = ok.filter(r => /fix/.test(norm(r[cK])));
@@ -3920,6 +4000,37 @@ async function importAnalysis(file) {
       if (k === 'pl_druh' && !S.m.pl_druh) return;
       const h = fieldHeader(k); if (h) vals[h] = v;
     };
+    /* 1) OM: dodávateľ vždy z firmy (presný názov zo zoznamu), OM sa zapíšu do záložky OM vrátane spotrieb */
+    for (const g of ['el', 'pl']) {
+      const fd = matchDod((A[g] && A[g].dod) || V(r, g + '_dod')), kn = g === 'el' ? 'Elektrina' : 'Plyn';
+      A.om.forEach(o => { if (o.komodita === kn) o.dodavatel = fd; });
+    }
+    const omOk = await saveOm(r, A.om, A.cust);
+    /* 2) OM, ktoré už existovali: prepíš spotrebu a dodávateľa, doplň prázdne polia; cudzí názov dodávateľa vymaž a daj ten z firmy */
+    const omList = [], cur = (omOk && omRowsFor(r)) || [];
+    const kindOf = o => /^plyn/.test(norm(o.komodita)) ? 'pl' : 'el';
+    cur.forEach(o => {
+      const g = kindOf(o), fd = matchDod((A[g] && A[g].dod) || V(r, g + '_dod')), ch = {};
+      const an = A.om.find(z => norm(z.komodita) === norm(o.komodita) && ((z.eic && o.eic) ? norm(z.eic) === norm(o.eic) : String(z.cislo) === String(o.cislo)));
+      if (an && an.spotreba !== '' && omCmp('spotreba', o.spotreba) !== omCmp('spotreba', an.spotreba)) ch.spotreba = an.spotreba;
+      if ((A[g] || DODAVATELIA.includes(fd)) && String(o.dodavatel || '').trim() !== fd) ch.dodavatel = fd;
+      if (an) ['sadzba', 'istic', 'koniec', 'adresa', 'eic'].forEach(f => {
+        const nv = String(an[f] ?? '').trim(); if (!nv) return;
+        const same = f === 'koniec' ? (isoDate(o[f]) || String(o[f] ?? '').trim()) === (isoDate(nv) || nv) : String(o[f] ?? '').trim() === nv;
+        if (!same) ch[f] = an[f];   /* prepis všetkého, čo je v analýze (aj už vyplnené) */
+      });
+      if (Object.keys(ch).length) omList.push({row: o.r, cislo: o.cislo, komodita: o.komodita, o: ch});
+    });
+    /* 3) sumár spotreby do firmy = súčet spotrieb OM danej komodity (po zápise) */
+    for (const g of ['el', 'pl']) {
+      if (!A[g]) continue;
+      const rows = cur.filter(o => kindOf(o) === g);
+      if (!rows.length) continue;
+      const tot = rows.reduce((q, o) => { const ch = (omList.find(z => z.row === o.r) || {o: {}}).o; const v = 'spotreba' in ch ? ch.spotreba : o.spotreba; return q + (num(v) || 0); }, 0);
+      if (tot > 0) A[g].sp = r3(tot);
+      const ds = rows.map(o => { const ch = (omList.find(z => z.row === o.r) || {o: {}}).o; return isoDate(String('koniec' in ch ? ch.koniec : (o.koniec ?? ''))); }).filter(Boolean).sort();
+      if (ds.length) A[g].kon = ds[0];
+    }
     put('obch', A.cust.odb); put('ico', A.cust.ico, true); put('ulica', A.cust.ulica, true); put('psc', A.cust.psc, true); put('mesto', A.cust.mesto, true);
     for (const g of ['el', 'pl']) {
       const x = A[g]; if (!x) continue;
@@ -3928,14 +4039,12 @@ async function importAnalysis(file) {
     }
     put('an_ok', {t: 'd', v: todayISO()});
     const real = await materializeNewCols(vals);
-    // dodávateľ OM sa vždy berie z firmy (to, čo sa práve zapísalo do firmy, inak čo tam už je)
-    for (const g of ['el', 'pl']) {
-      const fd = matchDod((A[g] && A[g].dod) || V(r, g + '_dod')), kn = g === 'el' ? 'Elektrina' : 'Plyn';
-      A.om.forEach(o => { if (o.komodita === kn) o.dodavatel = fd; });
-    }
-    const omOk = await saveOm(r, A.om, A.cust);
-    await api('update', {sheet: 'contacts', row: r.r, values: real, activity: actFor(r, 'Analýza načítaná', '', real),
+    const jU = await api('update', {sheet: 'contacts', row: r.r, values: real, om: omList, activity: actFor(r, 'Analýza načítaná', '', real),
       check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
+    if (omList.length) {
+      if (jU && !jU.lost && jU.om !== omList.length) toast('Server je na starej verzii API – opravy OM sa neuložili. Nasaď novú verziu CRM_API.gs.', true);
+      else omList.forEach(it => { const x = omRowByNo(it.row); if (x) Object.assign(x, it.o); });
+    }
     setUndo(r, real);
     const local = {}; for (const h in real) local[h] = typeof real[h] === 'number' ? fmtDec(real[h]) : real[h];
     applyLocal(r, local); pushActivity(actFor(r, 'Analýza načítaná', '', real)); persist();
