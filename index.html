@@ -49,7 +49,8 @@ h1,h2,h3{margin:0}
 @media(min-width:900px){.lhead{margin:0 -1.1rem;padding:.9rem 1.1rem .5rem;background:var(--panel2);border-radius:20px 20px 0 0}}
 .ltitle{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem}
 .ltitle h1{font-size:1.35rem;font-weight:750}
-.cnt{color:var(--muted);font-size:.85rem}
+.cnt{color:#8ef0a8;font-size:.85rem}
+html[data-theme="light"] .cnt{color:#1e7a3c}
 .sp{flex:1}
 .ib{width:2.5rem;height:2.5rem;border-radius:14px;border:1px solid var(--line);background:#141821;color:var(--text);
   display:grid;place-items:center;cursor:pointer}
@@ -1276,9 +1277,14 @@ html[data-theme="light"] body .setSec>.gtitle{border-bottom-color:#b3bfdc}
 /* zámok editácie počas načítavania */
 #lockBar{display:none;position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:9999;background:#f0a84f;color:#1a1a1a;padding:.5rem 1rem;border-radius:999px;font-size:.9rem;box-shadow:0 4px 14px rgba(0,0,0,.35);pointer-events:none;white-space:nowrap}
 body.locked #lockBar{display:block}
-/* kontakt po exporte alebo so stavom Klient: len na prezeranie, upraviteľná je iba záložka Aktivita */
-#detailPane.ro :is(#tabBody,.firmBar,#firmTop,#linkBox) :is(input,textarea,select,button):not([data-tab]):not([data-open]):not([data-gotoact]){pointer-events:none!important;opacity:.6}
-#detailPane.ro #tabBody .delSw{display:none}
+/* kontakt po exporte alebo so stavom Klient: len na prezeranie; v Aktivite sa dá upraviť len aktivita, Čo nasleduje, poznámky, dátum a čas; spájanie firiem ostáva funkčné */
+#detailPane.ro-all :is(#tabBody,.firmBar,#firmTop) :is(input,textarea,select,button):not([data-tab]):not([data-open]):not([data-gotoact]):not([data-act="linkopen"]):not([data-act="unlink"]):not([data-act="linkyes"]):not([data-act="linkno"]):not([data-linkto]):not(#linkQ){pointer-events:none!important;opacity:.6}
+#detailPane.ro-all #tabBody .delSw{display:none}
+/* nesprávny vstup pri ukladaní */
+.bad,input.bad,select.bad,textarea.bad{outline:2px solid #e5484d!important;outline-offset:-1px;border-color:#e5484d!important;box-shadow:0 0 0 3px rgba(229,72,77,.25)!important;border-radius:6px}
+.tab.bad{color:#e5484d!important;box-shadow:inset 0 -2px 0 #e5484d}
+#detailPane.ro :is([data-act="loadan"],.btn-an){pointer-events:none!important;opacity:.6}
+#detailPane.ro #fCall :is(.omBox,#osList) :is(input,textarea,select,button){pointer-events:none!important;opacity:.6}
 body.locked #detailPane :is(input,textarea,select,button,.urgSw,.delSw):not(a):not([data-tab]):not([data-act="back"]):not([data-gsel]):not([data-open]){pointer-events:none!important;opacity:.55}
 
 /* vybraný kontakt – silnejší glow pozdĺž bočných pásikov + tieň z jasného (svietiaceho) okraja do tmavej vo vnútri karty */
@@ -1400,7 +1406,9 @@ const CRM_URL = 'https://script.google.com/macros/s/AKfycbxzB8ANPyrB0DblCBzKpz4F
 const LS = localStorage;
 const $ = (s, e = document) => e.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const _norm0 = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const _normC = new Map();   /* rýchlosť: opakované krátke texty (firma, stav, aktivita…) sa nenormalizujú znova */
+const norm = s => { s = String(s || ''); if (s.length > 120) return _norm0(s); let v = _normC.get(s); if (v === undefined) { if (_normC.size > 30000) _normC.clear(); v = _norm0(s); _normC.set(s, v); } return v; };
 const pad = n => String(n).padStart(2, '0');
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const todayISO = () => iso(new Date());
@@ -1499,6 +1507,14 @@ if (location.hash.startsWith('#cfg=')) {
   history.replaceState(null, '', location.pathname + location.search);
 }
 try { const c = LS.getItem('crm.cache'); if (c) S.data = JSON.parse(c); } catch (e) {}
+/* farby hodnôt Stav / Aktivita: pamätá si ich CRM (v prehliadači), zo Sheetu sa už nečítajú.
+   Ak ešte nie sú uložené, prevezmú sa raz tie, ktoré CRM doteraz zobrazovalo (z pamäte posledného načítania). */
+S.colors = (() => {
+  try { const c = JSON.parse(LS.getItem('crm.colors') || 'null'); if (c && Object.keys(c).length) return c; } catch (e) {}
+  const c = S.data && S.data.contacts && S.data.contacts.colors;
+  if (c && Object.keys(c).length) { try { LS.setItem('crm.colors', JSON.stringify(c)); } catch (e) {} return c; }
+  return {};
+})();
 
 /* polia hlavnej tabuľky – poradie je dôležité (prvé sa priraďujú) */
 const FIELDS = [
@@ -1641,7 +1657,7 @@ const textOn = bg => { const m = /^#?([0-9a-f]{6})$/i.exec(bg || ''); if (!m) re
 function sheetCols() {
   const d = S.data; if (!d) return {};
   if (S._scD === d && S._scM === S.m) return S._sc;
-  const o = {}, c = (d.contacts && d.contacts.colors) || {};
+  const o = {}, c = S.colors || {};
   [S.m.stav, S.m.pozicia].forEach(h => { const m = h && c[h]; if (m) for (const v in m) o[norm(v)] = [m[v][0], m[v][1] || textOn(m[v][0])]; });
   S._scD = d; S._scM = S.m; S._sc = o; return o;
 }
@@ -1768,9 +1784,12 @@ function paintLock() {
 setInterval(paintLock, 400);
 let lockT = 0;
 function lockToast() { if (Date.now() - lockT > 1500) { lockT = Date.now(); toast('Načítavam údaje – úpravy sú zamknuté, počkaj chvíľu'); } }
-function persist() {
-  try { LS.setItem('crm.cache', JSON.stringify(S.data, (k, v) => k === '_s' ? undefined : v)); } catch (e) {}
-}
+/* ukladanie celých dát do pamäte prehliadača je pomalé (JSON.stringify) – pri sérii zmien sa spojí do jedného zápisu a nezdržuje obrazovku */
+let _persT = 0;
+function persistNow() { clearTimeout(_persT); _persT = 0; try { if (S.data) LS.setItem('crm.cache', JSON.stringify(S.data, (k, v) => (k === '_s' || k === '_k') ? undefined : v)); } catch (e) {} }
+function persist() { clearTimeout(_persT); _persT = setTimeout(persistNow, 700); }
+addEventListener('pagehide', () => { if (_persT) persistNow(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && _persT) persistNow(); });
 function setSync(st, msg) { S.sy = {st, msg}; paintSync(); }
 function paintSync() {
   const el = $('#sync'); if (!el) return; const sy = S.sy || {st: 'ok'};
@@ -1786,20 +1805,33 @@ async function manualLoad() {
   for (let i = 0; i < 20 && pendingSaves; i++) await new Promise(r => setTimeout(r, 500));
   if (pendingSaves) pendingSaves = 0;
   if (loading) { setSync('sync'); return; }
-  await load(false, false, true);
+  await load(false, false, true, true);
   if (S.sy && S.sy.st === 'ok') toast('Načítané ✔');
 }
-async function load(silent, quiet, top) {
+/* server neposiela prázdne bunky (menší prenos) – tu sa doplnia, aby kód mohol čítať r.v[hlavička] ako doteraz */
+function fillEmpty(d) {
+  for (const k of ['contacts', 'companies', 'activities']) {
+    const s = d && d[k]; if (!s || !s.rows || !s.headers) continue;
+    const hs = s.headers;
+    for (const r of s.rows) { const v = r.v || (r.v = {}); for (let i = 0; i < hs.length; i++) if (v[hs[i]] === undefined) v[hs[i]] = ''; }
+  }
+}
+async function load(silent, quiet, top, fresh) {
   if (loading) return;
   if (pendingSaves) { if (!silent) toast('Dokončujem ukladanie…'); return; }
   loading = true; loadT0 = Date.now(); lockLoad = !quiet; paintLock(); if (!quiet) setSync('sync');
   try {
-    const j = await api('read');
-    S.data = j; S.lastLoad = Date.now(); buildMap(); persist(); pruneExpSel();
+    const j = await api('read', fresh ? {fresh: true} : {});
+    fillEmpty(j);
+    if (j.contacts && j.contacts.colors) {
+      if (!Object.keys(S.colors || {}).length && Object.keys(j.contacts.colors).length) { S.colors = j.contacts.colors; S._scD = null; try { LS.setItem('crm.colors', JSON.stringify(S.colors)); } catch (e) {} }
+      delete j.contacts.colors; delete j.contacts.colorsInfo;
+    }
+    S.data = j; S.lastLoad = Date.now(); buildMap(); pruneExpSel();
     if (S.sel != null && S.view === 'contacts' && !rowBy(S.sel)) S.sel = null;
     if (quiet || S.dirty) { renderChips(); renderListBody(); }
     else if (!(top && openTop())) render();   /* top: po načítaní vždy vyber prvý kontakt v zozname */
-    setSync('ok'); checkLists(); sweepMeetings(); syncGroups();
+    setSync('ok'); setTimeout(persist, 0); checkLists(); sweepMeetings(); syncGroups();
   } catch (e) { if (quiet && S.data) setSync('ok'); else { setSync('err', 'Chyba: ' + e.message); if (!silent) toast(e.message, true); } }
   finally { loading = false; lockLoad = false; paintLock(); }
 }
@@ -1908,6 +1940,7 @@ function renderChips() {
     <button class="chip stbtn ${n ? 'sel' : ''}" data-stpop>${n ? 'Stav (' + n + ')' : 'Stav'} ▾</button>
     ${S.stOpen ? `<div class="stpop"><div class="stitem" data-stall><span class="ck">${n ? '' : '✓'}</span>Všetko</div><div class="stitem" data-stitem="__none"><span class="ck">${S.stSet.has('__none') ? '✓' : ''}</span>Žiadny</div>${statuses().map(x => `<div class="stitem" data-stitem="${esc(x)}"><span class="ck">${S.stSet.has(x) ? '✓' : ''}</span>${badge(x) || esc(x)}</div>`).join('')}</div>` : ''}`;
 }
+const SK_COLL = new Intl.Collator('sk');
 function filtered() {
   const q = norm(S.q), T = todayISO();
   const rows = S.data.contacts.rows.filter(r => {
@@ -1917,9 +1950,9 @@ function filtered() {
     if (q) { if (!(r._s || (r._s = norm(Object.values(r.v).join(' ')))).includes(q)) return false; }
     return true;
   });
-  const key = r => { const {d, t} = DT(r); return [d || '9999-99-99', t || '99:99']; };
-  rows.sort((a, b) => { const x = key(a), y = key(b);
-    return x[0].localeCompare(y[0]) || x[1].localeCompare(y[1]) || String(V(a, 'firma')).localeCompare(String(V(b, 'firma')), 'sk'); });
+  const keyed = rows.map(r => { const {d, t} = DT(r); return {r, d: d || '9999-99-99', t: t || '99:99', f: String(V(r, 'firma'))}; });
+  keyed.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0) || (a.t < b.t ? -1 : a.t > b.t ? 1 : 0) || SK_COLL.compare(a.f, b.f));
+  rows.splice(0, rows.length, ...keyed.map(k => k.r));
   /* firmy jedného konateľa sa v zozname ukážu ako jeden kontakt */
   const seenG = new Set();
   return rows.filter(r => { const g = gidOf(r); if (!g || groupOf(r).length < 2) return true; if (seenG.has(g)) return false; seenG.add(g); return true; });
@@ -2086,13 +2119,9 @@ function listMismatches(exact) {
   return out;
 }
 function colorsInfoText() {
-  const c = S.data && S.data.contacts && S.data.contacts.colors;
-  if (c === undefined) return 'Farby zo Sheetu: Apps Script ich ešte neposiela – nasaď novú verziu CRM_API.gs (Nasadiť → Spravovať nasadenia → ✎ → Nová verzia → Nasadiť) a načítaj dáta znova.';
+  const c = S.colors || {};
   const n = k => { const h = S.m[k]; return h && c[h] ? Object.keys(c[h]).length : 0; };
-  const a = n('pozicia'), st = n('stav');
-  const i = (S.data.contacts.colorsInfo) || {};
-  const dbg = i.error ? ' Chyba v skripte: ' + i.error : (i.rules !== undefined ? ' (pravidiel podmieneného formátovania v záložke: ' + i.rules + ', z toho prečítaných: ' + i.parsed + ')' : '');
-  return 'Farby zo Sheetu – Aktivita: ' + a + ', Stav: ' + st + '.' + dbg;
+  return 'Farby Stavu a Aktivity si pamätá CRM (zo Sheetu sa nečítajú) – Aktivita: ' + n('pozicia') + ', Stav: ' + n('stav') + '. Označenia kontaktov na export sa tiež ukladajú v CRM.';
 }
 function checkLists(force) {
   if (!S.data || !S.data.contacts || document.querySelector('#modal .ovl')) return;
@@ -2293,7 +2322,7 @@ function fieldInput(h, val) {
   if (k === 'cas') return timeSelect(a, isoTime(val));
   if (k === 'urgent') return `<input type="checkbox" ${a} ${['ano', '1', 'true', 'x', 'urgent', 'urgentne'].includes(norm(val)) ? 'checked' : ''}>`;
   if (k === 'firma') return `<input type="text" ${a} class="firmaInp" value="${esc(val)}">`;
-  if (k === 'web') return `<input type="url" ${a} value="${esc(val)}">`;
+  if (k === 'web') return `<input type="text" inputmode="url" autocapitalize="off" spellcheck="false" ${a} value="${esc(val)}">`;
   if (k === 'pozn') return `<textarea ${a} rows="6">${esc(val)}</textarea>`;
   const selA = k === 'pozicia' ? `class="pillSel" data-sty="act" style="${isActLbl(val) ? actStyle(val) : palStyle(val)}"` : k === 'stav' ? `class="pillSel" data-sty="st" style="${palStyle(val)}"` : '';
   if (k === 'pozicia' && !lists) { const L = ACTIVITIES.slice(); if (val && !L.includes(val)) L.unshift(val); return `<select ${a} ${selA}><option value=""></option>${L.map(x => `<option value="${esc(x)}" ${x === val ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`; }
@@ -2332,7 +2361,7 @@ function cInput(k, h, val) {
     return `<select ${a}>${opts.map(x => `<option value="${esc(x)}" ${(x === (m || cur)) ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`; }
   if (/_dod$/.test(k)) return dodSelect(a, val);
   if (k === 'pozn_an') return `<textarea ${a} rows="3">${esc(val)}</textarea>`;
-  if (k === 'web') return `<input type="url" ${a} value="${esc(val)}">`;
+  if (k === 'web') return `<input type="text" inputmode="url" autocapitalize="off" spellcheck="false" ${a} value="${esc(val)}">`;
   return `<input type="text" ${a} value="${esc(val)}">`;
 }
 /* polia, pre ktoré v Sheete ešte nie je stĺpec – priradí sa im dočasný názov a pri uložení sa stĺpec vytvorí na konci */
@@ -2635,6 +2664,7 @@ function omChanges(r, form) {
 }
 async function saveEverything() {
   const r = rowBy(S.sel); if (!r) return;
+  if (!detailFormsOk()) return;
   const forms = [];
   const held = (S._st && S._st.row === S.sel) ? S._st.tabs : {};
   Object.keys(held).forEach(k => { const f = held[k].querySelector('form'); if (f) forms.push(f); });   /* odložené záložky */
@@ -2908,6 +2938,11 @@ async function saveFirma(form) {
 function openNewContact() {
   let hs = orderedHeaders();
   if (S.m.firma && S.m.ico && hs.includes(S.m.firma) && hs.includes(S.m.ico)) { hs = hs.filter(h => h !== S.m.ico); hs.splice(hs.indexOf(S.m.firma) + 1, 0, S.m.ico); }
+  /* v novom kontakte hneď za IČO: DIČ, IČ DPH, Register, adresa, konateľ */
+  if (S.m.ico && hs.includes(S.m.ico)) {
+    const after = ['dic', 'icdph', 'register', 'ulica', 'konatel'].map(k => S.m[k]).filter((h, i, a) => h && hs.includes(h) && a.indexOf(h) === i);
+    if (after.length) { hs = hs.filter(h => !after.includes(h)); hs.splice(hs.indexOf(S.m.ico) + 1, 0, ...after); }
+  }
   S.newOpen = true; history.pushState({m: 1}, '');
   modal(`<div class="mhead"><h2>Nový kontakt</h2><button type="button" class="newBack" data-act="close">${ico('back')}Späť</button><button class="ib" data-act="close" aria-label="Zavrieť">${ico('x')}</button></div>
     <div id="dupBox"></div>
@@ -3516,19 +3551,79 @@ async function exportTpl(onlySel) {
 
 /* ---------- udalosti ---------- */
 /* zámok počas načítavania: v detaile povolené len prezeranie (záložky, späť, odkazy, prepnutie firmy) */
+/* ---------- kontrola vstupov pri ukladaní: nesprávne pole = červený rámček ---------- */
+const VAL_RULES = {
+  email: v => v.split(/[;,\s]+/).filter(Boolean).every(x => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(x)),
+  tel: v => /^[0-9+\s()\-\/.]+$/.test(v) && v.replace(/\D/g, '').length >= 7 && v.replace(/\D/g, '').length <= 15,
+  ico: v => /^\d{6,10}$/.test(v.replace(/\s+/g, '')),
+  dic: v => /^[A-Za-z0-9]{8,12}$/.test(v.replace(/\s+/g, '')),
+  icdph: v => /^[A-Za-z]{2}[A-Za-z0-9]{2,12}$/.test(v.replace(/\s+/g, '')),
+  num: v => isFinite(num(v)) && /^[-+]?\d[\d\s]*([.,]\d+)?$/.test(v.trim()),
+  eic: v => /^[A-Za-z0-9]{10,22}$/.test(v.replace(/\s+/g, '')),
+  /* web: musí sa dať otvoriť ako stránka – http(s):// je voliteľné (doplní sa https://), doména s bodkou a koncovkou, bez medzier */
+  web: v => {
+    let s = v.trim(); if (!s || /\s/.test(s)) return false;
+    if (!/^https?:\/\//i.test(s)) { if (/^[a-z][a-z0-9+.\-]*:/i.test(s) && !/^[^\/?#]+:\d+/.test(s)) return false; s = 'https://' + s; }
+    try { const u = new URL(s); return /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z0-9-]{2,}$/i.test(u.hostname) && !u.username && !u.password; } catch (e) { return false; }
+  }
+};
+const VAL_KEYS = {email: 'email', tel: 'tel', tel2: 'tel', web: 'web', ico: 'ico', dic: 'dic', icdph: 'icdph', el_sp: 'num', pl_sp: 'num', el_cs: 'num', pl_cs: 'num'};
+function badEl(el, list) { el.classList.add('bad'); list.push(el); }
+function checkForms(forms, r) {
+  document.querySelectorAll('.bad').forEach(e => e.classList.remove('bad'));
+  const bad = [], tabOf = {fCall: 'hovor', fAll: 'udaje', fComp: 'firma', fOm: 'om'};
+  const omRows = r ? (omRowsFor(r) || []) : [];
+  for (const f of forms) {
+    const before = bad.length;
+    new Set([...f.querySelectorAll('[data-h]'), ...(f.id ? document.querySelectorAll('[data-h][form="' + f.id + '"]') : [])]).forEach(el => {
+      if (el.type === 'checkbox' || el.dataset.t || el.tagName === 'SELECT') return;
+      const h = el.dataset.h, v = String(el.value || '').trim(); if (!v) return;
+      const k = Object.keys(S.m).find(x => S.m[x] === h), rule = VAL_RULES[VAL_KEYS[k]]; if (!rule) return;
+      if (r && v === String(r.v[h] ?? '').trim()) return;     /* nezmenená hodnota sa nekontroluje */
+      if (!rule(v)) badEl(el, bad);
+    });
+    f.querySelectorAll('[data-of]').forEach(el => {
+      const v = String(el.value || '').trim(); if (!v) return;
+      const rule = el.dataset.of === 'mail' ? VAL_RULES.email : el.dataset.of === 'tel' ? VAL_RULES.tel : null;
+      if (rule && !rule(v) && el.defaultValue !== el.value) badEl(el, bad);
+    });
+    f.querySelectorAll('[data-omf]').forEach(el => {
+      const fld = el.dataset.omf, v = String(el.value || '').trim(); if (!v) return;
+      const rule = fld === 'spotreba' ? VAL_RULES.num : fld === 'eic' ? VAL_RULES.eic : null; if (!rule) return;
+      const o = omRows.find(x => String(x.r) === String(el.dataset.omrow));
+      if (o && omCmp(fld, o[fld]) === omCmp(fld, v)) return;
+      if (!rule(v)) badEl(el, bad);
+    });
+    if (bad.length > before && tabOf[f.id]) { const tb = document.querySelector('.tab[data-tab="' + tabOf[f.id] + '"]'); if (tb) tb.classList.add('bad'); }
+  }
+  if (!bad.length) { document.querySelectorAll('.tab.bad').forEach(e => e.classList.remove('bad')); return true; }
+  toast('Oprav červene označené polia (' + bad.length + ') – nič sa neuložilo', true);
+  const first = bad.find(e => e.offsetParent) || bad[0]; try { first.scrollIntoView({block: 'center', behavior: 'smooth'}); if (first.offsetParent) first.focus({preventScroll: true}); } catch (e) {}
+  return false;
+}
+function detailFormsOk() {
+  const r = rowBy(S.sel), forms = [];
+  const held = (S._st && S._st.row === S.sel) ? S._st.tabs : {};
+  Object.keys(held).forEach(k => { const f = held[k].querySelector('form'); if (f) forms.push(f); });
+  const cur = document.querySelector('#tabBody form'); if (cur) forms.push(cur);
+  return checkForms(forms, r);
+}
+/* po úprave poľa sa červený rámček odstráni */
+['input', 'change'].forEach(ev => document.addEventListener(ev, e => { const t = e.target; if (t && t.classList && t.classList.contains('bad')) t.classList.remove('bad'); }, true));
+
 /* ---------- zámok po exporte / stave Klient ---------- */
 function roRow(r) {
   if (!r) return false;
   if (norm(V(r, 'stav')) === 'klient') return true;
   return groupOf(r).some(x => S.expDone.full.has(x.r) || S.expDone.cr.has(x.r));
 }
-const roActive = () => { const p = document.getElementById('detailPane'); return !!(p && S.sel != null && S.tab !== 'hovor' && roRow(rowBy(S.sel))); };
-function paintRo() { const p = document.getElementById('detailPane'); if (p) p.classList.toggle('ro', roActive()); }
+const roActive = () => { const p = document.getElementById('detailPane'); return !!(p && S.sel != null && roRow(rowBy(S.sel))); };
+function paintRo() { const p = document.getElementById('detailPane'); if (!p) return; const on = roActive(); p.classList.toggle('ro', on); p.classList.toggle('ro-all', on && S.tab !== 'hovor'); }
 setInterval(paintRo, 250);
 let roT = 0;
-function roToast() { if (Date.now() - roT > 1500) { roT = Date.now(); toast('Kontakt je exportovaný alebo má stav Klient – upraviť sa dá len záložka Aktivita'); } }
-const RO_OK = 'a, [data-tab], [data-act="back"], [data-gsel], [data-nav], [data-gotoact], [data-open], [data-stsel], .stsel, .saveGrp, [data-act="savetop"], [data-act="undo"], [data-act="loadan"], #anFile';
-const inRoArea = e => roActive() && e.target && e.target.closest && e.target.closest('#detailPane') && !e.target.closest('.dhead') && !e.target.closest(RO_OK);
+function roToast() { if (Date.now() - roT > 1500) { roT = Date.now(); toast('Kontakt je exportovaný alebo má stav Klient – v Aktivite sa dá upraviť len aktivita, Čo nasleduje, poznámky, dátum a čas'); } }
+const RO_OK = 'a, [data-tab], [data-act="back"], [data-gsel], [data-nav], [data-gotoact], [data-open], [data-stsel], .stsel, .saveGrp, [data-act="savetop"], [data-act="undo"], #anFile, [data-act="linkopen"], [data-act="unlink"], [data-act="linkyes"], [data-act="linkno"], [data-linkto], #linkBox, .lnkSug';
+const inRoArea = e => roActive() && e.target && e.target.closest && e.target.closest('#detailPane') && !e.target.closest('.dhead') && !e.target.closest(RO_OK) && (S.tab !== 'hovor' || !!e.target.closest('#fCall .omBox, #fCall #osList, [data-act="loadan"], #anFile'));
 document.addEventListener('click', e => {
   if (!inRoArea(e) || !e.target.closest('button, input, select, textarea, label, .chip, [data-act]')) return;
   e.stopPropagation(); e.preventDefault(); roToast();
@@ -3564,7 +3659,7 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-themetoggle]'))) { setTheme(themeNow() === 'light' ? 'dark' : 'light'); return; }
   if ((el = t.closest('[data-gsel]'))) { openSel(+el.dataset.gsel); return; }
   if ((el = t.closest('[data-linkto]'))) { const o = rowBy(+el.dataset.linkto); if (o) linkRows(rowBy(S.sel), [o]); return; }
-  if ((el = t.closest('[data-nav]'))) { if (el.dataset.nav === 'settings') { openSettings(); if (S.cfg.url) load(true).then(() => { if ($('#fSet') && !$('#sUrl').matches(':focus')) openSettings(); }); } return; }
+  if ((el = t.closest('[data-nav]'))) { if (el.dataset.nav === 'settings') { openSettings(); if (S.cfg.url) load(true, false, false, true).then(() => { if ($('#fSet') && !$('#sUrl').matches(':focus')) openSettings(); }); } return; }
   if ((el = t.closest('[data-tab]'))) { switchTab(el.dataset.tab, el); return; }
   if (S.stOpen && !t.closest('.chips')) { S.stOpen = false; renderChips(); }
   if ((el = t.closest('[data-stpop]'))) { S.stOpen = !S.stOpen; renderChips(); return; }
@@ -3640,7 +3735,7 @@ document.addEventListener('click', e => {
       api('addcols', {headers: names}).then(j => { toast('Pridané do Sheetu: ' + ((j.added || []).join(', ') || 'nič'));  closeModal(); for (const f of FIELDS) if (S.map[f.k] && !S.data.contacts.headers.includes(S.map[f.k])) delete S.map[f.k]; LS.setItem('crm.map', JSON.stringify(S.map)); load(); })
         .catch(e => { el.disabled = false; toast(e.message, true); });
     }
-    else if (a === 'reloadcols') { el.disabled = true; load().then(() => { if ($('#fSet')) openSettings(); }); }
+    else if (a === 'reloadcols') { el.disabled = true; load(false, false, false, true).then(() => { if ($('#fSet')) openSettings(); }); }
     else if (a === 'selectallcols') {
       S.map = {}; for (const f of FIELDS) if (S.auto[f.k]) S.map[f.k] = S.auto[f.k];
       LS.setItem('crm.map', JSON.stringify(S.map)); buildMap(); render(); openSettings();
@@ -3659,6 +3754,8 @@ document.addEventListener('click', e => {
 document.addEventListener('submit', e => {
   e.preventDefault(); const f = e.target;
   if (isLocked() && f.closest && f.closest('#detailPane')) { lockToast(); return; }
+  if (['fCall', 'fAll', 'fComp', 'fOm'].includes(f.id) && f.closest('#detailPane')) { if (!detailFormsOk()) return; }
+  else if (f.id === 'fNew') { if (!checkForms([f], null)) return; }
   if (['fCall', 'fAll', 'fComp', 'fOm'].includes(f.id) && f.closest('#detailPane') && stashTabs().length) { saveEverything(); return; }   /* sú neuložené aj iné záložky → ulož všetky */
   ({fCall: saveCall, fAll: saveAll, fComp: saveFirma, fNew: saveNew, fOm: saveOmTab}[f.id] || (() => {}))(f);
   if (f.id === 'fSet') {
@@ -3959,23 +4056,16 @@ function parseAnalysis(wb) {
         cislo: txt(r[0]), komodita: kind === 'el' ? 'Elektrina' : 'Plyn',
         eic: cE >= 0 ? txt(r[cE]) : '',
         adresa: cAdr.map(i => txt(r[i])).filter(Boolean).join(', '),
-        spotreba: nn(r[cS]) > 0 || nn(r[cS]) === 0 ? r3(nn(r[cS])) : '',
+        spotreba: nn(r[cS]) > 0 || nn(r[cS]) === 0 ? r1(nn(r[cS])) : '',   /* OM: spotreba na 1 desatinné miesto */
         dodavatel: matchDod(txt(r[cD])),
         sadzba: cSad >= 0 ? clean(r[cSad]) : '',
         istic: kind === 'el' && cIst >= 0 ? clean(r[cIst]) : '',
         koniec: kd || clean(kv)
       });
     });
-    let sp = sum ? nn(sum[cS]) : NaN;
-    if (!(sp > 0)) sp = data.reduce((a, r) => a + (nn(r[cS]) || 0), 0);
-    let price = sum ? nn(sum[cC]) : NaN;
-    { const omSp = data.reduce((q, r) => q + (nn(r[cS]) || 0), 0); if (omSp > 0) sp = r3(omSp); else if (kind + '_sp' in hdr) sp = hdr[kind + '_sp']; }   /* sumár do firmy = súčet OM */
-    if (kind + '_cs' in hdr) price = hdr[kind + '_cs'];
-    if (!(price > 0) && !((kind + '_cs') in hdr)) {
-      const ok = data.filter(r => nn(r[cS]) > 0 && nn(r[cC]) > 0), fix = ok.filter(r => /fix/.test(norm(r[cK])));
-      const base = fix.length ? fix : ok, w = base.reduce((a, r) => a + nn(r[cS]), 0);
-      price = w ? base.reduce((a, r) => a + nn(r[cS]) * nn(r[cC]), 0) / w : NaN;
-    }
+    /* spotreba a cena IBA z hlavičky analýzy (riadky nad prvou tabuľkou) – žiadny dopočet z OM ani zo súčtového riadka */
+    const sp = (kind + '_sp') in hdr ? hdr[kind + '_sp'] : NaN;
+    const price = (kind + '_cs') in hdr ? hdr[kind + '_cs'] : NaN;
     const dod = pickDod(data.map(r => txt(r[cD])));
     // dodávateľ OM = dodávateľ firmy (jeden zápis zo zoznamu pre celú komoditu)
     if (dod) out.om.slice(out.om.length - data.length).forEach(o => { o.dodavatel = dod; });
@@ -3989,6 +4079,8 @@ function parseAnalysis(wb) {
 }
 const r3 = x => Math.round(x * 1000) / 1000;
 const fmtDec = x => String(r3(x)).replace('.', ',');
+const r1 = x => Math.round(x * 10) / 10;
+const fmtDec1 = x => String(r1(x)).replace('.', ',');
 async function saveOm(r, rows, cust) {
   if (!rows || !rows.length) return true;
   cust = cust || {};
@@ -4034,7 +4126,7 @@ async function importAnalysis(file) {
     cur.forEach(o => {
       const g = kindOf(o), fd = matchDod((A[g] && A[g].dod) || V(r, g + '_dod')), ch = {};
       const an = A.om.find(z => norm(z.komodita) === norm(o.komodita) && ((z.eic && o.eic) ? norm(z.eic) === norm(o.eic) : String(z.cislo) === String(o.cislo)));
-      if (an && an.spotreba !== '' && omCmp('spotreba', o.spotreba) !== omCmp('spotreba', an.spotreba)) ch.spotreba = an.spotreba;
+      if (an && an.spotreba !== '' && (isFinite(num(o.spotreba)) ? r1(num(o.spotreba)) : '') !== an.spotreba) ch.spotreba = an.spotreba;
       if ((A[g] || DODAVATELIA.includes(fd)) && String(o.dodavatel || '').trim() !== fd) ch.dodavatel = fd;
       if (an) ['sadzba', 'istic', 'koniec', 'adresa', 'eic'].forEach(f => {
         const nv = String(an[f] ?? '').trim(); if (!nv) return;
@@ -4049,14 +4141,14 @@ async function importAnalysis(file) {
       const rows = cur.filter(o => kindOf(o) === g);
       if (!rows.length) continue;
       const tot = rows.reduce((q, o) => { const ch = (omList.find(z => z.row === o.r) || {o: {}}).o; const v = 'spotreba' in ch ? ch.spotreba : o.spotreba; return q + (num(v) || 0); }, 0);
-      if (tot > 0) A[g].sp = r3(tot);
+      /* spotreba firmy sa berie z hlavičky analýzy, nie ako súčet OM */
       const ds = rows.map(o => { const ch = (omList.find(z => z.row === o.r) || {o: {}}).o; return isoDate(String('koniec' in ch ? ch.koniec : (o.koniec ?? ''))); }).filter(Boolean).sort();
       if (ds.length) A[g].kon = ds[0];
     }
     put('obch', A.cust.odb); put('ico', A.cust.ico, true); put('ulica', A.cust.ulica, true); put('psc', A.cust.psc, true); put('mesto', A.cust.mesto, true);
     for (const g of ['el', 'pl']) {
       const x = A[g]; if (!x) continue;
-      put(g + '_dod', x.dod); put(g + '_druh', x.druh); put(g + '_sp', isFinite(x.sp) ? r3(x.sp) : null); put(g + '_cs', isFinite(x.cs) ? r3(x.cs) : null);
+      put(g + '_dod', x.dod); put(g + '_druh', x.druh); put(g + '_sp', isFinite(x.sp) ? r1(x.sp) : null); put(g + '_cs', isFinite(x.cs) ? r1(x.cs) : null);
       if (x.kon) put(g + '_kon', x.kon === 'neurčitá' ? 'neurčitá' : {t: 'd', v: x.kon});
     }
     put('an_ok', {t: 'd', v: todayISO()});
@@ -4071,7 +4163,7 @@ async function importAnalysis(file) {
     const local = {}; for (const h in real) local[h] = typeof real[h] === 'number' ? fmtDec(real[h]) : real[h];
     applyLocal(r, local); pushActivity(actFor(r, 'Analýza načítaná', '', real)); persist();
     S.tab = 'firma'; S.dirty = false; renderChips(); renderListBody(); renderDetail();
-    const bits = []; const bt = (n, x) => n + ' ' + [isFinite(x.sp) ? fmtDec(x.sp) + ' MWh' : 'spotreba chýba', isFinite(x.cs) ? fmtDec(x.cs) + ' €/MWh' : 'cena chýba'].join(' · ');
+    const bits = []; const bt = (n, x) => n + ' ' + [isFinite(x.sp) ? fmtDec1(x.sp) + ' MWh' : 'spotreba chýba', isFinite(x.cs) ? fmtDec1(x.cs) + ' €/MWh' : 'cena chýba'].join(' · ');
     if (A.el) bits.push(bt('elektrina', A.el)); if (A.pl) bits.push(bt('plyn', A.pl));
     if (omOk && A.om.length) bits.push(A.om.length + ' OM' + (S.omRes && S.omRes.added != null ? ` (${S.omRes.skipped || 0} už existovalo, ${S.omRes.added} nových${S.omRes.filled ? ', doplnené sadzba/istič: ' + S.omRes.filled : ''})` : '')); toast('Analýza načítaná: ' + bits.join(' | '));
   } catch (e) { toast(e.message || String(e), true); if (e.conflict) load(true); }
@@ -4109,7 +4201,12 @@ setInterval(() => { if (S.data && S.view === 'contacts' && !S.dirty && !document
 
 /* ---------- štart ---------- */
 buildMap(); if (!(S.data && openTop())) render();
-if (!S.cfg.url) openSettings(); else load(false, false, true);
+if (!S.cfg.url) openSettings();
+else if (S.data && S.data.contacts && S.data.contacts.rows) {
+  /* dáta z pamäte sú už zobrazené – nové sa dotiahnu na pozadí, bez zamknutia úprav */
+  setSync('sync');
+  load(true, true).then(() => { if (!S.dirty && S.view === 'contacts' && S.sel != null && !document.querySelector('#modal .ovl') && rowBy(S.sel)) renderDetail(); });
+} else load(false, false, true);
 
 /* viditeľné „stlačenie“ modrých tlačidiel (aj pri rýchlom kliknutí/dotyku) */
 document.addEventListener('click', e => {
