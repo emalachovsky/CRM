@@ -2656,7 +2656,7 @@ function omChanges(r, form) {
     const ch = {};
     form.querySelectorAll(`[data-omrow="${o.r}"]`).forEach(el => {
       const f = el.dataset.omf, v = el.value.trim();
-      if (omCmp(f, o[f]) !== omCmp(f, v)) ch[f] = f === 'spotreba' ? (v === '' ? '' : r3(num(v))) : v;
+      if (omCmp(f, o[f]) !== omCmp(f, v)) ch[f] = f === 'spotreba' ? (v === '' ? '' : r1(num(v))) : v;
     });
     if (Object.keys(ch).length) list.push({row: o.r, cislo: o.cislo, komodita: o.komodita, o: ch});
   });
@@ -3833,7 +3833,7 @@ function omRowsFor(r) {
   const ico = omIco(r), nz = omNazov(r);
   return all.filter(o => omMatch(o, ico, nz));
 }
-const omCmp = (f, x) => f === 'spotreba' ? (isFinite(num(x)) ? r3(num(x)) : '') : String(x ?? '').trim();
+const omCmp = (f, x) => f === 'spotreba' ? (isFinite(num(x)) ? r1(num(x)) : '') : String(x ?? '').trim();
 /* dodávateľ firmy pre komoditu OM (použije sa, ak OM nemá vlastného) */
 function omFirmDod(o) {
   const r = rowBy(S.sel); if (!r) return '';
@@ -3844,7 +3844,7 @@ function omEdit(rows) {
     const a = f => `data-omrow="${o.r}" data-omf="${f}"`;
     const kon = omVal(o.koniec);
     const koInp = kon && !isoDate(kon) ? `<input type="text" ${a('koniec')} value="${esc(kon)}">` : dateInp(a('koniec'), isoDate(kon));
-    const sp = omVal(o.spotreba) === '' ? '' : fmtDec(num(o.spotreba));
+    const sp = omVal(o.spotreba) === '' ? '' : fmtDec1(num(o.spotreba));
     return `<div class="omBox"><div class="omNo">OM #${esc(omVal(o.cislo))}</div>
       <label>EIC/POD<input type="text" ${a('eic')} value="${esc(omVal(o.eic))}"></label>
       <label>Adresa OM<input type="text" ${a('adresa')} value="${esc(omVal(o.adresa))}"></label>
@@ -3883,7 +3883,7 @@ function omFirmVals(r, pending, all) {
     const put = (k, v) => { const h = fieldHeader(k); if (h) vals[h] = v; };
     /* spotreba = súčet všetkých OM danej komodity */
     const tot = L.reduce((q, o) => q + (num(o.spotreba) || 0), 0);
-    if (L.some(o => omVal(o.spotreba) !== '')) put(g + '_sp', r3(tot));
+    if (L.some(o => omVal(o.spotreba) !== '')) put(g + '_sp', r1(tot));
     /* dodávateľ: zmenený v tomto uložení má prednosť, inak najčastejší z OM */
     const chg = (pending || []).filter(it => it.o && 'dodavatel' in it.o && omKindOf(it) === g).map(it => matchDod(it.o.dodavatel)).filter(Boolean);
     const dod = chg.length ? chg[chg.length - 1] : pickDod(L.map(o => o.dodavatel));
@@ -3933,7 +3933,7 @@ function saveOmTab(form) {
     const ch = {};
     form.querySelectorAll(`[data-omrow="${o.r}"]`).forEach(el => {
       const f = el.dataset.omf, v = el.value.trim();
-      if (omCmp(f, o[f]) !== omCmp(f, v)) ch[f] = f === 'spotreba' ? (v === '' ? '' : r3(num(v))) : v;
+      if (omCmp(f, o[f]) !== omCmp(f, v)) ch[f] = f === 'spotreba' ? (v === '' ? '' : r1(num(v))) : v;
     });
     if (Object.keys(ch).length) list.push({row: o.r, cislo: o.cislo, komodita: o.komodita, o: ch});
   });
@@ -4127,6 +4127,7 @@ async function importAnalysis(file) {
       const g = kindOf(o), fd = matchDod((A[g] && A[g].dod) || V(r, g + '_dod')), ch = {};
       const an = A.om.find(z => norm(z.komodita) === norm(o.komodita) && ((z.eic && o.eic) ? norm(z.eic) === norm(o.eic) : String(z.cislo) === String(o.cislo)));
       if (an && an.spotreba !== '' && (isFinite(num(o.spotreba)) ? r1(num(o.spotreba)) : '') !== an.spotreba) ch.spotreba = an.spotreba;
+      else if (isFinite(num(o.spotreba)) && omVal(o.spotreba) !== '' && num(o.spotreba) !== r1(num(o.spotreba))) ch.spotreba = r1(num(o.spotreba));   /* aj staré OM: spotreba na 1 desatinné miesto */
       if ((A[g] || DODAVATELIA.includes(fd)) && String(o.dodavatel || '').trim() !== fd) ch.dodavatel = fd;
       if (an) ['sadzba', 'istic', 'koniec', 'adresa', 'eic'].forEach(f => {
         const nv = String(an[f] ?? '').trim(); if (!nv) return;
