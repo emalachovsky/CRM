@@ -512,11 +512,12 @@ input[type=tel]{color:var(--tel-g)}
 .card .c-top{padding-right:1.5rem}
 .card.exp .c-top{padding-right:4.2rem}
 /* stav exportu v karte: tmavosivý zápis „Export CR ✓“, po oboch exportoch „Exportované“ */
-.expMk .xd{font-size:.72rem;letter-spacing:.02em;color:#5f6671;font-weight:400!important;white-space:nowrap;pointer-events:none}
+.expMk .xd{font-size:.72rem;letter-spacing:.02em;color:#5f6671;font-weight:400!important;white-space:nowrap;cursor:pointer;pointer-events:auto}
 html[data-theme="light"] .expMk .xd{color:#8b919b}
 html[data-theme="light"] .expDone{color:#a3a9b3}
 .expDone{position:absolute;top:.2rem;right:.3rem;z-index:3;padding:.3rem;font-size:.72rem;letter-spacing:.02em;color:#79808b;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
 .card.xd1 .c-top{padding-right:8rem}
+.card.xd1.exp .c-top{padding-right:11.5rem}
 .card.xd2 .c-top{padding-right:5.5rem}
 /* polia „Poznámka k …“ v editovacom okne – sivé */
 input[data-note]{color:var(--muted)}
@@ -1277,7 +1278,7 @@ html[data-theme="light"] body .setSec>.gtitle{border-bottom-color:#b3bfdc}
 /* zámok editácie počas načítavania */
 #lockBar{display:none;position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:9999;background:#f0a84f;color:#1a1a1a;padding:.5rem 1rem;border-radius:999px;font-size:.9rem;box-shadow:0 4px 14px rgba(0,0,0,.35);pointer-events:none;white-space:nowrap}
 body.locked #lockBar{display:block}
-/* kontakt po exporte alebo so stavom Klient: len na prezeranie; v Aktivite sa dá upraviť len aktivita, Čo nasleduje, poznámky, dátum a čas; spájanie firiem ostáva funkčné */
+/* kontakt po Final exporte alebo so stavom Klient: len na prezeranie; v Aktivite sa dá upraviť len aktivita, Čo nasleduje, poznámky, dátum a čas; spájanie firiem ostáva funkčné */
 #detailPane.ro-all :is(#tabBody,.firmBar,#firmTop) :is(input,textarea,select,button):not([data-tab]):not([data-open]):not([data-gotoact]):not([data-act="linkopen"]):not([data-act="unlink"]):not([data-act="linkyes"]):not([data-act="linkno"]):not([data-linkto]):not(#linkQ){pointer-events:none!important;opacity:.6}
 #detailPane.ro-all #tabBody .delSw{display:none}
 /* nesprávny vstup pri ukladaní */
@@ -1383,6 +1384,23 @@ html:not([data-theme="light"]) #fOm input[data-omf="koniec"]::-webkit-datetime-e
 html:not([data-theme="light"]) #fOm input[data-omf="koniec"]::-webkit-datetime-edit-day-field,html:not([data-theme="light"]) #fOm input[data-omf="koniec"]::-webkit-datetime-edit-month-field,
 html:not([data-theme="light"]) #fOm input[data-omf="koniec"]::-webkit-datetime-edit-year-field,html:not([data-theme="light"]) #fOm input[data-omf="koniec"]::-webkit-datetime-edit-text{color:#fff!important;-webkit-text-fill-color:#fff!important;opacity:1}
 html:not([data-theme="light"]) #fOm .dsh{color:#fff!important}
+
+/* vybraný (zobrazený) kontakt – výrazný glow dookola vo farbe stavu karty (--sg) */
+html body .card.card.sel{position:relative;z-index:2;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb,var(--sg) 85%,transparent),
+    0 0 14px 2px color-mix(in srgb,var(--sg) 70%,transparent),
+    0 0 30px 6px color-mix(in srgb,var(--sg) 45%,transparent),
+    0 0 52px 12px color-mix(in srgb,var(--sg) 22%,transparent),
+    inset 14px 0 14px -8px color-mix(in srgb,var(--sg) 55%,transparent),
+    inset -14px 0 14px -8px color-mix(in srgb,var(--sg) 55%,transparent)!important}
+html[data-theme="light"] body .card.card.sel{
+  box-shadow:
+    0 0 0 1px color-mix(in srgb,var(--sg) 80%,transparent),
+    0 0 12px 2px color-mix(in srgb,var(--sg) 55%,transparent),
+    0 0 26px 5px color-mix(in srgb,var(--sg) 32%,transparent),
+    inset 12px 0 12px -8px color-mix(in srgb,var(--sg) 35%,transparent),
+    inset -12px 0 12px -8px color-mix(in srgb,var(--sg) 35%,transparent)!important}
 </style>
 </head>
 <body>
@@ -1944,7 +1962,7 @@ const SK_COLL = new Intl.Collator('sk');
 function filtered() {
   const q = norm(S.q), T = todayISO();
   const rows = S.data.contacts.rows.filter(r => {
-    if (q === 'export') return S.expSel.has(r.r);   /* hľadanie „export“ = všetky kontakty s fajkou na export */
+    if (q === 'export') return S.expSel.has(r.r) || expStage(r) > 0;   /* hľadanie „export“ = kontakty označené na export + všetky už exportované (Export CR ✓ aj Exportovaný) */
     if (S.chip === 'due') { const d = DT(r).d; if (!d || d > T) return false; }
     if (S.stSet.size) { const sv = String(V(r, 'stav')).trim(); if (sv ? !S.stSet.has(V(r, 'stav')) : !S.stSet.has('__none')) return false; }
     if (q) { if (!(r._s || (r._s = norm(Object.values(r.v).join(' ')))).includes(q)) return false; }
@@ -1958,6 +1976,9 @@ function filtered() {
   return rows.filter(r => { const g = gidOf(r); if (!g || groupOf(r).length < 2) return true; if (seenG.has(g)) return false; seenG.add(g); return true; });
 }
 /* označenie kontaktov na export (kruh vpravo hore v karte) */
+/* stav exportu kontaktu (skupiny spojených firiem): 0 = bez exportu, 1 = hotový Export CR (ďalej už len Final), 2 = hotový Final export */
+function expStage(r) { const g = groupOf(r); return g.some(x => S.expDone.full.has(x.r)) ? 2 : g.some(x => S.expDone.cr.has(x.r)) ? 1 : 0; }
+const expStageOk = (r, kind) => expStage(r) === (kind === 'full' ? 1 : 0);
 function saveExpDone() { try { LS.setItem('crm.expdone', JSON.stringify({cr: [...S.expDone.cr], full: [...S.expDone.full]})); } catch (e) {} }
 function saveExpSel() { try { LS.setItem('crm.expsel', JSON.stringify([...S.expSel])); } catch (e) {} }
 function pruneExpSel() {
@@ -1966,10 +1987,10 @@ function pruneExpSel() {
   for (const id of [...S.expSel]) if (!ok.has(id)) { S.expSel.delete(id); ch = true; }
   if (ch) saveExpSel();
 }
-function expSelRows() {
+function expSelRows(kind) {
   const out = [], seen = new Set();
   if (!S.data) return out;
-  for (const r of S.data.contacts.rows) if (S.expSel.has(r.r)) for (const x of groupOf(r)) if (!seen.has(x.r)) { seen.add(x.r); out.push(x); }
+  for (const r of S.data.contacts.rows) if (S.expSel.has(r.r) && (!kind || expStageOk(r, kind))) for (const x of groupOf(r)) if (!seen.has(x.r)) { seen.add(x.r); out.push(x); }
   return out;
 }
 function toggleExpMark(id, el) {
@@ -1983,9 +2004,9 @@ function toggleExpMark(id, el) {
   if (norm(S.q) === 'export') renderListBody();
 }
 /* pre export: všetky firmy spojených kontaktov, každá zvlášť */
-function exportRows() {
+function exportRows(kind) {
   const out = [], seen = new Set();
-  for (const r of filtered()) for (const x of groupOf(r)) if (!seen.has(x.r)) { seen.add(x.r); out.push(x); }
+  for (const r of filtered()) if (!kind || expStageOk(r, kind)) for (const x of groupOf(r)) if (!seen.has(x.r)) { seen.add(x.r); out.push(x); }
   return out;
 }
 const nowHM = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
@@ -1995,15 +2016,15 @@ function card(r) {
   const urg = isUrg(r), nx = V(r, 'dalsi');
   const act = isActLbl(V(r, 'pozicia'));
   const gl = groupOf(r), expOn = gl.some(x => S.expSel.has(x.r));
-  const dBoth = gl.some(x => S.expDone.full.has(x.r));
-  const xdTxt = '';
+  const stg = expStage(r), dBoth = stg === 2;
+  const xdTxt = stg === 1 ? 'Export CR ✓' : '', lblTxt = stg === 1 ? 'Export Final' : 'Export CR';
   const xdCls = dBoth ? 'exp xd2' : (expOn ? 'exp' : '') + (xdTxt ? ' xd1' : '');
   return `<div class="card ${c} ${xdCls} ${gl.some(x => x.r === S.sel) ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
     <div class="c-left ${c} ${c === 'today' && t && t < nowHM() ? 'late' : ''} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}${norm(V(r, 'pozicia')) === 'stretnutie' ? ' meet' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${gl.length > 1 ? '🔗 ' + esc(gl.map(x => V(x, 'firma') || '(bez firmy)').join(' + ')) : esc(V(r, 'firma') || '(bez firmy)')}</b></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
-    ${dBoth ? `<span class="expDone" data-expreset="${r.r}" title="Exportované – klepnutím vrátiť stav pred exportom">Exportované</span>` : `<span class="expMk ${expOn ? 'on' : ''}" data-expmk="${r.r}" role="checkbox" aria-checked="${expOn}" aria-label="Označiť na export" title="Označiť na export">${xdTxt ? `<span class="xd">${xdTxt}</span>` : ''}<span class="lbl">Export</span><span class="dot">✓</span></span>`}
+    ${dBoth ? `<span class="expDone" data-expreset="${r.r}" title="Exportovaný – klepnutím (po potvrdení) vrátiť stav pred exportom">Exportovaný</span>` : `<span class="expMk ${expOn ? 'on' : ''}" data-expmk="${r.r}" role="checkbox" aria-checked="${expOn}" aria-label="Označiť na ${lblTxt}" title="Označiť na ${lblTxt}">${xdTxt ? `<span class="xd" data-expreset="${r.r}" title="Export CR hotový – klepnutím (po potvrdení) vrátiť stav pred exportom">${xdTxt}</span>` : ''}<span class="lbl">${lblTxt}</span><span class="dot">✓</span></span>`}
 </div>`;
 }
 const isUrg = r => ['ano', '1', 'true', 'x', 'urgent', 'urgentne'].includes(norm(V(r, 'urgent')));
@@ -3215,10 +3236,13 @@ function openSettings() {
     </section>
     ${tplSectionHtml()}
     ${hs.length ? `<section class="setSec"><div class="gtitle">Export – import do Meitn CRM</div>
-      <button class="cta ghost" type="button" data-act="exporttpl">Export – filtrované kontakty (${S.data ? exportRows().length : 0})</button>
-      <button class="cta ghost" type="button" data-act="exportsel">Export – iba označené na export (${S.data ? expSelRows().length : 0})</button>
+      <button class="cta ghost" type="button" data-act="exportcr">Export CR – filtrované kontakty (${S.data ? exportRows('cr').length : 0})</button>
+      <button class="cta ghost" type="button" data-act="exportcrsel">Export CR – iba označené (${S.data ? expSelRows('cr').length : 0})</button>
+      <button class="cta ghost" type="button" data-act="exportfinal">Final export – filtrované kontakty (${S.data ? exportRows('full').length : 0})</button>
+      <button class="cta ghost" type="button" data-act="exportfinalsel">Final export – iba označené (${S.data ? expSelRows('full').length : 0})</button>
       <p class="rcP">Podľa šablóny: všetko, čo patrí do databázy (klienti, kontakty, odberné miesta, prípady, aktivity). Záznamy z poznámok sa prevedú na aktivity, História sa neexportuje.</p>
-      <p class="rcP">Filtrované = to, čo máš práve vyfiltrované v zozname (Dnes/Všetky, Stav, hľadanie). Označené = kontakty s kruhom vpravo hore v karte. Po exporte sa kontakty označia ako „Exportované“; klepnutím na tento štítok v karte sa stav vráti.</p>
+      <p class="rcP">Filtrované = to, čo máš práve vyfiltrované v zozname (Dnes/Všetky, Stav, hľadanie). Označené = kontakty s označeným kruhom vpravo hore v karte.</p>
+      <p class="rcP">Postup: kruh v karte = označenie na Export CR. Po Export CR sa vedľa kruhu zobrazí sivé „Export CR ✓“ a ďalšie označenie kruhom povolí už len Final export. Po Final exporte kruh zmizne a ostane „Exportovaný“. Klepnutím na sivý štítok alebo na „Exportovaný“ sa (po potvrdení) stav vráti pred export. Export CR berie len kontakty bez exportu, Final export len kontakty s hotovým Export CR.</p>
       <button class="cta ghost" type="button" data-act="expclear">Zrušiť označenia na export</button>
     </section>
     <section class="setSec"><div class="gtitle">Kontrola duplicity</div>
@@ -3240,9 +3264,10 @@ function openSettings() {
 /* ---------- export do šablóny Meitn CRM ---------- */
 /* ---------- šablóna exportu: načítaná z xlsx, uložená v prehliadači ---------- */
 const TPL_DEF = {"navodName": "Návod", "navod": ["Import údajov do Meitn CRM", null, "Ako na to", "1. Vyplň hárky Klienti, Kontakty, Odberné miesta, Prípady a Aktivity (nemusíš všetky, len tie, čo potrebuješ). Hlavičky ani názvy hárkov nemeň.", "2. Hárky sa prepájajú cez IČO klienta. Prípad a aktivita sa k odbernému miestu a prípadu pripájajú cez EIC/POD a Kód importu.", "3. V CRM klikni hore na Import, vyber tento súbor, skontroluj náhľad a klikni Importovať.", "4. Ak náhľad ukáže chyby, oprav riadky podľa hlášky (hárok + číslo riadka) a súbor nahraj znova. Pri chybe sa nezapíše nič.", null, "Pravidlá", "• Všetko, čo importuješ, bude patriť tebe. Klient s IČO, ktoré už v CRM je a patrí inému obchodníkovi, sa neimportuje (požiadaj o prístup).", "• Ak klient s IČO už je tvoj, doplnia sa mu len chýbajúce údaje, nové odberné miesta a kontakty. Vyplnené údaje sa neprepisujú. Prípady sa pri existujúcom klientovi nezakladajú (založ ich v CRM a vyber odberné miesta), aktivity, ktoré už má, sa preskočia.", "• Všetky nové prípady (pre nových klientov) vstupujú na začiatok procesu (čakáme na podklady). Kroky a výhry nastavuje CRM podľa postupu, nie import.", "• Povinné polia majú v hlavičke hviezdičku (*). Ostatné údaje, ktoré CRM pred žiadosťou o ponuku vyžaduje, môžeš doplniť neskôr priamo v klientovi.", "• Desatinné čísla píš s čiarkou (12,5), bodka tiež funguje. Dátumy ako RRRR-MM-DD (2027-01-01) alebo D.M.RRRR, dátum a čas ako RRRR-MM-DD HH:MM.", "• Rovnaký súbor sa nedá importovať dvakrát. Neprázdne riadky sa spracujú všetky, prázdne sa preskočia.", null, "Doterajší dodávateľ (presne takto)", "ELGAS; ENERGIE 2; Energetika Slovensko, a.s. (VSE, Košice); Energetika Slovensko, a.s. (ZSE, Bratislava); Lama Energy; MET; MVM; Magna Energia; Rightpower; SPP; SSE", null, "Hárky a stĺpce", "Klienti — Jeden riadok = jeden klient. IČO je kľúč, podľa ktorého sa k nemu pripoja ostatné hárky.", "   IČO* — 6 až 10 číslic, bez medzier", "   Názov*", "   Stav — prázdne = prospekt  [prospekt / klient]", "   DIČ", "   IČ DPH — prázdne, ak klient nie je platiteľ DPH", "   Neplatiteľ DPH — ano = klient nie je platiteľ DPH (IČ DPH sa nevyžaduje); prázdne = nie  [ano / nie]", "   Register — napr. OR OS Košice I, oddiel Sro, vložka č. 1234/V", "   Ulica", "   Mesto", "   PSČ", "   Korešpondenčná adresa", "   Banka", "   BIC", "   IBAN", "   Fakturačný e-mail — na doručovanie faktúr; prázdne = e-mail konateľa", "   Poznámka", null, "Kontakty — Kontaktné osoby klienta. Jeden riadok = jedna osoba.", "   IČO klienta*", "   Meno a priezvisko*", "   Funkcia — napr. konateľ", "   Telefón", "   E-mail", "   Hlavná osoba  [ano / nie]", "   Podpisuje — ano = osoba sa pripojí ako podpisujúca ku všetkým prípadom klienta z tohto súboru  [ano / nie]", null, "Odberné miesta — Odberné miesta klienta. Jeden riadok = jedno odberné miesto (EIC alebo POD).", "   IČO klienta*", "   Komodita*  [EE / PL]", "   EIC/POD*", "   Adresa odberného miesta", "   Ročná spotreba (MWh)", "   Tarifa — napr. C2-X3, X3-C2, X2; napätie (NN/VN) sa určí z tarify, X2 = VN", "   Istič (A) — pri NN", "   MRK (kW) — pri VN", "   RK (kW) — pri VN", "   Periodicita RK  [mesacna / trojmesacna / dvanastmesacna]", "   Typ merania  [A / C]", "   Fázy — pri NN  [1 / 3]", "   Doterajší dodávateľ", "   Koniec zmluvy — RRRR-MM-DD alebo D.M.RRRR", "   Poznámka", null, "Prípady — Obchodné prípady. Všetky vstupujú na začiatok procesu (čakáme na podklady). Jeden riadok = jedna komodita.", "   Kód importu* — vlastný kód len pre tento súbor, napr. P1, P2 (na prepojenie s aktivitami)", "   IČO klienta*", "   Komodita*  [EE / PL]", "   Predmet — prázdne = Zmena dodávateľa EE/PL", "   Produkt  [FIX / SPOT]", "   EIC/POD odberných miest — viac oddeľ bodkočiarkou; musia byť v hárku Odberné miesta alebo už v CRM", "   Objem (MWh/rok)", "   Cena FIX (€/MWh) — naša ponuka klientovi; cenu z faktúry klienta píš do Stará cena", "   Marža SPOT (€/MWh) — naša ponuka klientovi; cenu z faktúry klienta píš do Stará cena", "   Stará cena (€/MWh) — doterajšia cena klienta z jeho faktúry (cena dodávky), nie naša ponuka", "   Zmluva od", "   Zmluva do", "   Doterajší dodávateľ — presne podľa zoznamu v hárku Návod", "   Poznámka", null, "Aktivity — Hovory, stretnutia, úlohy a ďalšie záznamy ku klientovi (voliteľne k prípadu).", "   IČO klienta*", "   Kód prípadu — kód z hárka Prípady, ak sa aktivita týka prípadu", "   Typ*  [uloha / stretnutie / telefonat / udalost / list]", "   Predmet*", "   Od* — RRRR-MM-DD HH:MM alebo D.M.RRRR HH:MM", "   Do", "   Stav — prázdne = naplánovaná  [naplanovana / hotova]", "   Výsledok", "   Poznámka"], "sheets": [["Klienti", ["IČO*", "Názov*", "Stav", "DIČ", "IČ DPH", "Neplatiteľ DPH", "Register", "Ulica", "Mesto", "PSČ", "Korešpondenčná adresa", "Banka", "BIC", "IBAN", "Fakturačný e-mail", "Poznámka"]], ["Kontakty", ["IČO klienta*", "Meno a priezvisko*", "Funkcia", "Telefón", "E-mail", "Hlavná osoba", "Podpisuje"]], ["Odberné miesta", ["IČO klienta*", "Komodita*", "EIC/POD*", "Adresa odberného miesta", "Ročná spotreba (MWh)", "Tarifa", "Istič (A)", "MRK (kW)", "RK (kW)", "Periodicita RK", "Typ merania", "Fázy", "Doterajší dodávateľ", "Koniec zmluvy", "Poznámka"]], ["Prípady", ["Kód importu*", "IČO klienta*", "Komodita*", "Predmet", "Produkt", "EIC/POD odberných miest", "Objem (MWh/rok)", "Cena FIX (€/MWh)", "Marža SPOT (€/MWh)", "Stará cena (€/MWh)", "Zmluva od", "Zmluva do", "Doterajší dodávateľ", "Poznámka"]], ["Aktivity", ["IČO klienta*", "Kód prípadu", "Typ*", "Predmet*", "Od*", "Do", "Stav", "Výsledok", "Poznámka"]]]};
-const TPL_KEYS = {full: 'crm.exptpl'};
-const TPL_DEFS = {full: TPL_DEF};
-const TPL_LABEL = {full: 'Šablóna exportu'};
+const TPL_KEYS = {cr: 'crm.exptpl.cr', full: 'crm.exptpl'};
+const TPL_DEFS = {cr: TPL_DEF, full: TPL_DEF};   /* kým nie je načítaná vlastná šablóna CR, použije sa vstavaná (rovnaké stĺpce ako Final) */
+const TPL_LABEL = {cr: 'Šablóna Export CR', full: 'Šablóna Final export'};
+const TPL_ACC = {cr: 'šablónu Export CR', full: 'šablónu Final export'};
 const hKey = h => norm(String(h).replace(/\*/g, ''));
 function tplSaved(kind) {
   try { const j = JSON.parse(LS.getItem(TPL_KEYS[kind || 'full']) || 'null'); if (j && Array.isArray(j.sheets) && j.sheets.length && Array.isArray(j.navod)) return j; } catch (e) {}
@@ -3250,7 +3275,7 @@ function tplSaved(kind) {
 }
 function tplActive(kind) { kind = kind || 'full'; return tplSaved(kind) || Object.assign({name: 'vstavaná šablóna', builtin: true}, TPL_DEFS[kind]); }
 /* z workbooku vytiahne hárok Návod (stĺpec A) a hlavičky (1. riadok) ostatných hárkov */
-function tplParse(wb, fname) {
+function tplParse(wb, fname, lenient) {
   const DATA_SH = ['klienti', 'kontakty', 'odberne miesta', 'pripady', 'aktivity'];
   /* Návod = hárok s názvom Návod, inak prvý hárok súboru (ak to nie je dátový hárok) */
   const nvName = wb.SheetNames.find(n => norm(n) === 'navod') || (wb.SheetNames[0] && !DATA_SH.includes(norm(wb.SheetNames[0])) ? wb.SheetNames[0] : undefined);
@@ -3268,7 +3293,7 @@ function tplParse(wb, fname) {
     if (r1.length) sheets.push([n, r1]);
   }
   if (!sheets.some(s => norm(s[0]) === 'klienti')) throw new Error('V súbore chýba hárok „Klienti“ – je to správna šablóna exportu?');
-  if (!navod.length) throw new Error('V súbore chýba hárok „Návod“ s pokynmi.');
+  if (!navod.length && !lenient) throw new Error('V súbore chýba hárok „Návod“ s pokynmi.');
   return {name: fname || 'šablóna.xlsx', loaded: Date.now(), navodName: nvName || 'Návod', navod, sheets};
 }
 /* pokyny z hárka Návod: zoznam dodávateľov, povinné stĺpce (*) a povolené hodnoty v [hranatých zátvorkách] */
@@ -3380,11 +3405,12 @@ function tplInfoHtml(kind) {
 function tplSectionHtml() {
   const blk = (k, act, fid, txt) => `<div class="gtitle" style="margin-top:.6rem">${TPL_LABEL[k]}</div>
     ${tplInfoHtml(k)}
-    <button class="cta ghost" type="button" data-act="${act}">Načítať ${TPL_LABEL[k].toLowerCase()}…</button>
+    <button class="cta ghost" type="button" data-act="${act}">Načítať ${TPL_ACC[k]}…</button>
     <input type="file" id="${fid}" accept=".xlsx,.xls" style="display:none">
     <p class="rcP">${txt}</p>`;
   return `<section class="setSec"><div class="gtitle">Šablóny exportu</div>
-    ${blk('full', 'tplload', 'tplFile', 'Súbor sablona-import-meitn-crm.xlsx (Klienti, Kontakty, Odberné miesta, Prípady, Aktivity). Podľa nej sa generuje export.')}
+    ${blk('cr', 'tploadcr', 'tplFileCr', 'Šablóna pre prvý export (Export CR). Hárky Klienti, Kontakty, Odberné miesta, Prípady, Aktivity; hárok Návod je voliteľný.')}
+    ${blk('full', 'tplload', 'tplFile', 'Súbor sablona-import-meitn-crm.xlsx (Klienti, Kontakty, Odberné miesta, Prípady, Aktivity). Podľa nej sa generuje Final export.')}
     <p class="rcP">Šablóny sa ukladajú v tomto prehliadači. Export použije rovnaké hárky a stĺpce a hodnoty podľa pokynov z prvého hárka (Návod): povinné polia, povolené hodnoty, formát dátumu a čísel, zoznam dodávateľov.</p>
   </section>`;
 }
@@ -3393,7 +3419,7 @@ async function tplImport(file, kind) {
   try {
     toast('Čítam šablónu…'); await loadXLSX();
     const wb = XLSX.read(await file.arrayBuffer(), {type: 'array'});
-    const t = tplParse(wb, file.name);
+    const t = tplParse(wb, file.name, kind === 'cr');
     const nS = t.sheets.map(s => norm(s[0]));
     if (kind === 'full' && !nS.includes('kontakty') && !nS.includes('odberne miesta')) throw new Error('Toto nevyzerá ako šablóna exportu (chýbajú hárky Kontakty / Odberné miesta).');
     LS.setItem(TPL_KEYS[kind], JSON.stringify(t));
@@ -3430,11 +3456,13 @@ function dodSelect(attrs, val) {
   const opts = ['', ...DODAVATELIA];
   return `<select ${attrs}>${opts.map(x => `<option value="${esc(x)}" ${x === cur ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
 }
-async function exportTpl(onlySel) {
-  const kind = 'full';
+async function exportTpl(kind, onlySel) {
+  kind = kind === 'cr' ? 'cr' : 'full';
+  const KL = kind === 'cr' ? 'Export CR' : 'Final export';
   if (!S.data) return;
   if (onlySel && !expSelRows().length) { toast('Nie sú označené žiadne kontakty na export', true); return; }
-  const tx = x => String(x ?? '').trim(), rows = onlySel ? expSelRows() : exportRows();
+  const tx = x => String(x ?? '').trim(), rows = onlySel ? expSelRows(kind) : exportRows(kind);
+  if (!rows.length) { toast(kind === 'cr' ? 'Export CR: nie je čo exportovať – kontakty už majú Export CR alebo sú exportované' : 'Final export: nie je čo exportovať – kontakt musí mať hotový Export CR a ešte nebyť exportovaný', true); return; }
   const K = [], C = [], O = [], P = [], A = [], seen = new Set(), byFirma = new Map(), cSeen = new Set();
   const omAll = (S.data.om && S.data.om.rows) || [];
   let skip = 0, omSkip = 0, pc = 0; const doneIds = [];
@@ -3500,7 +3528,7 @@ async function exportTpl(onlySel) {
   if (!K.length) { toast('Nie je čo exportovať – ' + (onlySel ? 'označené' : 'vyfiltrované') + ' kontakty nemajú platné IČO', true); return; }
   try { await loadXLSX(); } catch (e) { toast(e.message, true); return; }
   const wb = XLSX.utils.book_new();
-  const nv = XLSX.utils.aoa_to_sheet(T.navod.map(x => [x])); nv['!cols'] = [{wch: 120}]; XLSX.utils.book_append_sheet(wb, nv, T.navodName || 'Návod');
+  if (T.navod.length) { const nv = XLSX.utils.aoa_to_sheet(T.navod.map(x => [x])); nv['!cols'] = [{wch: 120}]; XLSX.utils.book_append_sheet(wb, nv, T.navodName || 'Návod'); }
   const DEFH = {}; TPL_DEFS.full.sheets.forEach(([n, h]) => DEFH[norm(n)] = norm(n) === 'pripady' ? h.filter(x => !/^stara cena/.test(hKey(x))) : h);
   const DATA = {klienti: K, kontakty: C, 'odberne miesta': O, pripady: P, aktivity: A};
   const cnt = {}; let reqSkip = 0, enumBad = 0;
@@ -3541,12 +3569,12 @@ async function exportTpl(onlySel) {
     cnt[key] = out.length;
     const ws = XLSX.utils.aoa_to_sheet([hs, ...out]); ws['!cols'] = hs.map(h => ({wch: Math.max(14, h.length + 2)})); XLSX.utils.book_append_sheet(wb, ws, nm);
   }
-  XLSX.writeFile(wb, 'import-meitn-crm-' + nowS.slice(0, 10) + '.xlsx');
-  /* po exporte sa kontakty označia „Exportované“ (kruh zmizne) */
-  { const set = S.expDone.full;
+  XLSX.writeFile(wb, 'import-meitn-crm-' + (kind === 'cr' ? 'cr' : 'final') + '-' + nowS.slice(0, 10) + '.xlsx');
+  /* po Export CR sa vedľa kruhu zobrazí sivé „Export CR ✓“ (ďalej už len Final); po Final exporte kruh zmizne a ostane „Exportovaný“ */
+  { const set = kind === 'cr' ? S.expDone.cr : S.expDone.full;
     doneIds.forEach(id => { set.add(id); S.expSel.delete(id); });
     saveExpDone(); saveExpSel(); renderListBody(); }
-  toast(`Export hotový: ${cnt.klienti || 0} klientov, ${cnt.kontakty || 0} kontaktov, ${cnt['odberne miesta'] || 0} OM, ${cnt.pripady || 0} prípadov, ${cnt.aktivity || 0} aktivít` + (skip ? ` · preskočené bez IČO: ${skip}` : '') + (omSkip ? ` · OM bez EIC/komodity: ${omSkip}` : '') + (reqSkip ? ` · riadky bez povinného poľa: ${reqSkip}` : '') + (EXP_DODMISS ? ` · dodávateľ mimo zoznamu (vynechaný): ${EXP_DODMISS}` : '') + (enumBad ? ` · hodnoty nesedia s Návodom (nechané prázdne): ${enumBad}` : '') + ` · desatinný oddeľovač: ${DEC === ',' ? 'čiarka' : 'bodka'}`);
+  toast(`${KL} hotový: ${cnt.klienti || 0} klientov, ${cnt.kontakty || 0} kontaktov, ${cnt['odberne miesta'] || 0} OM, ${cnt.pripady || 0} prípadov, ${cnt.aktivity || 0} aktivít` + (skip ? ` · preskočené bez IČO: ${skip}` : '') + (omSkip ? ` · OM bez EIC/komodity: ${omSkip}` : '') + (reqSkip ? ` · riadky bez povinného poľa: ${reqSkip}` : '') + (EXP_DODMISS ? ` · dodávateľ mimo zoznamu (vynechaný): ${EXP_DODMISS}` : '') + (enumBad ? ` · hodnoty nesedia s Návodom (nechané prázdne): ${enumBad}` : '') + ` · desatinný oddeľovač: ${DEC === ',' ? 'čiarka' : 'bodka'}`);
 }
 
 /* ---------- udalosti ---------- */
@@ -3615,13 +3643,13 @@ function detailFormsOk() {
 function roRow(r) {
   if (!r) return false;
   if (norm(V(r, 'stav')) === 'klient') return true;
-  return groupOf(r).some(x => S.expDone.full.has(x.r) || S.expDone.cr.has(x.r));
+  return groupOf(r).some(x => S.expDone.full.has(x.r));   /* zámok až po Final exporte; po samotnom Export CR sa dá ďalej upravovať */
 }
 const roActive = () => { const p = document.getElementById('detailPane'); return !!(p && S.sel != null && roRow(rowBy(S.sel))); };
 function paintRo() { const p = document.getElementById('detailPane'); if (!p) return; const on = roActive(); p.classList.toggle('ro', on); p.classList.toggle('ro-all', on && S.tab !== 'hovor'); }
 setInterval(paintRo, 250);
 let roT = 0;
-function roToast() { if (Date.now() - roT > 1500) { roT = Date.now(); toast('Kontakt je exportovaný alebo má stav Klient – v Aktivite sa dá upraviť len aktivita, Čo nasleduje, poznámky, dátum a čas'); } }
+function roToast() { if (Date.now() - roT > 1500) { roT = Date.now(); toast('Kontakt je po Final exporte alebo má stav Klient – v Aktivite sa dá upraviť len aktivita, Čo nasleduje, poznámky, dátum a čas'); } }
 const RO_OK = 'a, [data-tab], [data-act="back"], [data-gsel], [data-nav], [data-gotoact], [data-open], [data-stsel], .stsel, .saveGrp, [data-act="savetop"], [data-act="undo"], #anFile, [data-act="linkopen"], [data-act="unlink"], [data-act="linkyes"], [data-act="linkno"], [data-linkto], #linkBox, .lnkSug';
 const inRoArea = e => roActive() && e.target && e.target.closest && e.target.closest('#detailPane') && !e.target.closest('.dhead') && !e.target.closest(RO_OK) && (S.tab !== 'hovor' || !!e.target.closest('#fCall .omBox, #fCall #osList, [data-act="loadan"], #anFile'));
 document.addEventListener('click', e => {
@@ -3652,7 +3680,13 @@ document.addEventListener('click', e => {
   const t = e.target;
   if (t.closest('a.qcall') || t.closest('a.call') || t.closest('a.lnk')) return;
   let el;
-  if ((el = t.closest('[data-expreset]'))) { e.stopPropagation(); const r0 = rowBy(Number(el.dataset.expreset)); if (!r0 || !confirm('Vrátiť stav pred exportom?\n\nOdstráni sa označenie „Exportované“ a kontakt bude možné znova označiť na export.')) return; if (r0) groupOf(r0).forEach(x => { S.expDone.cr.delete(x.r); S.expDone.full.delete(x.r); }); saveExpDone(); renderListBody(); return; }
+  if ((el = t.closest('[data-expreset]'))) {
+    e.stopPropagation(); const r0 = rowBy(Number(el.dataset.expreset)); if (!r0) return;
+    const st0 = expStage(r0);
+    if (!confirm(st0 === 1 ? 'Zrušiť Export CR?\n\nStav sa vráti pred export a kontakt bude možné znova označiť na Export CR.' : 'Vrátiť stav pred exportom?\n\nOdstráni sa označenie „Exportovaný“ (aj Export CR) a kontakt bude možné znova označiť na export od začiatku (Export CR → Final export).')) return;
+    groupOf(r0).forEach(x => { S.expDone.cr.delete(x.r); S.expDone.full.delete(x.r); S.expSel.delete(x.r); });
+    saveExpDone(); saveExpSel(); renderListBody(); return;
+  }
   if ((el = t.closest('[data-expmk]'))) { e.stopPropagation(); toggleExpMark(Number(el.dataset.expmk), el); return; }
   if ((el = t.closest('[data-urgent]'))) { toggleUrgent(); return; }
   if ((el = t.closest('[data-themeset]'))) { setTheme(el.dataset.themeset); return; }
@@ -3701,8 +3735,11 @@ document.addEventListener('click', e => {
     else if (a === 'undodel') undoDelete();
     else if (a === 'dupcheck') dupReport();
     else if (a === 'tplload') { const fi = $('#tplFile'); if (fi) fi.click(); }
-    else if (a === 'exporttpl') exportTpl();
-    else if (a === 'exportsel') exportTpl(true);
+    else if (a === 'tploadcr') { const fi = $('#tplFileCr'); if (fi) fi.click(); }
+    else if (a === 'exportcr') exportTpl('cr');
+    else if (a === 'exportcrsel') exportTpl('cr', true);
+    else if (a === 'exportfinal') exportTpl('full');
+    else if (a === 'exportfinalsel') exportTpl('full', true);
     else if (a === 'expclear') { S.expSel.clear(); saveExpSel(); renderListBody(); if ($('#fSet')) openSettings(); toast('Označenia na export zrušené'); }
     else if (a === 'addosoba') { const l = $('#osList'), rr = rowBy(S.sel); if (l) { const has2 = l.querySelector('.osP2'); l.insertAdjacentHTML('beforeend', persCard({}, has2 ? 'x' : 'p2', has2 ? null : rr)); const c = l.lastElementChild.querySelector('input'); if (c) c.focus(); markDirty(); } }
     else if (a === 'delosoba') { const c = el.closest('.osX'); if (c) { const t2 = c.classList.contains('osP2') && c.querySelector('[data-h]'); const h = t2 && !t2.dataset.h.startsWith('__new__') ? t2.dataset.h : ''; if (h) c.outerHTML = `<input type="hidden" data-h="${esc(h)}" value="">`; else c.remove(); markDirty(); } }
@@ -3765,7 +3802,7 @@ document.addEventListener('submit', e => {
 });
 document.addEventListener('input', e => {
   const t = e.target;
-  if (t.id === 'anFile' || t.id === 'tplFile') return;
+  if (t.id === 'anFile' || t.id === 'tplFile' || t.id === 'tplFileCr') return;
   if (t.id === 'linkQ') { linkSearch(t.value); return; }
   if (t.id === 'q') { S.q = t.value; S.limit = 150; renderListBody(); return; }
   if (t.closest('#fNew')) { newDupCheck(t.closest('#fNew')); return; }
@@ -3775,6 +3812,7 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'tplFile') { const f = t.files && t.files[0]; t.value = ''; if (f) tplImport(f, 'full'); return; }
+  if (t.id === 'tplFileCr') { const f = t.files && t.files[0]; t.value = ''; if (f) tplImport(f, 'cr'); return; }
   if (t.id === 'anFile') { const f = t.files && t.files[0]; t.value = ''; if (f) importAnalysis(f); return; }
   if (t.dataset.stsel !== undefined) { saveStav(t); return; }
   if (t.dataset.fn !== undefined) {
