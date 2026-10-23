@@ -62,7 +62,7 @@ html[data-theme="light"] .cnt{color:#1e7a3c}
 .dot{width:.6rem;height:.6rem;border-radius:50%;background:var(--grey)}
 .dot.ok{background:var(--green)} .dot.sync{background:var(--orange);animation:pulse 1s infinite} .dot.err{background:var(--red)}
 @keyframes pulse{50%{opacity:.3}}
-.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;padding:.55rem 0 .1rem}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;padding:.55rem 0 .1rem}
 .chip{flex:none;border:1px solid var(--line);background:#141821;color:var(--text);border-radius:999px;padding:.22rem .6rem;
   font-size:.8rem;cursor:pointer;white-space:nowrap}
 .chip.on{background:var(--blue-d);border-color:var(--blue)}
@@ -1279,13 +1279,13 @@ html[data-theme="light"] body .setSec>.gtitle{border-bottom-color:#b3bfdc}
 #lockBar{display:none;position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:9999;background:#f0a84f;color:#1a1a1a;padding:.5rem 1rem;border-radius:999px;font-size:.9rem;box-shadow:0 4px 14px rgba(0,0,0,.35);pointer-events:none;white-space:nowrap}
 body.locked #lockBar{display:block}
 /* kontakt po Final exporte alebo so stavom Klient: len na prezeranie; v Aktivite sa dá upraviť len aktivita, Čo nasleduje, poznámky, dátum a čas; spájanie firiem ostáva funkčné */
-#detailPane.ro-all :is(#tabBody,.firmBar,#firmTop) :is(input,textarea,select,button):not([data-tab]):not([data-open]):not([data-gotoact]):not([data-act="linkopen"]):not([data-act="unlink"]):not([data-act="linkyes"]):not([data-act="linkno"]):not([data-linkto]):not(#linkQ){pointer-events:none!important;opacity:.6}
+#detailPane.ro-all :is(#tabBody,.firmBar,#firmTop) :is(input[type=date],input[type=checkbox],input[type=radio],select,button):not([data-tab]):not([data-open]):not([data-gotoact]):not([data-act="linkopen"]):not([data-act="unlink"]):not([data-act="linkyes"]):not([data-act="linkno"]):not([data-linkto]):not(#linkQ){pointer-events:none!important;opacity:.6}
 #detailPane.ro-all #tabBody .delSw{display:none}
 /* nesprávny vstup pri ukladaní */
 .bad,input.bad,select.bad,textarea.bad{outline:2px solid #e5484d!important;outline-offset:-1px;border-color:#e5484d!important;box-shadow:0 0 0 3px rgba(229,72,77,.25)!important;border-radius:6px}
 .tab.bad{color:#e5484d!important;box-shadow:inset 0 -2px 0 #e5484d}
 #detailPane.ro :is([data-act="loadan"],.btn-an){pointer-events:none!important;opacity:.6}
-#detailPane.ro #fCall :is(.omBox,#osList) :is(input,textarea,select,button){pointer-events:none!important;opacity:.6}
+#detailPane.ro-all #tabBody :is(input:not([type=date]):not([type=checkbox]):not([type=radio]),textarea){opacity:.75;-webkit-user-select:text;user-select:text}
 body.locked #detailPane :is(input,textarea,select,button,.urgSw,.delSw):not(a):not([data-tab]):not([data-act="back"]):not([data-gsel]):not([data-open]){pointer-events:none!important;opacity:.55}
 
 /* vybraný kontakt – silnejší glow pozdĺž bočných pásikov + tieň z jasného (svietiaceho) okraja do tmavej vo vnútri karty */
@@ -1954,6 +1954,7 @@ function renderChips() {
   const el = $('#chips'); if (!el) return;
   const n = S.stSet.size;
   el.innerHTML = `<button class="chip ${S.chip === 'due' ? 'on' : ''}" data-chip="due">Dnes</button>
+    <button class="chip ${S.chip === 'tom' ? 'on' : ''}" data-chip="tom">Zajtra</button>
     <button class="chip ${S.chip === 'all' ? 'on' : ''}" data-chip="all">Všetky</button>
     <button class="chip stbtn ${n ? 'sel' : ''}" data-stpop>${n ? 'Stav (' + n + ')' : 'Stav'} ▾</button>
     ${S.stOpen ? `<div class="stpop"><div class="stitem" data-stall><span class="ck">${n ? '' : '✓'}</span>Všetko</div><div class="stitem" data-stitem="__none"><span class="ck">${S.stSet.has('__none') ? '✓' : ''}</span>Žiadny</div>${statuses().map(x => `<div class="stitem" data-stitem="${esc(x)}"><span class="ck">${S.stSet.has(x) ? '✓' : ''}</span>${badge(x) || esc(x)}</div>`).join('')}</div>` : ''}`;
@@ -1964,6 +1965,7 @@ function filtered() {
   const rows = S.data.contacts.rows.filter(r => {
     if (q === 'export') return S.expSel.has(r.r) || expStage(r) > 0;   /* hľadanie „export“ = kontakty označené na export + všetky už exportované (Export CR ✓ aj Exportovaný) */
     if (S.chip === 'due') { const d = DT(r).d; if (!d || d > T) return false; }
+    if (S.chip === 'tom') { if (DT(r).d !== addDays(1)) return false; }
     if (S.stSet.size) { const sv = String(V(r, 'stav')).trim(); if (sv ? !S.stSet.has(V(r, 'stav')) : !S.stSet.has('__none')) return false; }
     if (q) { if (!(r._s || (r._s = norm(Object.values(r.v).join(' ')))).includes(q)) return false; }
     return true;
@@ -3649,19 +3651,29 @@ const roActive = () => { const p = document.getElementById('detailPane'); return
 function paintRo() { const p = document.getElementById('detailPane'); if (!p) return; const on = roActive(); p.classList.toggle('ro', on); p.classList.toggle('ro-all', on && S.tab !== 'hovor'); }
 setInterval(paintRo, 250);
 let roT = 0;
-function roToast() { if (Date.now() - roT > 1500) { roT = Date.now(); toast('Kontakt je po Final exporte alebo má stav Klient – v Aktivite sa dá upraviť len aktivita, Čo nasleduje, poznámky, dátum a čas'); } }
+function roToast() { if (Date.now() - roT > 1500) { roT = Date.now(); toast('Kontakt je po Final exporte alebo má stav Klient – upraviť sa dá len záložka Aktivita, ostatné údaje sa dajú len kopírovať'); } }
 const RO_OK = 'a, [data-tab], [data-act="back"], [data-gsel], [data-nav], [data-gotoact], [data-open], [data-stsel], .stsel, .saveGrp, [data-act="savetop"], [data-act="undo"], #anFile, [data-act="linkopen"], [data-act="unlink"], [data-act="linkyes"], [data-act="linkno"], [data-linkto], #linkBox, .lnkSug';
-const inRoArea = e => roActive() && e.target && e.target.closest && e.target.closest('#detailPane') && !e.target.closest('.dhead') && !e.target.closest(RO_OK) && (S.tab !== 'hovor' || !!e.target.closest('#fCall .omBox, #fCall #osList, [data-act="loadan"], #anFile'));
+const roTxt = el => !!el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !['date', 'checkbox', 'radio', 'file', 'button', 'submit'].includes(el.type)));
+const inRoArea = e => roActive() && e.target && e.target.closest && e.target.closest('#detailPane') && !e.target.closest('.dhead') && !e.target.closest(RO_OK) && (S.tab !== 'hovor' || !!e.target.closest('[data-act="loadan"], #anFile'));
 document.addEventListener('click', e => {
   if (!inRoArea(e) || !e.target.closest('button, input, select, textarea, label, .chip, [data-act]')) return;
+  if (roTxt(e.target)) return;   /* text sa dá označiť a skopírovať */
   e.stopPropagation(); e.preventDefault(); roToast();
 }, true);
 ['keydown', 'beforeinput', 'paste', 'cut', 'drop'].forEach(ev => document.addEventListener(ev, e => {
   if (!inRoArea(e) || !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
-  if (ev === 'keydown' && ['Tab', 'Escape'].includes(e.key)) return;
+  if (ev === 'keydown') {
+    if (['Tab', 'Escape'].includes(e.key)) return;
+    if (roTxt(e.target) && (e.metaKey || e.ctrlKey || !(e.key.length === 1 || ['Backspace', 'Delete', 'Enter'].includes(e.key)))) return;   /* Cmd/Ctrl+C, A, šípky… */
+  }
   e.preventDefault(); e.stopPropagation(); roToast();
 }, true));
-document.addEventListener('focusin', e => { if (inRoArea(e) && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) e.target.blur(); }, true);
+document.addEventListener('focusin', e => {
+  if (!inRoArea(e) || !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if (roTxt(e.target)) { if (!e.target.readOnly) { e.target.readOnly = true; e.target.dataset.roAdd = '1'; } return; }   /* len na čítanie, bez klávesnice */
+  e.target.blur();
+}, true);
+document.addEventListener('focusout', e => { const t = e.target; if (t && t.dataset && t.dataset.roAdd) { t.readOnly = false; delete t.dataset.roAdd; } }, true);
 document.addEventListener('change', e => { if (inRoArea(e)) { e.stopPropagation(); e.preventDefault(); } }, true);
 const LOCK_OK = 'a, [data-tab], [data-act="back"], [data-gsel], [data-nav], [data-gotoact], [data-open]';
 const inLockedDetail = e => isLocked() && e.target && e.target.closest && e.target.closest('#detailPane');
