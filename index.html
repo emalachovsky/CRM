@@ -1606,7 +1606,20 @@ function buildMap() {
     const o = S.map[f.k];
     S.m[f.k] = o === '' ? '' : (o && hs.includes(o) ? o : (auto[f.k] || ''));
   }
-  fillFirma(); normPhones();
+  fillFirma(); normPhones(); syncExpFromSheet();
+}
+/* stav exportu (Export CR ✓ / Exportovaný) sa vždy berie zo stĺpca Export v Sheete: „CR“ = Export CR hotový, „Final“ = Final export hotový, prázdne = bez exportu */
+function syncExpFromSheet() {
+  const h = S.m && S.m.export; if (!h || !S.data) return;
+  const cr = new Set(), full = new Set();
+  for (const r of S.data.contacts.rows) {
+    const v = norm(String(r.v[h] ?? '').trim());
+    if (v === 'final') full.add(r.r);
+    else if (v === 'cr') cr.add(r.r);
+  }
+  S.expDone.cr = cr; S.expDone.full = full;
+  for (const id of [...S.expSel]) if (full.has(id)) S.expSel.delete(id);
+  saveExpDone(); saveExpSel();
 }
 /* kontakt bez firmy v bunke (zlúčené/prázdne bunky) dedí firmu z riadku nad ním – len v apke, do Sheetu sa nič nezapisuje */
 function fillFirma() {
