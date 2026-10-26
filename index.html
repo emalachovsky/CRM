@@ -1571,7 +1571,8 @@ const FIELDS = [
   {k:'el_dod', label:'EE Dodávateľ', pats:['ee dodavatel','dodavatel ee','dodavatel el','dodavatel elektriny','ee dod']},
   {k:'pl_dod', label:'PL Dodávateľ', pats:['pl dodavatel','dodavatel pl','dodavatel plyn','pl dod']},
   {k:'osoby', label:'Ďalšie osoby', pats:['dalsie osoby']},
-  {k:'skup', label:'Skupina firiem', pats:['skupina firiem']}
+  {k:'skup', label:'Skupina firiem', pats:['skupina firiem']},
+  {k:'export', label:'Export', pats:['export']}
 ];
 const ACT_H = {dt:'Dátum a čas', firma:'Firma', kontakt:'Kontakt', typ:'Typ', stav:'Stav', pozn:'Poznámka', dalsi:'Ďalší krok', dalsiK:'Ďalší kontakt'};
 const CGROUPS = [
@@ -1983,6 +1984,31 @@ function expStage(r) { const g = groupOf(r); return g.some(x => S.expDone.full.h
 const expStageOk = (r, kind) => expStage(r) === (kind === 'full' ? 1 : 0);
 function saveExpDone() { try { LS.setItem('crm.expdone', JSON.stringify({cr: [...S.expDone.cr], full: [...S.expDone.full]})); } catch (e) {} }
 function saveExpSel() { try { LS.setItem('crm.expsel', JSON.stringify([...S.expSel])); } catch (e) {} }
+/* zápis stĺpca Export do Sheetu: 'CR' po Export CR, 'Final' po Final exporte, '' pri vrátení stavu pred export */
+async function writeExportCol(ids, value) {
+  const h = S.m.export; if (!h || !S.data) return;
+  for (const id of ids) {
+    const r = rowBy(id); if (!r) continue;
+    if ((r.v[h] ?? '') === value) continue;
+    try { await api('update', {sheet: 'contacts', row: r.r, values: {[h]: value}}); r.v[h] = value; }
+    catch (e) { toast('Stĺpec Export sa nezapísal pre riadok ' + r.r + ': ' + e.message, true); }
+  }
+  persist(); renderListBody();
+}
+/* doplní do stĺpca Export hodnoty CR/Final pre kontakty, ktoré už majú export hotový (zo starších exportov uložených len lokálne) */
+async function syncExportCol() {
+  const h = S.m.export; if (!h || !S.data) throw new Error('Stĺpec Export nie je spárovaný – priraď ho v Spárovaní stĺpcov');
+  let n = 0;
+  for (const r of S.data.contacts.rows) {
+    const v = S.expDone.full.has(r.r) ? 'Final' : S.expDone.cr.has(r.r) ? 'CR' : '';
+    if (v && (r.v[h] ?? '') !== v) {
+      try { await api('update', {sheet: 'contacts', row: r.r, values: {[h]: v}}); r.v[h] = v; n++; }
+      catch (e) { toast('Riadok ' + r.r + ': ' + e.message, true); }
+    }
+  }
+  persist(); renderListBody();
+  return n;
+}
 function pruneExpSel() {
   if (!S.data || !S.expSel.size) return;
   const ok = new Set(S.data.contacts.rows.map(r => r.r)); let ch = false;
@@ -2364,9 +2390,12 @@ function orderedHeaders() {
 function tabAll(r) {
   const grp = ks => ks.map(k => S.m[k]).filter(Boolean);
   const el = grp(['el_dod', 'el_druh', 'el_sp', 'el_cs', 'el_kon']), pl = grp(['pl_dod', 'pl_druh', 'pl_sp', 'pl_cs', 'pl_kon']);
-  const lab = h => `<label>${esc(h.replace(/^__new__/, ''))}${fieldInput(h, r.v[h] ?? '')}</label>`;
+  const hObch = fieldHeader('obch');   /* rovnaký stĺpec ako „Odberateľ“ v záložke Firma */
+  const lab = h => { let t = h.replace(/^__new__/, ''); if (h === S.m.firma) t = 'Zobrazený názov firmy'; else if (h === hObch) t = 'Odberateľ (Obchodný názov firmy)'; return `<label>${esc(t)}${fieldInput(h, r.v[h] ?? '')}</label>`; };
+  const other = orderedHeaders().filter(h => !el.includes(h) && !pl.includes(h) && h !== hObch);
+  if (hObch) { const i = other.indexOf(S.m.firma); other.splice(i >= 0 ? i + 1 : 0, 0, hObch); }   /* hneď pod Zobrazený názov firmy */
   const box = (cls, title, list) => list.length ? `<div class="cg ${cls}"><div class="gtitle">${title}</div>${list.map(lab).join('')}</div>` : '';
-  return `<form id="fAll" class="win pad" autocomplete="off">${box('grey', 'Ostatné', orderedHeaders().filter(h => !el.includes(h) && !pl.includes(h)))}${box('el', '<span class="gi">⚡</span>Elektrina', el)}${box('gas', '<span class="gi">🔥</span>Plyn', pl)}
+  return `<form id="fAll" class="win pad" autocomplete="off">${box('grey', 'Ostatné', other)}${box('el', '<span class="gi">⚡</span>Elektrina', el)}${box('gas', '<span class="gi">🔥</span>Plyn', pl)}
     </form>`;
 }
 
@@ -3246,6 +3275,7 @@ function openSettings() {
       <p class="rcP">Filtrované = to, čo máš práve vyfiltrované v zozname (Dnes/Všetky, Stav, hľadanie). Označené = kontakty s označeným kruhom vpravo hore v karte.</p>
       <p class="rcP">Postup: kruh v karte = označenie na Export CR. Po Export CR sa vedľa kruhu zobrazí sivé „Export CR ✓“ a ďalšie označenie kruhom povolí už len Final export. Po Final exporte kruh zmizne a ostane „Exportovaný“. Klepnutím na sivý štítok alebo na „Exportovaný“ sa (po potvrdení) stav vráti pred export. Export CR berie len kontakty bez exportu, Final export len kontakty s hotovým Export CR.</p>
       <button class="cta ghost" type="button" data-act="expclear">Zrušiť označenia na export</button>
+      ${S.m.export ? `<button class="cta ghost" type="button" data-act="expsync">Zapísať existujúce stavy exportu do stĺpca Export</button>` : `<p class="rcP">Pre zápis stavu exportu (CR / Final) do Sheetu spáruj nižšie stĺpec „Export“.</p>`}
     </section>
     <section class="setSec"><div class="gtitle">Kontrola duplicity</div>
       <button class="cta ghost" type="button" data-act="dupcheck">Kontrola duplicity (IČO a názvy)</button>
@@ -3575,7 +3605,8 @@ async function exportTpl(kind, onlySel) {
   /* po Export CR sa vedľa kruhu zobrazí sivé „Export CR ✓“ (ďalej už len Final); po Final exporte kruh zmizne a ostane „Exportovaný“ */
   { const set = kind === 'cr' ? S.expDone.cr : S.expDone.full;
     doneIds.forEach(id => { set.add(id); S.expSel.delete(id); });
-    saveExpDone(); saveExpSel(); renderListBody(); }
+    saveExpDone(); saveExpSel(); renderListBody();
+    writeExportCol(doneIds, kind === 'cr' ? 'CR' : 'Final'); }
   toast(`${KL} hotový: ${cnt.klienti || 0} klientov, ${cnt.kontakty || 0} kontaktov, ${cnt['odberne miesta'] || 0} OM, ${cnt.pripady || 0} prípadov, ${cnt.aktivity || 0} aktivít` + (skip ? ` · preskočené bez IČO: ${skip}` : '') + (omSkip ? ` · OM bez EIC/komodity: ${omSkip}` : '') + (reqSkip ? ` · riadky bez povinného poľa: ${reqSkip}` : '') + (EXP_DODMISS ? ` · dodávateľ mimo zoznamu (vynechaný): ${EXP_DODMISS}` : '') + (enumBad ? ` · hodnoty nesedia s Návodom (nechané prázdne): ${enumBad}` : '') + ` · desatinný oddeľovač: ${DEC === ',' ? 'čiarka' : 'bodka'}`);
 }
 
@@ -3696,8 +3727,10 @@ document.addEventListener('click', e => {
     e.stopPropagation(); const r0 = rowBy(Number(el.dataset.expreset)); if (!r0) return;
     const st0 = expStage(r0);
     if (!confirm(st0 === 1 ? 'Zrušiť Export CR?\n\nStav sa vráti pred export a kontakt bude možné znova označiť na Export CR.' : 'Vrátiť stav pred exportom?\n\nOdstráni sa označenie „Exportovaný“ (aj Export CR) a kontakt bude možné znova označiť na export od začiatku (Export CR → Final export).')) return;
-    groupOf(r0).forEach(x => { S.expDone.cr.delete(x.r); S.expDone.full.delete(x.r); S.expSel.delete(x.r); });
-    saveExpDone(); saveExpSel(); renderListBody(); return;
+    const ids0 = groupOf(r0).map(x => x.r);
+    ids0.forEach(id => { S.expDone.cr.delete(id); S.expDone.full.delete(id); S.expSel.delete(id); });
+    saveExpDone(); saveExpSel(); renderListBody();
+    writeExportCol(ids0, ''); return;
   }
   if ((el = t.closest('[data-expmk]'))) { e.stopPropagation(); toggleExpMark(Number(el.dataset.expmk), el); return; }
   if ((el = t.closest('[data-urgent]'))) { toggleUrgent(); return; }
@@ -3753,6 +3786,7 @@ document.addEventListener('click', e => {
     else if (a === 'exportfinal') exportTpl('full');
     else if (a === 'exportfinalsel') exportTpl('full', true);
     else if (a === 'expclear') { S.expSel.clear(); saveExpSel(); renderListBody(); if ($('#fSet')) openSettings(); toast('Označenia na export zrušené'); }
+    else if (a === 'expsync') { el.disabled = true; el.textContent = 'Zapisujem…'; syncExportCol().then(n => { toast('Stĺpec Export aktualizovaný: ' + n + ' kontaktov'); if ($('#fSet')) openSettings(); }).catch(e => { toast(e.message, true); if ($('#fSet')) openSettings(); }); }
     else if (a === 'addosoba') { const l = $('#osList'), rr = rowBy(S.sel); if (l) { const has2 = l.querySelector('.osP2'); l.insertAdjacentHTML('beforeend', persCard({}, has2 ? 'x' : 'p2', has2 ? null : rr)); const c = l.lastElementChild.querySelector('input'); if (c) c.focus(); markDirty(); } }
     else if (a === 'delosoba') { const c = el.closest('.osX'); if (c) { const t2 = c.classList.contains('osP2') && c.querySelector('[data-h]'); const h = t2 && !t2.dataset.h.startsWith('__new__') ? t2.dataset.h : ''; if (h) c.outerHTML = `<input type="hidden" data-h="${esc(h)}" value="">`; else c.remove(); markDirty(); } }
     else if (a === 'linkopen') { const b = $('#linkBox'); if (b) { b.style.display = b.style.display === 'none' ? '' : 'none'; const q = $('#linkQ'); if (q && b.style.display === '') q.focus(); } }
