@@ -1401,6 +1401,20 @@ html[data-theme="light"] body .card.card.sel{
     0 0 26px 5px color-mix(in srgb,var(--sg) 32%,transparent),
     inset 12px 0 12px -8px color-mix(in srgb,var(--sg) 35%,transparent),
     inset -12px 0 12px -8px color-mix(in srgb,var(--sg) 35%,transparent)!important}
+
+/* ===== pevné hlavičky: rolovanie len pod nimi, bežec len v obsahu ===== */
+#listPane{display:flex;flex-direction:column;overflow:hidden!important;padding:0!important}
+html body #listPane .lhead{position:relative;top:auto;margin:0;flex:none;z-index:6}
+#listPane>.empty,#listPane>.setupBox{margin:0 .8rem}
+#listBody{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 .8rem 1rem}
+@media(min-width:900px){
+  #listBody{padding:0 1.1rem 1.5rem}
+  #detailPane{display:flex;flex-direction:column;overflow:hidden!important;padding:0!important}
+  #detailPane>.ph{flex:1}
+  html body #detailPane .dfix{position:relative;top:auto;flex:none;margin:0;padding:0 1.1rem;z-index:20}
+  .dscroll{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 1.1rem 2rem}
+}
+@media(max-width:899px){.dscroll{display:contents}}
 </style>
 </head>
 <body>
@@ -2338,8 +2352,9 @@ function contactDetail(r) {
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
 </div>
     <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''} ${S.dirty && S.dTabs.has(k) ? 'ed' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div id="firmTop">${firmTopInner(r)}</div><div class="anbox"><div id="actSlot"></div></div></div>${firmBar(r)}</div>
-    <div id="tabBody">${tabBody(r)}</div>`;
+    <div id="dscroll" class="dscroll"><div id="tabBody">${tabBody(r)}</div></div>`;
 }
+const dScroller = () => { const s = document.getElementById('dscroll'); return s && getComputedStyle(s).display !== 'contents' ? s : document.getElementById('detailPane'); };
 function tabBody(r) {
   syncFirmTop(r);
   const h = tabBodyInner(r);
@@ -2619,8 +2634,8 @@ function commitBg(r, o) {
   else if (dtChanged && nextAfter != null && rowBy(nextAfter)) { S.limit = Math.max(S.limit, 150); openSel(nextAfter); }
   else {
     /* bežné uloženie: ostať na otvorenom kontakte (aj s pozíciou posunu) */
-    const dp = $('#detailPane'), sc = dp ? dp.scrollTop : 0;
-    renderDetail(); if (dp) dp.scrollTop = sc;
+    const sc = dScroller().scrollTop;
+    renderDetail(); dScroller().scrollTop = sc;
     saveMsg(o.msg || 'Uložené ✔'); revealSel();
   }
   pendingSaves++;
@@ -3195,14 +3210,14 @@ function openSel(id) {
   S._st = null;
   S.sel = id; if (!['hovor', 'firma', 'om', 'udaje'].includes(S.tab)) { try { S.tab = LS.getItem('crmTab'); } catch (e) {} } if (!['hovor', 'firma', 'om', 'udaje'].includes(S.tab)) S.tab = 'hovor'; S.dirty = false; S.msg = null; S.undo = null;
   if (innerWidth < 900 && !(history.state && history.state.d)) history.pushState({d: 1}, '');
-  render(); $('#detailPane').scrollTop = 0;
+  render(); dScroller().scrollTop = 0; $('#detailPane').scrollTop = 0;
   revealSel();
 }
 /* vybraná karta sa zastaví pod pevnou hlavičkou (hľadanie + filtre), nie za ňou */
 function revealSel() {
   const c = document.querySelector('#listPane .card.sel'); if (!c) return;
   const head = document.querySelector('#listPane .lhead');
-  const off = (head ? head.offsetHeight : 0) + 6;
+  const off = 6;
   c.style.scrollMarginTop = off + 'px'; c.style.scrollMarginBottom = '12px';
   c.scrollIntoView({block: 'nearest'});
   const g = c.previousElementSibling;
