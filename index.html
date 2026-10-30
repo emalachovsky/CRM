@@ -2863,7 +2863,8 @@ let _gm = null, _lg = null;
 const rowKey = r => { const i = String(V(r, 'ico')).replace(/\s+/g, ''); return i ? 'i' + i : 'f' + norm(V(r, 'firma')); };
 function lgGet() { if (!_lg) { try { _lg = JSON.parse(LS.getItem('crm.groups') || '{}') || {}; } catch (e) { _lg = {}; } } return _lg; }
 function lgSave() { try { LS.setItem('crm.groups', JSON.stringify(_lg || {})); } catch (e) {} _gm = null; }
-function gidOf(r) { const g = String(V(r, 'skup')).trim(); return g || lgGet()[rowKey(r)] || ''; }
+/* ak stĺpec „Skupina firiem“ v Sheete existuje, platí VÝHRADNE Sheet (lokálna záloha sa nepoužíva); záloha slúži len keď stĺpec ešte nie je */
+function gidOf(r) { const g = String(V(r, 'skup')).trim(); if (S.m.skup) return g; return g || lgGet()[rowKey(r)] || ''; }
 function gmap() {
   const rows = S.data.contacts.rows;
   if (_gm && _gm.src === rows && _gm.len === rows.length) return _gm.m;
@@ -2951,23 +2952,25 @@ async function syncGroups() {
   syncingG = true;
   try {
     const lg = lgGet(), rows = S.data.contacts.rows;
-    if (!S.m.skup && Object.keys(lg).length && !S.triedSkupCol) {   /* stĺpec ešte nie je – skús ho vytvoriť */
-      S.triedSkupCol = true;
-      await materializeNewCols({[fieldHeader('skup')]: 'x'});
+    if (S.m.skup) {
+      /* stĺpec v Sheete existuje → Sheet je jediný zdroj pravdy; stará lokálna záloha (aj z iného zariadenia) sa zahodí a NIKDY sa nezapisuje späť */
+      if (Object.keys(lg).length) { _lg = {}; lgSave(); renderChips(); renderListBody(); if (!S.dirty) renderDetail(); }
+      return;
     }
+    /* jednorazová migrácia: stĺpec ešte v Sheete nie je → vytvor ho a zapíš doň spojenia z lokálnej zálohy */
+    if (!Object.keys(lg).length || S.triedSkupCol) return;
+    S.triedSkupCol = true;
+    await materializeNewCols({[fieldHeader('skup')]: 'x'});
     if (!S.m.skup) return;
-    let ch = false;
-    rows.forEach(x => { const g = String(V(x, 'skup')).trim(); if (g && lg[rowKey(x)] !== g) { lg[rowKey(x)] = g; ch = true; } });
-    if (ch) lgSave();
     const cnt = {}; rows.forEach(x => { const g = lg[rowKey(x)]; if (g) cnt[g] = (cnt[g] || 0) + 1; });
-    const todo = rows.filter(x => !String(V(x, 'skup')).trim() && lg[rowKey(x)] && cnt[lg[rowKey(x)]] > 1);
+    const todo = rows.filter(x => lg[rowKey(x)] && cnt[lg[rowKey(x)]] > 1);
     for (const x of todo) {
       const vals = {[S.m.skup]: lg[rowKey(x)]};
       await api('update', {sheet: 'contacts', row: x.r, values: vals, check: S.m.firma && !x.fd ? {header: S.m.firma, value: V(x, 'firma')} : null});
       applyLocal(x, vals);
     }
+    _lg = {}; lgSave();
     if (todo.length) { persist(); renderListBody(); toast('Spojené firmy zapísané do Sheetu: ' + todo.length); }
-    else if (ch) { renderListBody(); if (!S.dirty) renderDetail(); }
   } catch (e) { /* skúsi sa znova pri ďalšom načítaní */ }
   finally { syncingG = false; }
 }
