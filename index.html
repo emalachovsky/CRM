@@ -1530,6 +1530,13 @@ html body .chips .chip,html body .chips select{padding:.18rem .3rem;font-size:.8
   html body .cg{padding:.25rem .5rem .05rem}
   html body .dtRow{row-gap:.3rem}
 }
+
+/* ===== v9: mobil/iPad – celá aplikácia začína pod stavovým riadkom, horná linka hlavičky je vidieť ===== */
+@media(max-width:899px),(pointer:coarse){
+  html body #app{box-sizing:border-box;padding-top:calc(env(safe-area-inset-top) + .5rem)}
+  html body .lhead,html body .dhead{padding-top:.45rem}
+  html body #listPane>.empty.big,html body .setupBox.big{padding-top:2rem}
+}
 </style>
 </head>
 <body>
