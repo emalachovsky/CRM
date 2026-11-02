@@ -21,7 +21,7 @@
   --text:#f0ece4; --muted:#8b91a1; --red:#e5605c; --green:#6fd3b0; --violet:#a78bfa;
 }
 *{box-sizing:border-box}
-html{font-size:clamp(15px,.3vw + 13px,18px);-webkit-text-size-adjust:100%}
+html{font-size:clamp(14px,.3vw + 12px,17px);-webkit-text-size-adjust:100%}
 body{margin:0;background:radial-gradient(1100px 600px at 85% -10%,rgba(235,188,90,.07),transparent),var(--bg);
   color:var(--text);font:1rem/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -1418,6 +1418,118 @@ html body #listPane .lhead{position:relative;top:auto;margin:0;flex:none;z-index
   .dscroll{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 1.1rem 2rem}
 }
 @media(max-width:899px){.dscroll{display:contents}}
+
+/* ===== v7: kompaktnejšia hlavička detailu + o 1 bod menšie písmo ===== */
+:root{--sth:1.75rem}
+html body .dhead{padding-top:.45rem;padding-bottom:.3rem;row-gap:.25rem;gap:.5rem}
+html body .dhead h2{font-size:1.4rem;line-height:1.1}
+html body .dhead .sub{font-size:.85rem!important;margin-top:.05rem}
+html body .dhead .back{width:2rem;height:2rem;border-radius:11px}
+html body .dhead .back .ico{width:1.1rem;height:1.1rem}
+html .dhead .nextCall{font-size:.88rem;padding:.05rem .6rem;margin:.25rem 0 0;line-height:1.2}
+html body .dhead .stsel,html body .dhead .saveTop,html body .dhead .undoTop{font-size:.85rem!important;height:var(--sth);min-height:var(--sth)}
+html body .dhead .stCol{gap:.3rem}
+html body .dhead>.savemsg{font-size:.82rem;padding:0 .6rem}
+html body .dhead .grpChips .chip{height:var(--sth);font-size:.82rem;padding:.1rem .6rem}
+html body .dhead .grpChips{min-height:var(--sth)}
+html body .calls{margin:.15rem 0 .4rem;gap:.4rem}
+html body .call,html body .call.main,html body .call.alt{min-height:2rem;padding-top:.15rem;padding-bottom:.15rem;font-size:1rem;border-radius:12px}
+html body .call .cTx small{margin-top:.1rem;font-size:.58em}
+.callnote{font-size:.78rem;line-height:1.25}
+.links{margin-bottom:.35rem;gap:.4rem}
+.lnk{font-size:.8rem;padding:.15rem .55rem;border-radius:10px}
+.tabsRow{margin-bottom:.5rem;gap:.4rem}
+html body .tab{padding:.3rem .6rem;font-size:.88rem}
+html body .btn-an{font-size:.8rem;padding:.25rem .7rem}
+html body #firmTop .anok{font-size:.68rem;padding:.15rem .5rem}
+.chip.sm{font-size:.78rem;padding:.15rem .55rem}
+html body .nxRow{margin:.2rem 0 .05rem}
+@media(min-width:900px){
+  .dfix::after{height:.6rem;bottom:-.6rem}
+}
+@media(max-width:600px){
+  :root{--sth:1.8rem}
+  html body .dhead{padding-top:calc(env(safe-area-inset-top) + .8rem);padding-bottom:.25rem}
+  html body .dhead h2{font-size:1.15rem}
+  html body .dhead .stsel,html body .dhead .saveTop,html body .dhead .undoTop{font-size:.85rem!important}
+  html body .tabsRow .tab{font-size:.74rem!important}
+  html body .callRow .calls .call,html body .callRow .calls .call.main,html body .callRow .calls .call.alt{font-size:.9rem}
+  html body .anbox .btn-an,html body .anbox #actSlot .actsel{height:2.4rem;min-height:2.4rem}
+}
+@media(min-width:601px) and (pointer:coarse){
+  html body .dhead{padding-top:calc(env(safe-area-inset-top,0px) + .4rem);padding-bottom:.3rem}
+  html body .dhead h2{font-size:1.3rem}
+  html body .dhead .back{width:2rem;height:2rem}
+}
+
+/* ===== v8: tesnejšie okná a polia v záložkách + nižšia hlavička zoznamu ===== */
+html body label{margin:.05rem 0 .35rem;font-size:.74rem;letter-spacing:.04em}
+html body label input:not([type=checkbox]):not([type=radio]):not(#_),
+html body label select:not(#_){height:2rem;min-height:2rem;margin-top:.12rem;padding-top:.1rem;padding-bottom:.1rem;font-size:max(16px,.95rem);border-radius:9px}
+html body label input[type=date]:not(#_){height:2rem;min-height:2rem}
+html body label textarea:not(#_){margin-top:.12rem;padding-top:.25rem;padding-bottom:.25rem;border-radius:9px}
+html body #fAll textarea:not(#_),html body #callNote:not(#_){min-height:3.6rem}
+html body .notesLb textarea:not(#_){min-height:7rem}
+html body .dtNarrow label input:not(#_),html body .dtNarrow label select:not(#_){height:2rem;min-height:2rem}
+html body .actsel,html body .stsel,html body select.pillSel{min-height:2rem;padding-top:.15rem;padding-bottom:.15rem;font-size:.9rem}
+html body .dtAct .actsel{height:2rem}
+.pad{padding:.55rem .65rem}
+html body .cg{padding:.3rem .65rem .05rem;margin:.4rem 0;border-radius:13px}
+.gtitle{margin:.2rem 0 .35rem;font-size:.74rem}
+.cg .gtitle,.cg.el .gtitle,.cg.gas .gtitle,.cg.basic .gtitle,.cg.grey .gtitle{font-size:.82rem}
+.cgpair{gap:.5rem}.cgpair .cg{margin:.4rem 0}
+.cg.basic{column-gap:.6rem}
+.omBox{padding:.4rem .6rem 0;margin:.35rem 0;border-radius:10px}
+.omBox .omNo{margin-bottom:.3rem;font-size:.85rem}
+.omCard .omNo{padding:.3rem .4rem}
+.pr2{gap:.45rem}
+.nrow{margin:0 0 .4rem;gap:.45rem;--nh:2rem}
+.nxIn{margin-top:.4rem;gap:.6rem}
+.nxInUrg{height:2rem;margin-bottom:.35rem}
+.qd,.qn{margin:.3rem 0 .45rem;gap:.3rem}
+.dtRow{margin-bottom:.1rem}
+.dtNarrow{gap:.45rem}
+.notePrev{margin:.1rem 0 .4rem;padding:.35rem .6rem}
+.btn-sm{padding:.25rem .7rem;font-size:.85rem}
+.delWrap{margin:.9rem 0 .5rem}
+.dscroll,#tabBody{--tight:1}
+@media(min-width:900px){.dscroll{padding-bottom:1rem}}
+.tabsRow{margin-bottom:.4rem}
+.firmBar{margin:.05rem 0 .4rem}
+.lnkSug{margin:.25rem 0;padding:.3rem .6rem}
+.omT td{padding:.3rem .45rem}
+/* hlavička zoznamu vľavo */
+html body .lhead{padding-top:calc(env(safe-area-inset-top) + .3rem);padding-bottom:.25rem}
+@media(min-width:900px){html body .lhead{padding-top:.4rem;padding-bottom:.25rem}}
+html body .lhead .ltitle{margin-bottom:.2rem;column-gap:.4rem}
+html body .lhead .ltitle .logo{font-size:1.35rem}
+html body .lhead .ltitle h1{font-size:1rem}
+html body .lhead .ib{width:2rem;height:2rem;border-radius:10px}
+html body .lhead .ib.refresh{width:1.9rem;height:1.9rem}
+html body .lhead .ib.reloadpg{width:2rem;height:2rem}
+html body .lhead .ib.add .ico,html body .lhead .ib[data-nav="settings"] .ico{width:1.1rem;height:1.1rem}
+html body .lhead .ltitle .qrow{margin-top:.3rem}
+html body .lhead .ltitle .qrow input{height:1.9rem;font-size:max(16px,.9rem)}
+html body .lhead .ltitle .sync{margin-top:.3rem;font-size:.85rem}
+html body .lhead .chips{padding:.25rem 0 .05rem;gap:.3rem}
+html body .chips .chip,html body .chips select{padding:.18rem .3rem;font-size:.8rem;border-radius:11px}
+.card{margin:.4rem 0}
+@media(max-width:600px){
+  html body .lhead{padding-top:calc(env(safe-area-inset-top) + .9rem);padding-bottom:.2rem}
+  html body .lhead .ib{width:2rem;height:2rem}
+  html body .lhead .ib.refresh{width:1.9rem;height:1.9rem}
+  html body .lhead .ltitle .qrow input{height:1.9rem}
+  html body .lhead .ltitle .logo{font-size:1.3rem}
+  html body .lhead .ltitle h1{font-size:.95rem}
+  html body .lhead .ltitle .sync{font-size:.78rem}
+  html body .dtRow .qd .chip{height:2rem}
+  html body #fCall.win{padding:.5rem .4rem}
+  html body #fCall .omBox{padding:.35rem .45rem 0}
+  html body #fCall label input:not([type=checkbox]):not([type=radio]):not(#_),html body #fCall label textarea:not(#_){padding-left:.45rem;padding-right:.45rem}
+  .pad{padding:.5rem .5rem}
+  html body .cg{padding:.25rem .5rem .05rem}
+  html body .dtRow{row-gap:.3rem}
+}
 </style>
 </head>
 <body>
