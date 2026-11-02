@@ -1543,6 +1543,17 @@ html body .chips .chip,html body .chips select{padding:.18rem .3rem;font-size:.8
   html body #app{padding-top:calc(env(safe-area-inset-top) + 1.4rem)}
 }
 body.locked #detailPane .dhead :is(button,select,.stsel,.saveTop,.undoTop,.back){opacity:1!important}
+
+/* ===== v11: mobil – jemne väčšie písmo ===== */
+@media(max-width:600px){
+  html{font-size:15.5px}
+  html body .tabsRow .tab{font-size:.8rem!important}
+  html body .dhead .stsel,html body .dhead .saveTop,html body .dhead .undoTop{font-size:.9rem!important}
+  html body .lhead .ltitle .sync{font-size:.82rem}
+  html body .chips .chip,html body .chips select{font-size:.88rem}
+  html body .callRow .calls .call,html body .callRow .calls .call.main,html body .callRow .calls .call.alt{font-size:.95rem}
+  html body label{font-size:.78rem}
+}
 </style>
 </head>
 <body>
