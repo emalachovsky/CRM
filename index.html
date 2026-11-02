@@ -1537,6 +1537,12 @@ html body .chips .chip,html body .chips select{padding:.18rem .3rem;font-size:.8
   html body .lhead,html body .dhead{padding-top:.45rem}
   html body #listPane>.empty.big,html body .setupBox.big{padding-top:2rem}
 }
+
+/* ===== v10: väčší odstup od stavového riadku + hlavička detailu sa počas načítania nestmaví ===== */
+@media(max-width:899px),(pointer:coarse){
+  html body #app{padding-top:calc(env(safe-area-inset-top) + 1.4rem)}
+}
+body.locked #detailPane .dhead :is(button,select,.stsel,.saveTop,.undoTop,.back){opacity:1!important}
 </style>
 </head>
 <body>
