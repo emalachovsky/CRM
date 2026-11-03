@@ -1062,19 +1062,19 @@ html:not([data-theme="light"]) #fOm .dwrap.has input[type=date],html:not([data-t
 
 /* ===== iPad / tablet (dotykové zariadenia nad 600px): hlavička detailu ako na iPhone ===== */
 @media(min-width:601px) and (max-width:759px) and (pointer:coarse){
-  /* tlačidlo Späť je vždy vidieť (na desktope s myšou ostáva skryté) */
+  /* tlačidlo Späť je vždy vidieť (v dvoch paneloch ostáva skryté) */
   html body .dhead .back{display:grid!important;width:2.5rem;height:2.5rem;flex:none}
-  /* nepohyblivá hlavička: firma + meno vedľa Späť, pod tým Stav / Späť / Uložiť */
-  html body .dhead{position:sticky;top:0;z-index:20;flex-wrap:wrap;align-items:center;row-gap:.45rem;
+  /* pevná hlavička: Späť + firma + meno vľavo, Stav vpravo pri názve firmy, pod ním Späť / Uložiť */
+  html body .dhead{position:relative;top:auto;z-index:20;flex-wrap:nowrap;align-items:flex-start;gap:.5rem;
     padding-top:calc(env(safe-area-inset-top,0px) + .7rem);padding-bottom:.5rem;background:var(--panel,var(--bg))}
-  html body .dhead>div[style*="flex:1"]{flex:1 0 calc(100% - 3.4rem)!important;min-width:0}
-  html body .dhead>.savemsg{order:3;align-self:auto;height:auto;min-height:var(--sth);margin:0}
-  html body .dhead .stCol{order:4;display:flex;flex:1 0 100%;gap:.5rem;align-items:stretch}
-  html body .dhead .stCol .saveGrp{display:contents}
-  html body .dhead .stCol .stsel{flex:0 0 auto;width:var(--stselw,auto);min-width:0}
-  html body .dhead .stCol .undoTop,html body .dhead .stCol .saveTop{flex:0 0 auto;width:auto!important;min-width:0;padding:0 1rem;justify-content:center}
-  html body .dhead .stCol .undoTop{margin-left:auto}
+  html body .dhead>div[style*="flex:1"]{flex:1 1 0!important;min-width:0}
   html body .dhead h2{font-size:1.5rem}
+  html body .dhead .stCol{margin-left:auto;flex:none}
+  /* rolovanie len pod záložkami, hlavička je zamknutá */
+  html body #detailPane{display:flex;flex-direction:column;overflow:hidden!important;padding:0!important}
+  html body #detailPane>.ph{flex:1}
+  html body #detailPane .dfix{display:block;position:relative;top:auto;flex:none;margin:0;padding:0 .8rem;z-index:20}
+  html body .dscroll{display:block;flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 .8rem 2rem}
 }
 
 /* Detail kontaktu (jeden panel pod 900px) musí byť nad hlavičkou zoznamu (CRM / Hľadať / Dnes-Všetky-Stav), ktorá mala z-index 6 */
@@ -1563,7 +1563,7 @@ html[data-theme="light"] .tab.on{background:color-mix(in srgb,#d9690f 22%,#fff)!
 html body .tab.on:not(.bad){color:#fff4e5!important}
 html[data-theme="light"] body .tab.on:not(.bad){color:#7a3300!important}
 #tabBody{position:relative;isolation:isolate}
-#tabBody::before{content:"";position:absolute;z-index:-1;left:-1.1rem;right:-1.1rem;top:-.5rem;height:4.5rem;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,#e07a1f 30%,transparent) 0%,transparent 100%)}
+#tabBody::before{display:none!important;content:"";position:absolute;z-index:-1;left:-1.1rem;right:-1.1rem;top:-.5rem;height:4.5rem;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,#e07a1f 30%,transparent) 0%,transparent 100%)}
 html[data-theme="light"] #tabBody::before{background:linear-gradient(180deg,color-mix(in srgb,#d9690f 20%,transparent) 0%,transparent 100%)}
 
 /* === Telefonát = blankytná modrá, Stretnutie = oranžová (štítok v karte, obrys vybranej karty) === */
