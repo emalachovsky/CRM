@@ -1592,6 +1592,9 @@ html body .calls a.call,html body .calls div.call,html body .callRow .calls .cal
   .callLinks{display:block}
   .callLinks .links{display:flex;flex-direction:row;flex-wrap:wrap;gap:.4rem;margin:.3rem 0 .6rem}
 }
+/* === hlavička detailu: „Čo nasleduje“ bez urgentu – rovnaké farby ako v karte kontaktu vľavo (čierne pozadie, svetlomodré písmo) === */
+html body .dhead .nextCall:not(.urg){background:#2f3541!important;border:1.5px solid var(--ibd)!important;color:#9fd8ff!important;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif!important;font-weight:400!important;letter-spacing:0!important;border-radius:12px}
+html body .dhead .nextCall:not(.urg)>span,html body .dhead .nextCall:not(.urg) .ico{color:#9fd8ff!important}
 </style>
 </head>
 <body>
