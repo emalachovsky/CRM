@@ -1554,6 +1554,42 @@ body.locked #detailPane .dhead :is(button,select,.stsel,.saveTop,.undoTop,.back)
   html body .callRow .calls .call,html body .callRow .calls .call.main,html body .callRow .calls .call.alt{font-size:.95rem}
   html body label{font-size:.78rem}
 }
+/* VEĽKÉ PÍSMENÁ: názov Kontakty, meno pod firmou, názvy záložiek, tlačidlá Spojiť s firmou / Načítať analýzu */
+html body .ltitle h1,html body .dhead .sub,html body .tab,html body .chip.sm[data-act="linkopen"],html body .btn-an{text-transform:uppercase!important}
+
+/* === záložky: jemné oranžové zvýraznenie pozadia pod názvom záložky (aj v hornej časti obsahu) === */
+.tab.on{background:color-mix(in srgb,#c2570c 15%,var(--panel))!important}
+html[data-theme="light"] .tab.on{background:color-mix(in srgb,#d9690f 12%,var(--panel))!important}
+#tabBody{position:relative;isolation:isolate}
+#tabBody::before{content:"";position:absolute;z-index:-1;left:-1.1rem;right:-1.1rem;top:-.5rem;height:4.5rem;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,#c2570c 15%,transparent) 0%,transparent 100%)}
+html[data-theme="light"] #tabBody::before{background:linear-gradient(180deg,color-mix(in srgb,#d9690f 12%,transparent) 0%,transparent 100%)}
+
+/* === Telefonát = blankytná modrá, Stretnutie = oranžová (štítok v karte, obrys vybranej karty) === */
+html body .c-left .badge.actnote.tele{background:linear-gradient(135deg,#bfe9ff 0%,#4fb6f2 100%)!important;border:1px solid #1f86c7!important;color:#05263b!important;font-weight:700;box-shadow:0 0 8px 1px rgba(79,182,242,.55),0 0 18px 3px rgba(79,182,242,.28)!important}
+html body .c-left .badge.actnote.tele.tele>span,html body .c-left .badge.actnote.tele .ico{color:#05263b!important}
+html body .card.card.sel.am.am.am{border-color:#ffa733!important;border-left-color:#ffa733!important;border-right-color:#ffa733!important;box-shadow:0 0 0 1px #ffa733,0 0 16px 3px rgba(255,167,51,.65)!important}
+html body .card.card.sel.at.at.at{border-color:#4fb6f2!important;border-left-color:#4fb6f2!important;border-right-color:#4fb6f2!important;box-shadow:0 0 0 1px #4fb6f2,0 0 16px 3px rgba(79,182,242,.65)!important}
+html[data-theme="light"] body .card.card.sel.am.am.am{border-color:#ffa733!important;border-left-color:#ffa733!important;border-right-color:#ffa733!important;box-shadow:0 0 0 1px #ffa733,0 0 16px 3px rgba(255,167,51,.65)!important}
+html[data-theme="light"] body .card.card.sel.at.at.at{border-color:#4fb6f2!important;border-left-color:#4fb6f2!important;border-right-color:#4fb6f2!important;box-shadow:0 0 0 1px #4fb6f2,0 0 16px 3px rgba(79,182,242,.65)!important}
+
+/* === trvalý jemný obrys kontaktu s aktivitou (glow pribudne až po kliknutí – rieši pravidlo .sel vyššie) === */
+html body .card.card.am.am:not(.sel),html body .card.card.am.am:not(.sel):hover{border:1.5px solid #ffa733!important;box-shadow:none!important}
+html body .card.card.at.at:not(.sel),html body .card.card.at.at:not(.sel):hover{border:1.5px solid #4fb6f2!important;box-shadow:none!important}
+
+/* telefóny vľavo, vedľa nich vpravo pod sebou e-mail (hore) a web (dole) */
+.callLinks{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:.9rem}
+.callLinks .callRow{flex:0 1 auto;max-width:100%}
+.callLinks .links{flex:1 1 9rem;min-width:0;flex-direction:column;flex-wrap:nowrap;align-items:flex-start;justify-content:flex-start;gap:.35rem;margin:.3rem 0 .8rem}
+.callLinks .links:not(:has(.lnk)){display:none}
+.callLinks .lnk{max-width:100%;min-width:0;word-break:break-all;overflow-wrap:anywhere}
+
+/* tlačidlá telefónov vždy rovnako vysoké (s menom aj bez mena) */
+html body .calls a.call,html body .calls div.call,html body .callRow .calls .call{height:2.7rem!important;min-height:2.7rem!important;box-sizing:border-box;padding-top:0!important;padding-bottom:0!important}
+/* iPhone / úzky displej: e-mail a web zostávajú pod tlačidlami telefónov */
+@media(max-width:600px){
+  .callLinks{display:block}
+  .callLinks .links{display:flex;flex-direction:row;flex-wrap:wrap;gap:.4rem;margin:.3rem 0 .6rem}
+}
 </style>
 </head>
 <body>
@@ -1661,13 +1697,33 @@ function switchTab(tab, el) {
   S.dTabs = keep; S.dirty = keep.size > 0; if (keep.size) syncTabDots();
 }
 /* neuložené zmeny → tlačidlo „Uložiť“ sa zvýrazní (body.dirty) */
+const BASE = new WeakMap();   /* pôvodné hodnoty polí – podľa nich sa pozná, že úprava sa vrátila do pôvodného stavu */
+S.struct = new Set();         /* záložky so štrukturálnou zmenou (pridaná/odstránená osoba) – tie sa nikdy samy nevyčistia */
+function ctrlVal(el) {
+  if (el.type === 'checkbox' || el.type === 'radio') return el.checked ? '1' : '0';
+  if (el.tagName === 'SELECT') return String(el.selectedIndex) + '|' + el.value;
+  return String(el.value).replace(/\r\n/g, '\n');
+}
+function tabCtrls() { return [...document.querySelectorAll('#tabBody input,#tabBody textarea,#tabBody select')].filter(el => !['file', 'button', 'submit'].includes(el.type)); }
+function ensureBase() {
+  const c = tabCtrls(); if (!c.length || BASE.has(c[0])) return;
+  c.forEach(el => BASE.set(el, ctrlVal(el)));
+}
+['pointerdown', 'touchstart', 'keydown', 'focusin'].forEach(ev => document.addEventListener(ev, ensureBase, true));
+/* ak sa obsah záložky vrátil do pôvodného stavu (napr. bunka vymazaná späť na prázdno), zruší sa „neuložené“ */
+function recheckDirty() {
+  if (!S.dirty || S.struct.has(S.tab)) return;
+  const c = tabCtrls(); if (!c.length) return;
+  for (const el of c) { if (!BASE.has(el)) return; if (BASE.get(el) !== ctrlVal(el)) return; }
+  S.dirty = false;
+}
 (function () {
   let d = false;
   /* neuložené zmeny na iných záložkách (odložené v S._st) držia príznak „neuložené“ aj po uložení aktuálnej záložky */
   S.dTabs = new Set();
   Object.defineProperty(S, 'dirty', {get: () => d, set: v => {
     v = !!v;
-    if (!v) { if (S._st && S._st.tabs) delete S._st.tabs[S.tab]; const o = stashTabs(); S.dTabs = new Set(o); v = o.length > 0; }
+    if (!v) { if (S._st && S._st.tabs) delete S._st.tabs[S.tab]; const o = stashTabs(); S.dTabs = new Set(o); v = o.length > 0; S.struct.delete(S.tab); try { document.querySelectorAll('#tabBody input,#tabBody textarea,#tabBody select').forEach(el => BASE.delete(el)); } catch (e) {} }
     d = v; if (document.body) document.body.classList.toggle('dirty', d); syncUndo(); syncTabDots();
   }, enumerable: true, configurable: true});
   let u = null;
@@ -1827,12 +1883,12 @@ const PAL = {
   /* Stav – farby ako chips v rozbaľovačke v Sheete: [pozadie, písmo] */
   oslovit:['#dde5f5','#000000'], osloveny:['#7cd1f0','#111212'], 'posle fa':['#472d0b','#fae420'],
   analyza:['#e65e23','#f3f274'], ponuka:['#cfeab4','#1f6742'], rozhoduje:['#502d7a','#e0c9f0'], klient:['#1f6742','#cfeab4'],
-  lost:['#fbc9c3','#a11612'], odlozeny:['#10244a','#f1f9ff'], mailom:['#bbdcf4','#20499d'],
-  telefonat:['#3a3315','#f2d34e'], stretnutie:['#3d2410','#ff9a4a'], email:['#12284a','#6fb0ff'], mail:['#12284a','#6fb0ff'], uloha:['#a82018','#ffd0cc']
+  lost:['#fbc9c3','#a11612'], odlozeny:['#10244a','#f1f9ff'],
+  telefonat:['#4fb6f2','#05263b'], stretnutie:['#ffa733','#2a1600'], email:['#12284a','#6fb0ff'], mail:['#12284a','#6fb0ff'], uloha:['#a82018','#ffd0cc']
 };
 const ACTIVITIES = ['Telefonát', 'Stretnutie', 'Email'];
-const STAVY = ['Oslovený', 'Pošle FA', 'Mailom', 'Analýza', 'Klient', 'Lost', 'Odložený', 'Rozhoduje', 'Osloviť'];
-const ACT_ST = {telefonat:['#3a3315','#b8962b','#f2d34e'], stretnutie:['#3d2410','#c2691f','#ff9a4a'], email:['#12284a','#2f6fc4','#6fb0ff'], mail:['#12284a','#2f6fc4','#6fb0ff'], ponuka:['#cfeab4','#79ae80','#1f6742']};
+const STAVY = ['Oslovený', 'Pošle FA', 'Analýza', 'Klient', 'Lost', 'Odložený', 'Rozhoduje', 'Osloviť'];
+const ACT_ST = {telefonat:['#4fb6f2','#1f86c7','#05263b'], stretnutie:['#ffa733','#d98200','#2a1600'], email:['#12284a','#2f6fc4','#6fb0ff'], mail:['#12284a','#2f6fc4','#6fb0ff'], ponuka:['#cfeab4','#79ae80','#1f6742']};
 const actStyle = s => { const sc = sheetCol(s); if (sc) return `background:${sc[0]};border:1px solid ${sc[0]};color:${sc[1]}`; const a = ACT_ST[actKey(s)]; return a ? `background:${a[0]};border:1px solid ${a[1]};color:${a[2]}` : ''; };
 const actIcon = s => ico(actKey(s) === 'telefonat' ? 'phone' : actKey(s) === 'stretnutie' ? 'user' : actKey(s) === 'ponuka' ? 'file' : actKey(s) === 'email' ? 'mail' : 'activity');
 const actKey = s => { const n = norm(s); return /mail/.test(n) ? 'email' : /^ponuk/.test(n) ? 'ponuka' : n; };
@@ -1846,7 +1902,7 @@ function sheetCols() {
   [S.m.stav, S.m.pozicia].forEach(h => { const m = h && c[h]; if (m) for (const v in m) o[norm(v)] = [m[v][0], m[v][1] || textOn(m[v][0])]; });
   S._scD = d; S._scM = S.m; S._sc = o; return o;
 }
-const sheetCol = s => sheetCols()[norm(s)] || null;
+const sheetCol = s => (['telefonat', 'stretnutie'].includes(norm(s)) ? null : sheetCols()[norm(s)] || null);
 const palOf = s => sheetCol(s) || PAL[norm(s)] || (actKey(s) === 'ponuka' ? PAL.ponuka : null) || (/mail/.test(norm(s)) ? PAL.email : null);
 function palStyle(s) { const p = palOf(s); return p ? `background:${p[0]};color:${p[1]};border-color:${p[0]}` : ''; }
 const badge = s => s ? (palOf(s) ? `<span class="badge" style="${palStyle(s)}">${esc(s)}</span>` : `<span class="badge b-${stCol(s)}">${esc(s)}</span>`) : '';
@@ -2218,8 +2274,8 @@ function card(r) {
   const stg = expStage(r), dBoth = stg === 2;
   const xdTxt = stg === 1 ? 'Export CR ✓' : '', lblTxt = stg === 1 ? 'Export Final' : 'Export CR';
   const xdCls = dBoth ? 'exp xd2' : (expOn ? 'exp' : '') + (xdTxt ? ' xd1' : '');
-  return `<div class="card ${c} ${xdCls} ${gl.some(x => x.r === S.sel) ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''}" data-open="${r.r}">
-    <div class="c-left ${c} ${c === 'today' && t && t < nowHM() ? 'late' : ''} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}${norm(V(r, 'pozicia')) === 'stretnutie' ? ' meet' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
+  return `<div class="card ${c} ${xdCls} ${gl.some(x => x.r === S.sel) ? 'sel' : ''} ${norm(st) === 'klient' ? 'klient' : ''} ${norm(V(r, 'pozicia')) === 'stretnutie' ? 'am' : norm(V(r, 'pozicia')) === 'telefonat' ? 'at' : ''}" data-open="${r.r}">
+    <div class="c-left ${c} ${c === 'today' && t && t < nowHM() ? 'late' : ''} ${isActLbl(V(r, 'pozicia')) ? 'hasl' : ''}">${isActLbl(V(r, 'pozicia')) ? `<span class="badge actnote${sheetCol(V(r, 'pozicia')) ? ' sc' : ''}${norm(V(r, 'pozicia')) === 'stretnutie' ? ' meet' : norm(V(r, 'pozicia')) === 'telefonat' ? ' tele' : ''}" style="${actStyle(V(r, 'pozicia'))}">${actIcon(V(r, 'pozicia'))}<span>${esc(V(r, 'pozicia'))}</span></span>` : ''}<div class="c-time">${esc(t || '—')}</div><div class="c-date">${d ? esc(fmtD(d)) : 'bez termínu'}</div>${st ? `<div class="c-st">${badge(st)}</div>` : ''}</div>
     <div class="c-main"><div class="c-top"><b class="c-firma">${gl.length > 1 ? '🔗 ' + esc(gl.map(x => V(x, 'firma') || '(bez firmy)').join(' + ')) : esc(V(r, 'firma') || '(bez firmy)')}</b></div>
     <div class="c-sub"><span class="meno">${esc(V(r, 'osoba'))}</span> ${act ? '' : badge(V(r, 'pozicia'))}</div>
     ${nx ? `<div class="c-next ${urg ? 'urg' : ''}">${nextIco(nx)}<span>${esc(nx)}</span></div>` : ''}</div>
@@ -2492,9 +2548,9 @@ function contactDetail(r) {
   const tabs = [['hovor', 'Aktivita'], ['firma', 'Firma'], ['om', 'OM'], ['udaje', 'Všetko']];
   return `<div class="dfix"><div class="dhead"><button class="back" data-act="back" aria-label="Späť">${ico('back')}</button>
     <div style="flex:1"><h2>${esc(V(r, 'firma') || '(bez firmy)')}</h2><div class="sub">${esc(V(r, 'osoba'))}</div>${nextHeadHtml(r)}</div>${grpChips(r)}${savemsgHtml()}<div class="stCol">${stSelect(V(r, 'stav'))}${saveGrpHtml()}</div></div>
-    ${callBtns(r)}
+    <div class="callLinks">${callBtns(r)}
     <div class="links">${em ? `<a class="lnk" href="mailto:${esc(em)}">${ico('mail')}${esc(em)}</a>` : ''}${web ? `<a class="lnk" href="${esc(webHref)}" target="_blank" rel="noopener">${ico('globe')}${esc(web.replace(/^https?:\/\//i, ''))}</a>` : ''}
-</div>
+</div></div>
     <div class="tabsRow"><div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${S.tab === k ? 'on' : ''} ${S.dirty && S.dTabs.has(k) ? 'ed' : ''}" data-tab="${k}">${l}</button>`).join('')}</div><div id="firmTop">${firmTopInner(r)}</div><div class="anbox"><div id="actSlot"></div></div></div>${firmBar(r)}</div>
     <div id="dscroll" class="dscroll"><div id="tabBody">${tabBody(r)}</div></div>`;
 }
@@ -2728,9 +2784,10 @@ function actFor(r, typ, note, vals) {
 /* hlásenie o zápise do kalendára (Aktivita = Stretnutie / Telefonát) */
 function calToast(j, row) {
   if (!j) return;
+  if (j.ok && typeof j.ver === 'number' && j.ver < 8 && !window._calOld) { window._calOld = 1; toast('⚠️ Skript v Google Sheets je stará verzia (kalendár) – nasaď novú verziu CRM_API.gs', true); }
   if (j.calNote !== undefined && S.m.pozicia) { const r = row || rowBy(S.sel); if (r) applyNotes(r, {[S.m.pozicia]: j.calNote}); }
   if (!j.cal) return;
-  if (j.cal.ok) toast(j.cal.removed ? '📅 Udalosť z kalendára zrušená' : j.cal.moved ? '📅 Udalosť v kalendári presunutá: ' + j.cal.title : j.cal.dup ? '📅 Udalosť už v kalendári je' : '📅 Udalosť v kalendári: ' + j.cal.title);
+  if (j.cal.ok) toast(j.cal.none ? '📅 V kalendári sa nenašla udalosť na zmazanie: ' + j.cal.title : j.cal.removed ? '📅 Udalosť z kalendára zrušená (zmazané: ' + (j.cal.del || 0) + ')' : j.cal.moved ? '📅 Udalosť v kalendári presunutá (zmazané: ' + (j.cal.del || 0) + '): ' + j.cal.title : j.cal.dup ? '📅 Udalosť už v kalendári je' : '📅 Udalosť v kalendári: ' + j.cal.title);
   else toast('⚠️ ' + j.cal.error, true);
 }
 /* poznámky k bunkám s telefónom (Google Sheets „Vložiť poznámku“) */
@@ -3941,7 +3998,7 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-pv]'))) {
     const box = el.closest('[data-pick]'), inp = box.querySelector('input'), was = el.classList.contains('on');
     box.querySelectorAll('button').forEach(b => b.classList.remove('on'));
-    inp.value = was ? '' : el.dataset.pv; if (!was) el.classList.add('on'); markDirty(); return;
+    inp.value = was ? '' : el.dataset.pv; if (!was) el.classList.add('on'); markDirty(); recheckDirty(); return;
   }
   if ((el = t.closest('[data-qn]'))) { const a = $('#callNote'); a.value = a.value ? a.value.replace(/[\s,]+$/, '') + ', ' + el.dataset.qn : el.dataset.qn; markDirty(); return; }
   if ((el = t.closest('[data-qnx]'))) {
@@ -3972,8 +4029,8 @@ document.addEventListener('click', e => {
     else if (a === 'exportfinalsel') exportTpl('full', true);
     else if (a === 'expclear') { S.expSel.clear(); saveExpSel(); renderListBody(); if ($('#fSet')) openSettings(); toast('Označenia na export zrušené'); }
     else if (a === 'expsync') { el.disabled = true; el.textContent = 'Zapisujem…'; syncExportCol().then(n => { toast('Stĺpec Export aktualizovaný: ' + n + ' kontaktov'); if ($('#fSet')) openSettings(); }).catch(e => { toast(e.message, true); if ($('#fSet')) openSettings(); }); }
-    else if (a === 'addosoba') { const l = $('#osList'), rr = rowBy(S.sel); if (l) { const has2 = l.querySelector('.osP2'); l.insertAdjacentHTML('beforeend', persCard({}, has2 ? 'x' : 'p2', has2 ? null : rr)); const c = l.lastElementChild.querySelector('input'); if (c) c.focus(); markDirty(); } }
-    else if (a === 'delosoba') { const c = el.closest('.osX'); if (c) { const t2 = c.classList.contains('osP2') && c.querySelector('[data-h]'); const h = t2 && !t2.dataset.h.startsWith('__new__') ? t2.dataset.h : ''; if (h) c.outerHTML = `<input type="hidden" data-h="${esc(h)}" value="">`; else c.remove(); markDirty(); } }
+    else if (a === 'addosoba') { const l = $('#osList'), rr = rowBy(S.sel); if (l) { const has2 = l.querySelector('.osP2'); l.insertAdjacentHTML('beforeend', persCard({}, has2 ? 'x' : 'p2', has2 ? null : rr)); const c = l.lastElementChild.querySelector('input'); if (c) c.focus(); S.struct.add(S.tab); markDirty(); } }
+    else if (a === 'delosoba') { const c = el.closest('.osX'); if (c) { const t2 = c.classList.contains('osP2') && c.querySelector('[data-h]'); const h = t2 && !t2.dataset.h.startsWith('__new__') ? t2.dataset.h : ''; if (h) c.outerHTML = `<input type="hidden" data-h="${esc(h)}" value="">`; else c.remove(); S.struct.add(S.tab); markDirty(); } }
     else if (a === 'linkopen') { const b = $('#linkBox'); if (b) { b.style.display = b.style.display === 'none' ? '' : 'none'; const q = $('#linkQ'); if (q && b.style.display === '') q.focus(); } }
     else if (a === 'linkyes') { const o = rowBy(+el.dataset.cand); if (o) linkRows(rowBy(S.sel), [o]); }
     else if (a === 'linkno') { const o = rowBy(+el.dataset.cand), r0 = rowBy(S.sel); if (o && r0) { const d = noLink(); d.add(nlKey(r0, o)); try { LS.setItem('crm.nolink', JSON.stringify([...d])); } catch (e) {} renderDetail(); } }
@@ -4040,7 +4097,7 @@ document.addEventListener('input', e => {
   if (t.id === 'q') { S.q = t.value; S.limit = 150; renderListBody(); return; }
   if (t.closest('#fNew')) { newDupCheck(t.closest('#fNew')); return; }
   if (t.closest('#fAll, #fComp')) editDupCheck(t.closest('form'));
-  if (t.closest('#detailPane') && t.dataset.stsel === undefined) markDirty();
+  if (t.closest('#detailPane') && t.dataset.stsel === undefined) { markDirty(); recheckDirty(); }
 });
 document.addEventListener('change', e => {
   const t = e.target;
