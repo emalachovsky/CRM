@@ -1558,11 +1558,13 @@ body.locked #detailPane .dhead :is(button,select,.stsel,.saveTop,.undoTop,.back)
 html body .ltitle h1,html body .dhead .sub,html body .tab,html body .chip.sm[data-act="linkopen"],html body .btn-an{text-transform:uppercase!important}
 
 /* === záložky: jemné oranžové zvýraznenie pozadia pod názvom záložky (aj v hornej časti obsahu) === */
-.tab.on{background:color-mix(in srgb,#c2570c 15%,var(--panel))!important}
-html[data-theme="light"] .tab.on{background:color-mix(in srgb,#d9690f 12%,var(--panel))!important}
+.tab.on{background:color-mix(in srgb,#e07a1f 38%,var(--panel))!important}
+html[data-theme="light"] .tab.on{background:color-mix(in srgb,#d9690f 22%,#fff)!important}
+html body .tab.on:not(.bad){color:#fff4e5!important}
+html[data-theme="light"] body .tab.on:not(.bad){color:#7a3300!important}
 #tabBody{position:relative;isolation:isolate}
-#tabBody::before{content:"";position:absolute;z-index:-1;left:-1.1rem;right:-1.1rem;top:-.5rem;height:4.5rem;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,#c2570c 15%,transparent) 0%,transparent 100%)}
-html[data-theme="light"] #tabBody::before{background:linear-gradient(180deg,color-mix(in srgb,#d9690f 12%,transparent) 0%,transparent 100%)}
+#tabBody::before{content:"";position:absolute;z-index:-1;left:-1.1rem;right:-1.1rem;top:-.5rem;height:4.5rem;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,#e07a1f 30%,transparent) 0%,transparent 100%)}
+html[data-theme="light"] #tabBody::before{background:linear-gradient(180deg,color-mix(in srgb,#d9690f 20%,transparent) 0%,transparent 100%)}
 
 /* === Telefonát = blankytná modrá, Stretnutie = oranžová (štítok v karte, obrys vybranej karty) === */
 html body .c-left .badge.actnote.tele{background:linear-gradient(135deg,#bfe9ff 0%,#4fb6f2 100%)!important;border:1px solid #1f86c7!important;color:#05263b!important;font-weight:700;box-shadow:0 0 8px 1px rgba(79,182,242,.55),0 0 18px 3px rgba(79,182,242,.28)!important}
