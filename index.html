@@ -37,7 +37,7 @@ h1,h2,h3{margin:0}
 #detailPane{position:absolute;inset:0;z-index:5;background:var(--bg);transform:translateX(102%);transition:transform .25s ease;
   padding:0 .8rem 1.5rem}
 .show-detail #detailPane{transform:none}
-@media(min-width:900px){
+@media(min-width:760px){
   #main{grid-template-columns:minmax(21rem,28rem) 1fr;gap:1rem;padding:1rem}
   #listPane,#detailPane{position:static;transform:none;border-radius:20px;border:1px solid var(--line);border-top:3px solid var(--blue);
     background:linear-gradient(180deg,var(--panel2),var(--panel));box-shadow:0 14px 40px rgba(0,0,0,.45);padding:0 1.1rem 2rem}
@@ -46,7 +46,7 @@ h1,h2,h3{margin:0}
 
 /* ---------- list ---------- */
 .lhead{position:sticky;top:0;z-index:6;margin:0 -.8rem;padding:calc(env(safe-area-inset-top) + .5rem) .8rem .5rem;background:var(--bg);border-bottom:1px solid rgba(255,255,255,.08)}
-@media(min-width:900px){.lhead{margin:0 -1.1rem;padding:.9rem 1.1rem .5rem;background:var(--panel2);border-radius:20px 20px 0 0}}
+@media(min-width:760px){.lhead{margin:0 -1.1rem;padding:.9rem 1.1rem .5rem;background:var(--panel2);border-radius:20px 20px 0 0}}
 .ltitle{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem}
 .ltitle h1{font-size:1.35rem;font-weight:750}
 .cnt{color:#8ef0a8;font-size:.85rem}
@@ -93,7 +93,7 @@ html[data-theme="light"] .cnt{color:#1e7a3c}
 
 /* ---------- detail ---------- */
 .dhead{position:sticky;top:0;z-index:6;display:flex;align-items:flex-start;gap:.7rem;margin:0 -.8rem .4rem;padding:calc(env(safe-area-inset-top) + .5rem) .8rem .6rem;background:var(--bg);border-bottom:1px solid rgba(255,255,255,.08)}
-@media(min-width:900px){.dhead{margin:0 -1.1rem .4rem;padding:.9rem 1.1rem .6rem;background:var(--panel2);border-radius:20px 20px 0 0}}
+@media(min-width:760px){.dhead{margin:0 -1.1rem .4rem;padding:.9rem 1.1rem .6rem;background:var(--panel2);border-radius:20px 20px 0 0}}
 .dhead h2{font-size:1.25rem;line-height:1.2;overflow-wrap:anywhere}
 .dhead .sub{color:var(--text);font-size:1.1rem;font-weight:650;margin-top:.15rem}
 .back{flex:none;width:2.5rem;height:2.5rem;border-radius:14px;border:1px solid var(--line);background:#141821;display:grid;place-items:center;cursor:pointer}
@@ -172,7 +172,7 @@ input[readonly]{opacity:.7}
   background:#1a1810;border:1px solid var(--teal);color:var(--text);padding:.7rem 1.1rem;border-radius:14px;opacity:0;pointer-events:none;
   transition:opacity .2s;max-width:90vw;text-align:center}
 #toast.show{opacity:1} #toast.err{background:#2a1412;border-color:var(--orange)}
-@media(min-width:900px){#toast{bottom:2rem}}
+@media(min-width:760px){#toast{bottom:2rem}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .chip.on{background:#ebbc5a;border-color:#ebbc5a;color:#1a1405}
 .c-firma{color:#4db8ff}
@@ -268,7 +268,7 @@ body{background:radial-gradient(900px 520px at 92% -12%,var(--glow),transparent 
 .win{position:relative;background:var(--panel);border:1px solid var(--line);border-top:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
 .win::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,var(--blue),var(--ok) 50%,var(--gas-tx));opacity:.8;pointer-events:none}
 .notes.win::before{display:none}
-@media(min-width:900px){
+@media(min-width:760px){
   #main{grid-template-columns:minmax(21rem,26rem) 1fr;gap:10px;padding:10px}
   #listPane,#detailPane{position:relative;border-radius:16px;border:1px solid var(--line);border-top:1px solid var(--line);background:var(--bg);box-shadow:none}
   #detailPane::before{display:none}
@@ -363,7 +363,7 @@ html[data-theme="light"]{
   --btn-sh:inset 0 1px 0 #fff,0 4px 10px rgba(120,95,0,.18);
   --nx-bg:#cfe6ff; --nx-bd:#9cc7f0; --nx-card:#1a5fb4;
 }
-@media(min-width:900px){#main{grid-template-columns:minmax(24rem,31rem) 1fr}}
+@media(min-width:760px){#main{grid-template-columns:minmax(24rem,31rem) 1fr}}
 /* tlačidlá: telefón + filtre (tieňovanie podľa obrázka) */
 .qcall,.call.main,.call.alt,.chip,.chips .chip,.chips select{background:var(--btn-bg);border:1px solid var(--btn-bd);color:var(--btn-tx);box-shadow:var(--btn-sh)}
 .chips .chip.on,.chip.on,.chips .chip.due.on,.chip.due.on{background:var(--btn-on-bg);border-color:var(--btn-on-bd);color:var(--btn-on-tx)}
@@ -543,7 +543,7 @@ html[data-theme="light"] .card.act,html[data-theme="light"] .card.act:hover{back
 .calsaved{display:block;margin:.25rem 0 0;font-size:.72rem;line-height:1.2;font-weight:400;text-transform:none;letter-spacing:normal;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* hlavička zoznamu (hľadanie + filtre) – nižšia */
 .lhead{padding-top:calc(env(safe-area-inset-top) + .3rem);padding-bottom:.3rem}
-@media(min-width:900px){.lhead{padding-top:.5rem;padding-bottom:.3rem}}
+@media(min-width:760px){.lhead{padding-top:.5rem;padding-bottom:.3rem}}
 .ltitle{margin-bottom:.3rem;gap:.5rem}
 .ltitle h1{font-size:1.1rem}
 .lhead .ib{width:2rem;height:2rem;border-radius:11px}
@@ -615,7 +615,7 @@ html[data-theme="light"] .undoTop.can{background:#fff;color:#111;border-color:#1
 .savemsg{text-align:left;margin:.2rem 0 .4rem}
 /* oznamy hore na obrazovke */
 #toast,#toast.show{top:calc(.7rem + env(safe-area-inset-top));bottom:auto}
-@media(min-width:900px){#toast{top:1rem;bottom:auto}}
+@media(min-width:760px){#toast{top:1rem;bottom:auto}}
 /* Nasleduje – nižšie */
 html .nextCall{padding:.1rem .7rem;line-height:1.2;font-size:.98rem}
 /* tlačidlá a oznamy – o niečo väčšie písmo, nie bold, nie veľké písmená */
@@ -1054,14 +1054,14 @@ html:not([data-theme="light"]) #fOm .dwrap.has input[type=date],html:not([data-t
 
 /* Detail kontaktu na desktope: hlavička + tlačidlá + záložky sú pevné, rolovať sa len obsah záložky */
 .dfix{display:contents}
-@media(min-width:900px){
+@media(min-width:760px){
   .dfix{display:block;position:sticky;top:0;z-index:20;margin:0 -1.1rem;padding:0 1.1rem;background:var(--panel);border-radius:20px 20px 0 0}
   .dfix .tabsRow{margin-bottom:.5rem;padding-top:.2rem}
   .dfix::after{content:"";position:absolute;left:0;right:0;bottom:-.9rem;height:.9rem;pointer-events:none;background:linear-gradient(180deg,var(--panel),transparent)}
 }
 
 /* ===== iPad / tablet (dotykové zariadenia nad 600px): hlavička detailu ako na iPhone ===== */
-@media(min-width:601px) and (pointer:coarse){
+@media(min-width:601px) and (max-width:759px) and (pointer:coarse){
   /* tlačidlo Späť je vždy vidieť (na desktope s myšou ostáva skryté) */
   html body .dhead .back{display:grid!important;width:2.5rem;height:2.5rem;flex:none}
   /* nepohyblivá hlavička: firma + meno vedľa Späť, pod tým Stav / Späť / Uložiť */
@@ -1078,7 +1078,7 @@ html:not([data-theme="light"]) #fOm .dwrap.has input[type=date],html:not([data-t
 }
 
 /* Detail kontaktu (jeden panel pod 900px) musí byť nad hlavičkou zoznamu (CRM / Hľadať / Dnes-Všetky-Stav), ktorá mala z-index 6 */
-@media(max-width:899px){
+@media(max-width:759px){
   #detailPane{z-index:30}
   .show-detail #listPane .lhead{visibility:hidden}
 }
@@ -1410,14 +1410,14 @@ html[data-theme="light"] body .card.card.sel{
 html body #listPane .lhead{position:relative;top:auto;margin:0;flex:none;z-index:6}
 #listPane>.empty,#listPane>.setupBox{margin:0 .8rem}
 #listBody{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 .8rem 1rem}
-@media(min-width:900px){
+@media(min-width:760px){
   #listBody{padding:0 1.1rem 1.5rem}
   #detailPane{display:flex;flex-direction:column;overflow:hidden!important;padding:0!important}
   #detailPane>.ph{flex:1}
   html body #detailPane .dfix{position:relative;top:auto;flex:none;margin:0;padding:0 1.1rem;z-index:20}
   .dscroll{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 1.1rem 2rem}
 }
-@media(max-width:899px){.dscroll{display:contents}}
+@media(max-width:759px){.dscroll{display:contents}}
 
 /* ===== v7: kompaktnejšia hlavička detailu + o 1 bod menšie písmo ===== */
 :root{--sth:1.75rem}
@@ -1444,7 +1444,7 @@ html body .btn-an{font-size:.8rem;padding:.25rem .7rem}
 html body #firmTop .anok{font-size:.68rem;padding:.15rem .5rem}
 .chip.sm{font-size:.78rem;padding:.15rem .55rem}
 html body .nxRow{margin:.2rem 0 .05rem}
-@media(min-width:900px){
+@media(min-width:760px){
   .dfix::after{height:.6rem;bottom:-.6rem}
 }
 @media(max-width:600px){
@@ -1493,14 +1493,14 @@ html body .cg{padding:.3rem .65rem .05rem;margin:.4rem 0;border-radius:13px}
 .btn-sm{padding:.25rem .7rem;font-size:.85rem}
 .delWrap{margin:.9rem 0 .5rem}
 .dscroll,#tabBody{--tight:1}
-@media(min-width:900px){.dscroll{padding-bottom:1rem}}
+@media(min-width:760px){.dscroll{padding-bottom:1rem}}
 .tabsRow{margin-bottom:.4rem}
 .firmBar{margin:.05rem 0 .4rem}
 .lnkSug{margin:.25rem 0;padding:.3rem .6rem}
 .omT td{padding:.3rem .45rem}
 /* hlavička zoznamu vľavo */
 html body .lhead{padding-top:calc(env(safe-area-inset-top) + .3rem);padding-bottom:.25rem}
-@media(min-width:900px){html body .lhead{padding-top:.4rem;padding-bottom:.25rem}}
+@media(min-width:760px){html body .lhead{padding-top:.4rem;padding-bottom:.25rem}}
 html body .lhead .ltitle{margin-bottom:.2rem;column-gap:.4rem}
 html body .lhead .ltitle .logo{font-size:1.35rem}
 html body .lhead .ltitle h1{font-size:1rem}
@@ -1532,14 +1532,14 @@ html body .chips .chip,html body .chips select{padding:.18rem .3rem;font-size:.8
 }
 
 /* ===== v9: mobil/iPad – celá aplikácia začína pod stavovým riadkom, horná linka hlavičky je vidieť ===== */
-@media(max-width:899px),(pointer:coarse){
+@media(max-width:759px),(pointer:coarse){
   html body #app{box-sizing:border-box;padding-top:calc(env(safe-area-inset-top) + .5rem)}
   html body .lhead,html body .dhead{padding-top:.45rem}
   html body #listPane>.empty.big,html body .setupBox.big{padding-top:2rem}
 }
 
 /* ===== v10: väčší odstup od stavového riadku + hlavička detailu sa počas načítania nestmaví ===== */
-@media(max-width:899px),(pointer:coarse){
+@media(max-width:759px),(pointer:coarse){
   html body #app{padding-top:calc(env(safe-area-inset-top) + 1.4rem)}
 }
 body.locked #detailPane .dhead :is(button,select,.stsel,.saveTop,.undoTop,.back){opacity:1!important}
@@ -1603,6 +1603,20 @@ html body .dhead .nextCall:not(.urg)>span,html body .dhead .nextCall:not(.urg) .
   html body .firmBar .fbL .chip{flex:1 1 auto;min-width:0;height:2rem!important;min-height:2rem!important;padding:0 .3rem!important;font-size:clamp(.6rem,3.1vw,.78rem)!important;justify-content:center;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:clip;box-sizing:border-box}
   html body .firmBar .fbR .btn-an{order:2;flex:1 1 0!important;min-width:0;margin-left:0!important;width:auto!important;height:2rem!important;min-height:2rem!important;padding:0 .3rem!important;font-size:clamp(.6rem,3.1vw,.78rem)!important;line-height:1;white-space:nowrap;overflow:hidden;box-sizing:border-box;border-radius:999px}
 }
+/* === iPad na výšku (760–1023 px): dva panely ako na Macu – zoznam vľavo, detail vpravo, každý sa posúva samostatne pod pevnou hlavičkou === */
+@media(min-width:760px) and (max-width:1023px){
+  html body #main{grid-template-columns:minmax(14.5rem,36%) minmax(0,1fr);gap:.5rem;padding:.5rem}
+}
+/* === tlačidlo Aktivita (vedľa dátumu a času): šírka podľa najdlhšieho textu (Stretnutie), nič sa neorezáva === */
+@media(min-width:601px){
+  html body .dtRow>.dtAct{width:max-content;min-width:9.5rem;max-width:14rem;justify-self:end}
+  html body .dtRow .dtAct .actsel{width:100%;min-width:0;font-size:.92rem;letter-spacing:0;padding-left:.8rem!important;padding-right:2rem!important;text-overflow:clip;white-space:nowrap}
+}
+/* === prázdna biela značka hore uprostred = skrytý panel Späť (#undoBar); keď nie je zobrazený, úplne sa skryje === */
+#undoBar{transition:transform .25s,visibility 0s .25s}
+#undoBar.show{transition:transform .25s,visibility 0s}
+#undoBar:not(.show){visibility:hidden}
+#undoBar:empty,#toast:empty{display:none!important}
 </style>
 </head>
 <body>
@@ -2519,7 +2533,7 @@ function histItem(a, withName) {
 function renderDetail() {
   const p = $('#detailPane');
   if (!S.data) { p.innerHTML = '<div class="ph">Vyber kontakt zo zoznamu.</div>'; return; }
-  if (S.sel == null && innerWidth >= 900) { const rows = filtered(); if (rows.length) S.sel = rows[0].r; }
+  if (S.sel == null && innerWidth >= 760) { const rows = filtered(); if (rows.length) S.sel = rows[0].r; }
   if (S.sel == null) { p.innerHTML = '<div class="ph">Vyber kontakt zo zoznamu.</div>'; return; }
   const r = rowBy(S.sel);
   p.innerHTML = r ? contactDetail(r) : '<div class="ph">Kontakt sa nenašiel.</div>';
@@ -3435,7 +3449,7 @@ function openSel(id, force) {
   if (!force && id !== S.sel && guardLeave(() => openSel(id, true))) return;
   S._st = null;
   S.sel = id; if (!['hovor', 'firma', 'om', 'udaje'].includes(S.tab)) { try { S.tab = LS.getItem('crmTab'); } catch (e) {} } if (!['hovor', 'firma', 'om', 'udaje'].includes(S.tab)) S.tab = 'hovor'; S.dirty = false; S.msg = null; S.undo = null;
-  if (innerWidth < 900 && !(history.state && history.state.d)) history.pushState({d: 1}, '');
+  if (innerWidth < 760 && !(history.state && history.state.d)) history.pushState({d: 1}, '');
   render(); dScroller().scrollTop = 0; $('#detailPane').scrollTop = 0;
   revealSel();
 }
@@ -3457,7 +3471,7 @@ function openTop() {
   const rows = filtered(); if (!rows.length) return false;
   S.limit = Math.max(S.limit, 150);
   /* iPhone (jeden panel): po otvorení / načítaní ostane základná obrazovka = zoznam, detail sa sám neotvorí */
-  if (innerWidth < 900) {
+  if (innerWidth < 760) {
     S._st = null; S.sel = null; S.dirty = false; S.msg = null; S.undo = null;
     if (history.state && history.state.d) { S.skipPop = true; history.back(); setTimeout(() => { S.skipPop = false; }, 600); }
     render();
