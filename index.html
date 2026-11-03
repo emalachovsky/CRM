@@ -1924,6 +1924,7 @@ function verifyLater(rowNo, values) {
 }
 async function apiCore(action, payload = {}) {
   if (!S.cfg.url) throw new Error('Chýba URL – otvor Nastavenia');
+  if (payload && payload.activity !== undefined) { const isU = /^Späť/.test(String((payload.activity && payload.activity.typ) || '')); payload = {...payload}; delete payload.activity; if (isU) payload.undo = true; }   /* aktivity sa už do Sheetu nezapisujú */
   const body = JSON.stringify({token: S.cfg.token, action, ...payload});
   const isRead = action === 'read' || action === 'ping' || action === 'omread';
   const tries = isRead ? 3 : 1;   // čítanie sa bezpečne opakuje, zápis nie (aby sa nezdvojil)
@@ -2007,7 +2008,9 @@ async function load(silent, quiet, top, fresh) {
   loading = true; loadT0 = Date.now(); lockLoad = !quiet; paintLock(); if (!quiet) setSync('sync');
   try {
     const j = await api('read', fresh ? {fresh: true} : {});
+    if (!j.noact && !S._oldSrvWarned) { S._oldSrvWarned = true; setTimeout(() => { toast('Server beží na STAROM CRM_API.gs – hárky Aktivity a Spoločnosti sa budú znova vytvárať. V Apps Scripte nasaď NOVÚ VERZIU (Nasadiť → Spravovať nasadenia → ✎ → Nová verzia).', true); clearTimeout(tt); tt = setTimeout(() => { $('#toast').className = ''; }, 15000); }, 600); }
     fillEmpty(j);
+    delete j.companies; j.activities = {headers: [], rows: []};   /* hárky Spoločnosti a Aktivity sa nepoužívajú */
     if (j.contacts && j.contacts.colors) {
       if (!Object.keys(S.colors || {}).length && Object.keys(j.contacts.colors).length) { S.colors = j.contacts.colors; S._scD = null; try { LS.setItem('crm.colors', JSON.stringify(S.colors)); } catch (e) {} }
       delete j.contacts.colors; delete j.contacts.colorsInfo;
@@ -2426,7 +2429,7 @@ function renderListBody() {
     if (rows.length > S.limit) html += `<button class="more" data-act="more">Zobraziť ďalších ${rows.length - S.limit}</button>`;
   } else {
     const q = norm(S.q);
-    const rows = S.data.activities.rows.filter(r => !q || norm(Object.values(r.v).join(' ')).includes(q))
+    const rows = ((S.data.activities || {}).rows || []).filter(r => !q || norm(Object.values(r.v).join(' ')).includes(q))
       .sort((a, b) => String(b.v[ACT_H.dt]).localeCompare(String(a.v[ACT_H.dt]))); n = rows.length;
     html = rows.slice(0, 100).map(a => histItem(a, true)).join('') || '<div class="empty">Zatiaľ žiadna aktivita. Zapíše sa po uložení hovoru.</div>';
   }
@@ -2704,7 +2707,7 @@ async function undoLast() {
 function pushActivity(a) {
   const v = {[ACT_H.dt]: nowISO(), [ACT_H.firma]: a.firma || '', [ACT_H.kontakt]: a.kontakt || '', [ACT_H.typ]: a.typ || '', [ACT_H.stav]: a.stav || '',
     [ACT_H.pozn]: a.pozn || '', [ACT_H.dalsi]: a.dalsi || '', [ACT_H.dalsiK]: a.dalsiKontakt || ''};
-  const row = {r: 0, v}; S.data.activities.rows.push(row); return row;
+  const row = {r: 0, v}; return row;   /* aktivity sa neukladajú (ani do Sheetu, ani lokálne) */
 }
 function changeTyp(vals, note) {
   const has = k => S.m[k] && vals && vals[S.m[k]] !== undefined, out = [];
@@ -2744,7 +2747,7 @@ function applyNotes(r, notes) {
   for (const h in notes) { if (notes[h]) r.n[h] = notes[h]; else delete r.n[h]; }
 }
 let pendingSaves = 0;
-const rmAct = a => { const i = S.data.activities.rows.indexOf(a); if (i >= 0) S.data.activities.rows.splice(i, 1); };
+const rmAct = () => {};   /* aktivity sa neevidujú */
 /* Okamžitá zmena v CRM (zoznam sa hneď prefiltruje a zoradí), zápis do Sheetu beží na pozadí; pri chybe sa zmena vráti. */
 function commitBg(r, o) {
   const vals = o.vals, act = o.act, notes = o.notes || {}, hasN = Object.keys(notes).length;
@@ -3350,7 +3353,16 @@ function dupReport() {
 }
 
 /* ---------- navigácia ---------- */
-function openSel(id) {
+/* neuložené zmeny v kontakte: odchod sa nepovolí, kým sa neuložia (okno v strede) */
+let pendingNav = null;
+function guardLeave(go) {
+  if (!(S.dirty && S.sel != null && S.view === 'contacts')) return false;
+  pendingNav = go;
+  modal(`<div class="mhead"><h2>Neuložené údaje</h2></div><p class="rcP">V kontakte sú zmeny, ktoré ešte neboli uložené. Bez uloženia z kontaktu odísť nemožno.</p><div class="row" style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem"><button type="button" class="cta" data-act="leavesave">Uložiť a pokračovať</button><button type="button" class="cta ghost" data-act="leavestay">Zostať v kontakte</button></div>`);
+  return true;
+}
+function openSel(id, force) {
+  if (!force && id !== S.sel && guardLeave(() => openSel(id, true))) return;
   S._st = null;
   S.sel = id; if (!['hovor', 'firma', 'om', 'udaje'].includes(S.tab)) { try { S.tab = LS.getItem('crmTab'); } catch (e) {} } if (!['hovor', 'firma', 'om', 'udaje'].includes(S.tab)) S.tab = 'hovor'; S.dirty = false; S.msg = null; S.undo = null;
   if (innerWidth < 900 && !(history.state && history.state.d)) history.pushState({d: 1}, '');
@@ -3393,13 +3405,14 @@ function stepSel(dir) {
   if (i >= S.limit) S.limit = i + 50;
   openSel(rows[i].r);
 }
-function closeSel() { if (history.state && history.state.d) history.back(); else { S.sel = null; render(); } }
+function closeSel() { if (guardLeave(() => closeSel())) return; if (history.state && history.state.d) history.back(); else { S.sel = null; render(); } }
 addEventListener('popstate', () => {
   if (S.skipPop) { S.skipPop = false; return; }
   if (S.newOpen) { S.newOpen = false; $('#modal').innerHTML = ''; return; }
+  if (S.dirty && S.sel != null && S.view === 'contacts') { history.pushState({d: 1}, ''); guardLeave(() => closeSel()); return; }
   S.sel = null; S.dirty = false; render();
 });
-function setView(v) { S.view = v; S.sel = null; S.q = ''; S.chip = 'all'; S.limit = 150; render(); }
+function setView(v) { if (guardLeave(() => setView(v))) return; S.view = v; S.sel = null; S.q = ''; S.chip = 'all'; S.limit = 150; render(); }
 function saveStFilter() { try { LS.setItem('crm.stfilter', JSON.stringify([...S.stSet])); } catch (e) {} }
 
 /* ---------- nastavenia ---------- */
@@ -3982,6 +3995,8 @@ document.addEventListener('click', e => {
     else if (a === 'omreload') { const rr = rowBy(S.sel); if (rr) { delete S.om[omKey(rr)]; $('#tabBody').innerHTML = tabBody(rr); } }
     else if (a === 'loadan') { const fi = $('#anFile'); if (fi) fi.click(); }
     else if (a === 'more') { S.limit += 150; renderListBody(); }
+    else if (a === 'leavestay') { pendingNav = null; closeModal(); }
+    else if (a === 'leavesave') { const go = pendingNav; pendingNav = null; closeModal(); Promise.resolve(saveEverything()).then(() => { if (!S.dirty && go) go(); }); }
     else if (a === 'close') closeModal();
     else if (a === 'add') openNewContact();
     else if (a === 'addcols') {
@@ -4205,13 +4220,7 @@ function anBadge(r) {
   const col = isoDate(V(r, 'an_ok'));
   if (col) return `<span class="anok"><span class="anchk">✔</span><span class="antxt"> Analýza načítaná </span> ${col.split('-').reverse().join('.')}</span>`;
   const f = norm(V(r, 'firma')); if (!f) return '';
-  let best = '';
-  for (const a of S.data.activities.rows) {
-    if (norm(a.v[ACT_H.typ]) !== 'analyza nacitana' || norm(a.v[ACT_H.firma]) !== f) continue;
-    const d = isoDate(a.v[ACT_H.dt]); if (d > best) best = d;
-  }
-  if (!best) return '';
-  return `<span class="anok"><span class="anchk">✔</span><span class="antxt"> Analýza načítaná </span> ${best.split('-').reverse().join('.')}</span>`;
+  return '';
 }
 function loadXLSX() {
   if (window.XLSX) return Promise.resolve();
