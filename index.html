@@ -2113,8 +2113,13 @@ async function load(silent, quiet, top, fresh) {
     if (S.sel != null && S.view === 'contacts' && !rowBy(S.sel)) S.sel = null;
     if (quiet || S.dirty) { renderChips(); renderListBody(); }
     else if (!(top && openTop())) render();   /* top: po načítaní vždy vyber prvý kontakt v zozname */
-    setSync('ok'); setTimeout(persist, 0); checkLists(); sweepMeetings(); syncGroups();
-  } catch (e) { if (quiet && S.data) setSync('ok'); else { setSync('err', 'Chyba: ' + e.message); if (!silent) toast(e.message, true); } }
+    S._rt = 0; setSync('ok'); setTimeout(persist, 0); checkLists(); sweepMeetings(); syncGroups();
+  } catch (e) {
+    if (quiet && S.data) {
+      if (S.lastLoad) setSync('ok');
+      else { setSync('err', 'Dáta z pamäte – nenačítané zo Sheetu'); if ((S._rt = (S._rt || 0) + 1) <= 3) setTimeout(() => refreshQuiet(true), 6000 * S._rt); }   /* zobrazená je len stará kópia → skús znova */
+    } else { setSync('err', 'Chyba: ' + e.message); if (!silent) toast(e.message, true); }
+  }
   finally { loading = false; lockLoad = false; paintLock(); }
 }
 
@@ -3241,9 +3246,13 @@ async function quietUpdate(sb, vals, act, notes) {
   applyLocal(sb, vals); if (notes) applyNotes(sb, notes);
   const row = pushActivity(act); persist();
   pendingSaves++;
-  try { await api('update', {sheet: 'contacts', row: sb.r, values: vals, notes: notes || {}, activity: act, check: S.m.firma && !sb.fd ? {header: S.m.firma, value: V(sb, 'firma')} : null}); }
-  catch (e) { for (const h in prev) sb.v[h] = prev[h]; delete sb._s; sb.n = prevN; rmAct(row); persist(); renderListBody(); toast('Zmena „' + V(sb, 'firma') + '“ sa neuložila: ' + e.message, true); }
+  let grpGone = false;
+  /* check2: zápis do druhej firmy sa vykoná len ak je v Sheete stále rovnaká „Skupina firiem“ (inak je spojenie už zrušené z iného zariadenia) */
+  const gid = S.m.skup ? String(sb.v[S.m.skup] ?? '').trim() : '';
+  try { await api('update', {sheet: 'contacts', row: sb.r, values: vals, notes: notes || {}, activity: act, check: S.m.firma && !sb.fd ? {header: S.m.firma, value: V(sb, 'firma')} : null, check2: gid ? {header: S.m.skup, value: gid} : null}); }
+  catch (e) { grpGone = !!e.conflict; for (const h in prev) sb.v[h] = prev[h]; delete sb._s; sb.n = prevN; rmAct(row); persist(); renderListBody(); toast(e.conflict ? 'Firmy už nie sú spojené (zmena z iného zariadenia) – nezapísalo sa do „' + V(sb, 'firma') + '“, načítavam dáta znova.' : 'Zmena „' + V(sb, 'firma') + '“ sa neuložila: ' + e.message, true); }
   pendingSaves--;
+  if (grpGone) setTimeout(() => refreshQuiet(true), 400);
 }
 async function saveFirma(form) {
   const r = rowBy(S.sel); if (!r) return;
@@ -4560,14 +4569,24 @@ try {
 /* každú minútu prekresli zoznam – dnešné časy, ktoré uplynuli, sa zafarbia samy */
 setInterval(() => { if (S.data && S.view === 'contacts' && !S.dirty && !document.querySelector('#modal .ovl')) { renderListBody(); } }, 60000);
 
+/* tiché obnovenie dát zo Sheetu na pozadí (bez zamknutia úprav); force = aj keď sa nedávno načítalo */
+function refreshQuiet(force) {
+  if (!S.cfg.url || !S.data || loading || S.dirty || pendingSaves || document.hidden) return Promise.resolve();
+  if (!force && S.lastLoad && Date.now() - S.lastLoad < 30000) return Promise.resolve();
+  return load(true, true).then(() => { if (!S.dirty && S.view === 'contacts' && S.sel != null && !document.querySelector('#modal .ovl') && rowBy(S.sel)) renderDetail(); });
+}
 /* ---------- štart ---------- */
 buildMap(); if (!(S.data && openTop())) render();
 if (!S.cfg.url) openSettings();
 else if (S.data && S.data.contacts && S.data.contacts.rows) {
   /* dáta z pamäte sú už zobrazené – nové sa dotiahnu na pozadí, bez zamknutia úprav */
   setSync('sync');
-  load(true, true).then(() => { if (!S.dirty && S.view === 'contacts' && S.sel != null && !document.querySelector('#modal .ovl') && rowBy(S.sel)) renderDetail(); });
+  refreshQuiet(true);
 } else load(false, false, true);
+/* iPhone/iPad držia apku v pamäti aj niekoľko dní bez nového načítania → po návrate do apky sa dáta (aj spojenia firiem) potichu znova načítajú zo Sheetu */
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshQuiet(); });
+addEventListener('pageshow', () => refreshQuiet());
+addEventListener('online', () => refreshQuiet(true));
 
 /* viditeľné „stlačenie“ modrých tlačidiel (aj pri rýchlom kliknutí/dotyku) */
 document.addEventListener('click', e => {
