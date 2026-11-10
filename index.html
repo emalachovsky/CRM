@@ -657,6 +657,10 @@ html[data-theme="light"] .calBox{--cg:#2f9e57;--cg-tx:#fff;background:#fff;box-s
 /* výber zo zoznamu (dodávateľ, čas, druh, funkcia…) – rovnaký vzhľad ako kalendár */
 .pkBox{width:max-content;min-width:10.5rem;max-width:min(94vw,22rem)}
 .pkBox .calTtl{width:0;min-width:100%}
+html:not([data-theme="light"]) .pkBox{background:#101a16;border-color:#2a4a3a}
+html:not([data-theme="light"]) .pkBox .pkOpt,html:not([data-theme="light"]) .pkBox .calFt button,html:not([data-theme="light"]) .pkBox .pkQ{background:#17261f;border-color:#223a2f}
+html:not([data-theme="light"]) .pkBox .pkOpt:hover,html:not([data-theme="light"]) .pkBox .calFt button:hover{background:#1f3329}
+html:not([data-theme="light"]) .pkBox .pkOpt.sel,html:not([data-theme="light"]) .pkBox .pkOpt.sel:hover{background:var(--cg);border-color:var(--cg)}
 .pkBox.tm{min-width:0;max-width:none}
 .pkBox.tm .calFt{gap:.3rem}
 .pkBox.tm .calFt button{padding:0 .5rem;min-height:2.1rem;font-size:.85rem;flex:1 1 0}
@@ -1668,6 +1672,46 @@ html body .dhead .nextCall:not(.urg)>span,html body .dhead .nextCall:not(.urg) .
   html body .card .c-left .c-st{max-width:100%}
   html body .card .c-left .c-st .badge{font-size:clamp(.6rem,2.8vw,.72rem)!important;padding:.08rem .35rem!important;max-width:100%;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
+
+/* ===== rozbalený zoznam možností: tmavomodrá až čierna (bunka s výberom ostáva v pôvodnej farbe) ===== */
+html body select option,html body select optgroup{
+  background-color:#05070f;background-image:linear-gradient(180deg,#14234a,#05070f);color:#f0ece4}
+/* ===== výber zo zoznamu (Funkcia, Dodávateľ, Čas…): tmavomodrá až čierna, šírka podľa najširšieho textu ===== */
+html:not([data-theme="light"]) .pkBox{--cg:#8fc3ff;--cg-tx:#06142e;background:linear-gradient(180deg,#0a1633 0%,#04060d 100%);border-color:#1b2c57}
+html:not([data-theme="light"]) .pkBox .pkOpt,html:not([data-theme="light"]) .pkBox .calFt button,html:not([data-theme="light"]) .pkBox .pkQ{background:#070f24;border-color:#15234a}
+html:not([data-theme="light"]) .pkBox .pkOpt:hover,html:not([data-theme="light"]) .pkBox .calFt button:hover{background:#0f2049;border-color:#27408a}
+html:not([data-theme="light"]) .pkBox .pkOpt.sel,html:not([data-theme="light"]) .pkBox .pkOpt.sel:hover{background:var(--cg);border-color:var(--cg);color:var(--cg-tx)}
+.pkBox{min-width:0}
+.pkBox .pkQ{width:0;min-width:100%}
+/* ===== kalendár (dátum): rovnaký modrý dizajn ako zoznam Čas ===== */
+html:not([data-theme="light"]) .calBox{--cg:#8fc3ff;--cg-tx:#06142e;background:linear-gradient(180deg,#0a1633 0%,#04060d 100%);border-color:#1b2c57}
+html:not([data-theme="light"]) .calBox .calGr .cd,html:not([data-theme="light"]) .calBox .calHd button,html:not([data-theme="light"]) .calBox .calFt button{background:#070f24;border-color:#15234a}
+html:not([data-theme="light"]) .calBox .calGr .cd:hover,html:not([data-theme="light"]) .calBox .calHd button:hover,html:not([data-theme="light"]) .calBox .calFt button:hover{background:#0f2049;border-color:#27408a}
+html:not([data-theme="light"]) .calBox .calGr .cd.sel,html:not([data-theme="light"]) .calBox .calGr .cd.sel:hover{background:var(--cg);border-color:var(--cg);color:var(--cg-tx)}
+/* ===== filtre v hlavičke zoznamu: veľké písmená ===== */
+.chips .chip,.chips select{text-transform:uppercase}
+/* ===== filtre (Dnes, Zajtra, Všetky, Stav): jemný oranžový obrys, písmo medium ===== */
+html body .chips .chip:not(.on):not(.sel),html body .chips select:not(.on){border:1.5px solid color-mix(in srgb,#f0a84f 48%,transparent)}
+html body .chips .chip,html body .chips select,html body .chips .stbtn{font-weight:500}
+/* ===== označenia stavu + Späť / Uložiť: písmo medium ===== */
+:root{--stfw:500}
+html body .stsel,html body .dhead .stsel,html body select.pillSel[data-sty="st"],html body .badge:not(.actnote),html body .card .c-left .c-st .badge,html body .stpop .stitem,
+html body .saveTop,html body .undoTop,html body .dhead .saveTop,html body .dhead .undoTop,html body .stCol .saveTop{font-weight:500!important}
+/* ===== pravé okno (detail kontaktu): tmavomodrá až čierna, rovnaký dizajn ako zoznamy ===== */
+html:not([data-theme="light"]) #detailPane{--panel:#0a1633;--card:#070f24;--field:#060c1f;--raise:#0f2049;--line:#1b2c57;--ibd:#2a427f;
+  background:linear-gradient(180deg,#0a1633 0%,#04060d 100%);border-color:#1b2c57}
+html:not([data-theme="light"]) #detailPane .win{background:linear-gradient(180deg,#0c1a3d 0%,#060c1f 100%);border-color:#1b2c57}
+html:not([data-theme="light"]) #detailPane .tab{background:#060c1f;border-color:#15234a}
+html:not([data-theme="light"]) #detailPane .tab.on{background:#0a1633;border-color:#2a427f;border-top-color:var(--firma);border-bottom-color:#0a1633}
+html:not([data-theme="light"]) #detailPane .hist,html:not([data-theme="light"]) #detailPane .notePrev{background:#070f24;border-color:#15234a}
+/* ===== Elektrina a Plyn: výraznejšia modrá a žltá na modrom pozadí ===== */
+html:not([data-theme="light"]) #detailPane .cg.el{background:linear-gradient(180deg,rgba(45,125,240,.46) 0%,rgba(28,78,170,.24) 100%);border:1.5px solid #4c9eff;box-shadow:0 0 14px rgba(76,158,255,.28)}
+html:not([data-theme="light"]) #detailPane .cg.el::before{background:linear-gradient(90deg,#7cc0ff,transparent);height:4px;opacity:1}
+html:not([data-theme="light"]) #detailPane .cg.el .gtitle{color:#8fcaff}
+html:not([data-theme="light"]) #detailPane .cg.gas{background:linear-gradient(180deg,rgba(245,208,74,.34) 0%,rgba(200,160,30,.15) 100%);border:1.5px solid #f5d04a;box-shadow:0 0 14px rgba(245,208,74,.26)}
+html:not([data-theme="light"]) #detailPane .cg.gas::before{background:linear-gradient(90deg,#ffe27a,transparent);height:4px;opacity:1}
+html:not([data-theme="light"]) #detailPane .cg.gas .gtitle{color:#ffe27a}
+.gtitle .gsub{font-size:.8em;font-weight:500;letter-spacing:.06em;opacity:.85}
 </style>
 </head>
 <body>
@@ -2742,7 +2786,7 @@ function tabHovor(r) {
   const {d, t} = DT(r), A = k => esc(S.m[k]);
   const ak = V(r, 'pozicia'), AL = activitiesList(); if (ak && !AL.some(x => norm(x) === norm(ak))) AL.unshift(ak);
   const actBlock = S.m.pozicia ? `<label class="dtAct">Aktivita<select class="actsel" data-h="${A('pozicia')}" style="${isActLbl(ak) ? actStyle(ak) : palStyle(ak)}"><option value=""></option>${AL.map(x => `<option value="${esc(x)}" style="${palStyle(x)}" ${x === ak ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>${['stretnutie', 'telefonat'].includes(norm(ak)) && r.n && norm(r.n[S.m.pozicia] || '').includes('kalend') ? '<span class="calsaved">Uložené do kalendára</span>' : ''}</label>` : '';
-  const qd = '<div class="qd"><button type="button" class="chip sm" data-qd="0">Dnes</button></div>';
+  const qd = '';
   const dtBlock = S.m.datum ? `<div class="dtRow"><div class="dtNarrow">
       <label class="dtD">Dátum${dateInp(`class="dtSmall" data-h="${A('datum')}"`, d)}</label>
       ${S.m.cas ? `<label class="dtT">Čas${timeSelect(`class="dtSmall" data-h="${A('cas')}"`, t)}</label>` : ''}
@@ -2753,8 +2797,7 @@ function tabHovor(r) {
     <div class="cg grey">
     ${dtBlock}
     ${persBlock(r)}
-    ${S.m.dalsi ? `<div class="nxIn"><label>Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label><div class="nxInUrg">${urgBtnHtml(r)}</div></div>
-      <div class="qn">${QUICK_NOTES.map(x => `<button type="button" class="chip sm" data-qnx="${esc(x)}">${x}</button>`).join('')}</div>` : ''}
+    ${S.m.dalsi ? `<div class="nxIn"><label>Čo nasleduje<input type="text" data-h="${A('dalsi')}" value="${esc(V(r, 'dalsi'))}"></label><div class="nxInUrg">${urgBtnHtml(r)}</div></div>` : ''}
     <label>Poznámka o hovore<textarea id="callNote" rows="3" placeholder=" "></textarea></label>
     <button type="button" class="btn-sm" data-act="savenote">Vložiť poznámku</button>
     </div>
@@ -2826,7 +2869,7 @@ function companyBlock(r) {
     const list = keys.filter(k => (k === 'email' || FIELDS.some(f => f.k === k)) && (k !== 'pl_druh' || S.m.pl_druh));
     if (!list.length) continue;
     const cls = g === 'Elektrina' ? 'el' : g === 'Plyn' ? 'gas' : 'basic';
-    const blk = `<div class="cg ${cls}"><div class="gtitle">${g === 'Elektrina' ? '<span class="gi">⚡</span>' : g === 'Plyn' ? '<span class="gi">🔥</span>' : ''}${g}</div>` +
+    const blk = `<div class="cg ${cls}"><div class="gtitle">${g === 'Elektrina' ? '<span class="gi">⚡</span>' : g === 'Plyn' ? '<span class="gi">🔥</span>' : ''}${g}${g === 'Elektrina' || g === 'Plyn' ? '<span class="gsub"> – za všetky OM</span>' : ''}</div>` +
       list.map(k => { const h = k === 'email' ? S.m.email : fieldHeader(k); if (!h) return ''; return `<label>${esc(CGROUP_LABELS[k] || k)}${k === 'email' ? `<input type="email" data-h="${esc(h)}" value="${esc(V(r, 'email'))}">` : cInput(k, h, k === 'konatel' ? konatelShown(r) : V(r, k))}</label>`; }).join('') + '</div>';
     if (cls === 'basic') basic += blk; else pair += blk;
   }
