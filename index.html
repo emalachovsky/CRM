@@ -624,20 +624,60 @@ button,.cta,.btn-sm,.btn-an,.chip,.tab,.undoTop,.saveTop,#toast,.savemsg,.actsel
 .chips .chip,.chips select{font-size:.9rem}
 #toast,.savemsg{font-size:1.02rem}
 .saveTop,.undoTop{font-size:1rem}
-/* kalendár – popup pri poli, o niečo väčší ako natívny */
+/* kalendár – popup pri poli: tmavé pozadie, zelený výber, dvojité šípky na roky */
 .calOvl{position:fixed;inset:0;z-index:200;background:transparent}
-.calBox{position:fixed;background:color-mix(in srgb,var(--panel2,#1b2230) 90%,#fff);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:.7rem;width:19rem;max-width:94vw;box-shadow:0 12px 40px rgba(0,0,0,.55);box-sizing:border-box}
-.calHd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;font-size:1.1rem}
-.calHd button{width:2.4rem;height:2.4rem;border-radius:10px;border:1px solid var(--line);background:var(--card,#141821);color:var(--text);font-size:1.5rem;line-height:1;cursor:pointer}
-.calWd,.calGr{display:grid;grid-template-columns:repeat(7,1fr);gap:.2rem;text-align:center}
-.calWd{color:var(--muted);font-size:.85rem;margin-bottom:.2rem}
-.calGr button,.calGr span{height:2.4rem}
-.calGr .cd{border:1px solid transparent;border-radius:10px;background:transparent;color:var(--text);font-size:1.05rem;cursor:pointer;padding:0}
-.calGr .cd:hover{background:var(--raise,#242b3a)}
-.calGr .cd.td{border-color:var(--acc)}
-.calGr .cd.sel{background:var(--acc);color:var(--acc-tx,#fff)}
-.calFt{display:flex;justify-content:space-between;gap:.4rem;margin-top:.5rem}
-.calFt button{flex:1;min-height:2.3rem;border-radius:10px;border:1px solid var(--line);background:var(--card,#141821);color:var(--text);font-size:.95rem;cursor:pointer}
+.calBox{--cg:#a3d5ac;--cg-tx:#0e2a16;position:fixed;background:color-mix(in srgb,var(--bg) 55%,var(--panel));color:var(--text);border:1px solid color-mix(in srgb,var(--cg) 28%,var(--line));border-radius:18px;padding:.9rem .9rem .8rem;width:23rem;max-width:94vw;box-shadow:0 18px 50px rgba(0,0,0,.6);box-sizing:border-box}
+html[data-theme="light"] .calBox{--cg:#2f9e57;--cg-tx:#fff;background:#fff;box-shadow:0 14px 40px rgba(20,30,50,.25)}
+.calTtl{font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 .65rem .1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.calHd{display:flex;align-items:center;gap:.3rem;margin-bottom:.5rem}
+.calHd button{width:2.3rem;height:2.3rem;flex:none;border-radius:10px;border:1px solid var(--line);background:var(--card,#141821);color:var(--text);font-size:1.35rem;line-height:1;cursor:pointer;padding:0}
+.calHd button:hover,.calFt button:hover{background:var(--raise,#242b3a)}
+.calHd button:active,.calFt button:active{transform:scale(.94)}
+.calHd .calMid{flex:1;display:flex;align-items:center;justify-content:center;gap:.3rem;min-width:0}
+.calHd .calMid b{font-size:1.1rem;font-weight:700;white-space:nowrap}
+.calHd .calMid .calMo,.calHd .calMid .calYr{width:auto;height:2.2rem;padding:0 .45rem;font-size:1.05rem;border-radius:10px;white-space:nowrap;background:transparent;border:1.5px dashed color-mix(in srgb,var(--muted) 55%,transparent)}
+.calHd .calMid .calMo{color:var(--text);font-weight:700}
+.calHd .calMid .calYr{color:var(--cg);font-weight:400;border-color:color-mix(in srgb,var(--cg) 45%,var(--line))}
+.calHd .calMid .calYr small{font-size:.6rem;margin-left:.2rem;vertical-align:middle}
+.calHd .calMid .calMo.on,.calHd .calMid .calYr.on{background:color-mix(in srgb,var(--cg) 16%,transparent);border-style:solid;border-color:var(--cg)}
+.calGr.mon{grid-template-columns:repeat(3,1fr);gap:.4rem;margin-top:.3rem}
+.calGr.mon button{height:3rem;font-size:1.05rem}
+.calWd,.calGr{display:grid;grid-template-columns:repeat(7,1fr);gap:.28rem;text-align:center}
+.calWd{color:var(--muted);font-size:.92rem;font-weight:700;margin:.2rem 0 .35rem}
+.calGr button,.calGr span{height:2.5rem}
+.calGr .cd{border:1px solid transparent;border-radius:10px;background:var(--card,#141821);color:var(--text);font-size:1.05rem;cursor:pointer;padding:0}
+.calGr .cd:hover{background:var(--raise,#242b3a);border-color:var(--line)}
+.calGr .cd.td{border-color:var(--cg)}
+.calGr .cd.sel,.calGr .cd.sel:hover{background:var(--cg);border-color:var(--cg);color:var(--cg-tx);font-weight:600}
+.calGr.yrs{grid-template-columns:repeat(3,1fr);gap:.4rem;margin-top:.3rem}
+.calGr.yrs button{height:3rem;font-size:1.15rem}
+.calFt{display:flex;justify-content:space-between;gap:.4rem;margin-top:.7rem}
+.calFt button{flex:0 1 auto;min-height:2.5rem;padding:0 1.1rem;border-radius:10px;border:1px solid var(--line);background:var(--card,#141821);color:var(--text);font-size:.98rem;cursor:pointer}
+.calFt button[data-clear]{margin-left:auto;margin-right:.4rem;color:var(--muted)}
+/* výber zo zoznamu (dodávateľ, čas, druh, funkcia…) – rovnaký vzhľad ako kalendár */
+.pkBox{width:max-content;min-width:10.5rem;max-width:min(94vw,22rem)}
+.pkBox .calTtl{width:0;min-width:100%}
+.pkBox.tm{min-width:0;max-width:none}
+.pkBox.tm .calFt{gap:.3rem}
+.pkBox.tm .calFt button{padding:0 .5rem;min-height:2.1rem;font-size:.85rem;flex:1 1 0}
+.pkQ{width:100%;box-sizing:border-box;height:2.4rem;margin:0 0 .5rem;padding:0 .8rem;border-radius:10px;border:1px solid var(--line);background:var(--card,#141821);color:var(--text);font-size:1rem}
+.pkList{display:flex;flex-direction:column;gap:.28rem;max-height:min(50vh,22rem);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.pkList.tm{gap:.2rem}
+.pkOpt{border:1px solid transparent;border-radius:10px;background:var(--card,#141821);color:var(--text);font-size:.93rem;cursor:pointer;text-align:left;padding:.45rem .8rem;min-height:2.3rem;flex:none}
+.pkList.tm .pkOpt{text-align:center;padding:.25rem .6rem;height:auto;min-height:1.9rem;font-size:.82rem}
+.pkDot{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;margin-right:.55rem;vertical-align:middle;border:1px solid rgba(255,255,255,.3)}
+.pkOpt:hover{background:var(--raise,#242b3a);border-color:var(--line)}
+.pkOpt.sel,.pkOpt.sel:hover{background:var(--cg);border-color:var(--cg);color:var(--cg-tx)}
+.pkNone{color:var(--muted);padding:.8rem;text-align:center}
+/* tlačidlo Krok späť v hlavičke zoznamu – okrúhle, modré */
+html body .lhead .ib.stepback{width:1.9rem;height:1.9rem;border-radius:50%;padding:0;color:#fff;border:1px solid #9bb6d6;position:relative;overflow:hidden;
+  background:radial-gradient(circle at 50% 55%,#4a86c7 0%,#2b5d95 55%,#173a63 100%);box-shadow:0 0 0 1px #a9c7e8 inset,0 2px 6px rgba(0,0,0,.45);transition:opacity .2s,transform .1s,box-shadow .2s}
+html body .lhead .ib.stepback::before{content:'';position:absolute;left:18%;right:18%;top:5%;height:30%;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.05));pointer-events:none}
+html body .lhead .ib.stepback .ico{width:62%;height:62%;position:relative;stroke-width:2.4;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+html body .lhead .ib.stepback:not(.can){opacity:.42}
+html body .lhead .ib.stepback.can{box-shadow:0 0 0 1px #cfe3f8 inset,0 0 10px 2px rgba(110,170,240,.7),0 0 20px 4px rgba(110,170,240,.35)}
+html body .lhead .ib.stepback:active{filter:brightness(1.2);transform:scale(.93)}
+html body .lhead .ib.stepback.busy .ico{animation:spinR .8s linear infinite reverse}
 /* pozadie kontaktov – tieňovanie zľava doprava ako tlačidlo volania */
 html body .card.card{--cg:color-mix(in srgb,#8da2c4 20%,var(--panel));background:linear-gradient(90deg,var(--cg) 0%,var(--panel) 100%)!important}
 html body .card.card:hover{background:linear-gradient(90deg,var(--cg) 0%,var(--raise) 100%)!important}
@@ -1677,6 +1717,7 @@ const ICONS = {
   plus:'<path d="M12 5v14M5 12h14"/>',
   refresh:'<path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/>',
   back:'<path d="M15 18l-6-6 6-6"/>',
+  stepback:'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
   mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
   globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/>',
   x:'<path d="M18 6 6 18M6 6l12 12"/>',
@@ -1765,7 +1806,8 @@ function recheckDirty() {
     d = v; if (document.body) document.body.classList.toggle('dirty', d); syncUndo(); syncTabDots();
   }, enumerable: true, configurable: true});
   let u = null;
-  Object.defineProperty(S, 'undo', {get: () => u, set: v => { u = v; syncUndo(); }, enumerable: true, configurable: true});
+  S._gu = null;   /* posledný uložený krok – pre tlačidlo Krok späť v hlavičke (prežije zmenu kontaktu) */
+  Object.defineProperty(S, 'undo', {get: () => u, set: v => { u = v; if (v) S._gu = v; syncUndo(); }, enumerable: true, configurable: true});
 })();
 if (location.hash.startsWith('#cfg=')) {
   try { S.cfg = JSON.parse(atob(location.hash.slice(5))); LS.setItem('crm.cfg', JSON.stringify(S.cfg)); } catch (e) {}
@@ -2207,7 +2249,7 @@ function renderList() {
   }
   p.innerHTML = `<div class="lhead"><div class="ltitle"><span class="logo">CRM</span><h1>Kontakty</h1><span class="cnt" id="cnt"></span><button class="ib add" data-act="add" aria-label="Pridať">${ico('plus')}</button><span class="sp"></span><span class="lbr"></span><div class="sync" id="sync"></div>
     <button class="ib refresh" id="refreshBtn" data-act="refresh" aria-label="Obnoviť" title="Načítať znova"><svg class="ico" viewBox="0 0 24 24" fill="#fff" stroke="none"><g fill="none" stroke="#fff" stroke-width="2.7"><path d="M16.3 5.86A7.5 7.5 0 0 0 4.76 13.94"/><path d="M7.7 18.14A7.5 7.5 0 0 0 19.24 10.06"/></g><path d="M7.66 13.16 5.54 16.84 1.86 14.72z"/><path d="M16.34 10.84 18.46 7.16 22.14 9.28z"/></svg></button>
-    <button class="ib reloadpg" data-act="reloadpage" aria-label="Obnoviť stránku" title="Obnoviť stránku (ako Option+Cmd+R)"><svg class="ico" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g class="rg"><path d="M74.4 79.1A38 38 0 1 1 79.1 25.6" stroke-width="3"/><path d="M80.2 17 82 28.5 71 24.7" stroke-width="3"/></g><text x="50" y="65" text-anchor="middle" fill="currentColor" stroke="none" font-size="46" font-weight="200" style="font-family:-apple-system,'Helvetica Neue',Helvetica,Arial,sans-serif">R</text></svg></button><button class="ib" data-nav="settings" aria-label="Nastavenia">${ico('gear')}</button></div>
+    <button class="ib reloadpg" data-act="reloadpage" aria-label="Obnoviť stránku" title="Obnoviť stránku (ako Option+Cmd+R)"><svg class="ico" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g class="rg"><path d="M74.4 79.1A38 38 0 1 1 79.1 25.6" stroke-width="3"/><path d="M80.2 17 82 28.5 71 24.7" stroke-width="3"/></g><text x="50" y="65" text-anchor="middle" fill="currentColor" stroke="none" font-size="46" font-weight="200" style="font-family:-apple-system,'Helvetica Neue',Helvetica,Arial,sans-serif">R</text></svg></button><button class="ib stepback ${(S.dirty || S._gu) ? 'can' : ''}" data-act="stepback" aria-label="Krok späť" title="Krok späť – vráti poslednú uloženú zmenu">${ico('stepback')}</button><button class="ib" data-nav="settings" aria-label="Nastavenia">${ico('gear')}</button></div>
     <div class="qrow"><input id="q" type="search" placeholder="Hľadať…" value="${esc(S.q)}" autocomplete="off" style="margin:0">
     </div>
     <div class="chips" id="chips"></div></div><div id="listBody"></div>`;
@@ -2369,6 +2411,69 @@ function fitNotes() {
   addEventListener('resize', run);
   document.addEventListener('input', e => { if (e.target && e.target.id === 'notesTa') run(); });
 })();
+/* názov poľa (label / hlavička stĺpca) – nadpis v okne kalendára a výberu */
+function fieldTitle(el) {
+  const lb = el.closest && el.closest('label'); let t = '';
+  if (lb) t = [...lb.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join(' ').replace(/\s+/g, ' ').trim();
+  const h = String(el.dataset.h || '').trim();
+  return (h.length > t.length ? h : t) || el.getAttribute('aria-label') || '';
+}
+/* výber zo zoznamu (select) v rovnakom vzhľade ako kalendár – okrem Stav a Aktivita */
+function openPick(sel) {
+  openPick.t = Date.now();
+  document.getElementById('calPop')?.remove();
+  const opts = [...sel.options].map((o, i) => ({i, v: o.value, t: (o.textContent || '').trim(), dis: o.disabled}));
+  const empty = opts.find(o => o.v === ''), items = opts.filter(o => o.v !== '');
+  const isTime = sel.dataset.t === 't', ttl = fieldTitle(sel) || (sel.matches('.stsel,[data-stsel]') ? 'Stav' : '');
+  const isSt = sel.matches('.stsel,[data-stsel],[data-sty="st"]');
+  const dot = o => { const op = sel.options[o.i], st = (op && op.getAttribute('style')) || (isSt && typeof palStyle === 'function' ? palStyle(o.v) : ''); const m = /background:\s*([^;]+)/.exec(st || ''); return m ? `<i class="pkDot" style="background:${esc(m[1].trim())}"></i>` : ''; };
+  const box = document.createElement('div'); box.id = 'calPop'; document.body.appendChild(box);
+  const close = () => { box.remove(); document.removeEventListener('keydown', onEsc); };
+  const onEsc = e => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onEsc);
+  const pick = i => { sel.selectedIndex = i; sel.dispatchEvent(new Event('input', {bubbles: true})); sel.dispatchEvent(new Event('change', {bubbles: true})); close(); };
+  const nm = x => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const listHtml = q => {
+    const f = q ? items.filter(o => nm(o.t).includes(nm(q))) : items;
+    return f.map(o => `<button type="button" class="pkOpt ${o.i === sel.selectedIndex && sel.value !== '' ? 'sel' : ''}" data-i="${o.i}" ${o.dis ? 'disabled' : ''}>${dot(o)}${esc(o.t || o.v)}</button>`).join('') || '<div class="pkNone">Nič sa nenašlo</div>';
+  };
+  box.innerHTML = `<div class="calOvl" data-close><div class="calBox pkBox ${isTime ? 'tm' : ''}">${ttl ? `<div class="calTtl">${esc(ttl)}</div>` : ''}${!isTime && items.length > 10 ? '<input type="search" class="pkQ" placeholder="Hľadať…" autocomplete="off" autocapitalize="off">' : ''}<div class="pkList ${isTime ? 'tm' : ''}">${listHtml('')}</div><div class="calFt">${empty ? `<button type="button" data-i="${empty.i}">${esc(empty.t && empty.t !== 'Stav' ? empty.t : 'Vymazať')}</button>` : ''}<button type="button" data-close>Zavrieť</button></div></div></div>`;
+  const cb = box.querySelector('.calBox'), list = box.querySelector('.pkList');
+  const r = sel.getBoundingClientRect(), bw = cb.offsetWidth, bh = cb.offsetHeight;
+  let top = r.bottom + 6; if (top + bh > innerHeight - 8) top = Math.max(8, r.top - bh - 6);
+  top = Math.max(8, Math.min(top, innerHeight - 8 - bh));
+  cb.style.left = Math.min(Math.max(8, r.left), Math.max(8, innerWidth - bw - 8)) + 'px'; cb.style.top = top + 'px';
+  const cur = list.querySelector('.pkOpt.sel');
+  if (cur) list.scrollTop = cur.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop - list.clientHeight / 2 + cur.offsetHeight / 2;
+  const q = box.querySelector('.pkQ');
+  if (q) q.addEventListener('input', () => { list.innerHTML = listHtml(q.value.trim()); });
+  box.addEventListener('click', e => {
+    const t = e.target.closest ? (e.target.closest('button') || e.target) : e.target;
+    if (t.dataset && t.dataset.i !== undefined && !t.disabled) pick(+t.dataset.i);
+    else if (t.dataset && 'close' in t.dataset) { if (Date.now() - openPick.t > 350) close(); }
+  });
+}
+const pickable = el => !!el && el.tagName === 'SELECT' && !el.disabled && !el.multiple && !el.closest('.chips');
+document.addEventListener('mousedown', e => { const el = e.target.closest && e.target.closest('select'); if (!pickable(el) || inRoArea(e)) return; e.preventDefault(); }, true);
+document.addEventListener('click', e => {
+  const el = e.target.closest && e.target.closest('select'); if (!pickable(el) || inRoArea(e)) return;
+  e.preventDefault(); el.blur();
+  if (Date.now() - (openPick.t || 0) < 400) return;
+  openPick(el);
+}, true);
+(function () {   /* dotyk (iPhone / iPad): natívny výber sa nesmie otvoriť, namiesto neho náš */
+  let sx = 0, sy = 0, mv = false;
+  document.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; mv = false; }, {passive: true, capture: true});
+  document.addEventListener('touchmove', e => { const t = e.touches[0]; if (Math.abs(t.clientX - sx) > 8 || Math.abs(t.clientY - sy) > 8) mv = true; }, {passive: true, capture: true});
+  document.addEventListener('touchend', e => {
+    const el = e.target.closest && e.target.closest('select'); if (!pickable(el) || inRoArea(e) || mv) return;
+    if (e.cancelable) e.preventDefault(); openPick(el);
+  }, {passive: false, capture: true});
+  document.addEventListener('keydown', e => {
+    const el = e.target; if (!pickable(el) || inRoArea(e) || !['Enter', ' ', 'ArrowDown'].includes(e.key)) return;
+    e.preventDefault(); openPick(el);
+  }, true);
+})();
 /* veľký kalendár namiesto malého natívneho */
 function openCal(inp) {
   openCal.t = Date.now();
@@ -2380,21 +2485,37 @@ function openCal(inp) {
   const today = iso(new Date());
   document.getElementById('calPop')?.remove();
   const box = document.createElement('div'); box.id = 'calPop'; document.body.appendChild(box);
-  const close = () => { box.remove(); document.removeEventListener('keydown', esc); };
-  const esc = e => { if (e.key === 'Escape') close(); };
-  document.addEventListener('keydown', esc);
+  const close = () => { box.remove(); document.removeEventListener('keydown', onEsc); };
+  const onEsc = e => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onEsc);
   const setV = v => { inp.value = v; inp.dispatchEvent(new Event('input', {bubbles: true})); inp.dispatchEvent(new Event('change', {bubbles: true})); close(); };
+  const ttl = fieldTitle(inp) || 'Dátum';
+  let mode = 'd', yb = 0;   /* d = dni, m = výber mesiaca, y = výber roka (yb = začiatok bloku 12 rokov) */
   let draw = () => {
-    const first = new Date(vy, vm, 1), lead = (first.getDay() + 6) % 7, days = new Date(vy, vm + 1, 0).getDate();
-    let cells = '';
-    for (let i = 0; i < lead; i++) cells += '<span></span>';
-    for (let d = 1; d <= days; d++) {
-      const v = vy + '-' + pad(vm + 1) + '-' + pad(d);
-      cells += `<button type="button" class="cd ${v === inp.value ? 'sel' : ''} ${v === today ? 'td' : ''}" data-v="${v}">${d}</button>`;
+    let grid;
+    if (mode === 'y') {
+      let ys = '';
+      for (let y = yb; y < yb + 12; y++) ys += `<button type="button" class="cd ${y === vy ? 'sel' : ''} ${y === +today.slice(0, 4) ? 'td' : ''}" data-y="${y}">${y}</button>`;
+      grid = `<div class="calGr yrs">${ys}</div>`;
+    } else if (mode === 'm') {
+      const tm = +today.slice(5, 7) - 1, ty = +today.slice(0, 4);
+      grid = `<div class="calGr mon">${MN.map((n, i) => `<button type="button" class="cd ${i === vm ? 'sel' : ''} ${i === tm && vy === ty ? 'td' : ''}" data-m="${i}">${n}</button>`).join('')}</div>`;
+    } else {
+      const first = new Date(vy, vm, 1), lead = (first.getDay() + 6) % 7, days = new Date(vy, vm + 1, 0).getDate();
+      let cells = '';
+      for (let i = 0; i < lead; i++) cells += '<span></span>';
+      for (let d = 1; d <= days; d++) {
+        const v = vy + '-' + pad(vm + 1) + '-' + pad(d);
+        cells += `<button type="button" class="cd ${v === inp.value ? 'sel' : ''} ${v === today ? 'td' : ''}" data-v="${v}">${d}</button>`;
+      }
+      grid = `<div class="calWd"><span>Po</span><span>Ut</span><span>St</span><span>Št</span><span>Pi</span><span>So</span><span>Ne</span></div><div class="calGr">${cells}</div>`;
     }
-    box.innerHTML = `<div class="calOvl" data-close><div class="calBox"><div class="calHd"><button type="button" data-nav="-1">‹</button><b>${MN[vm]} ${vy}</b><button type="button" data-nav="1">›</button></div>
-      <div class="calWd"><span>Po</span><span>Ut</span><span>St</span><span>Št</span><span>Pi</span><span>So</span><span>Ne</span></div>
-      <div class="calGr">${cells}</div>
+    const mid = mode === 'y' ? `<b>${yb} – ${yb + 11}</b>`
+      : `<button type="button" class="calMo ${mode === 'm' ? 'on' : ''}" data-mo title="Vybrať mesiac">${MN[vm]}</button><button type="button" class="calYr" data-yr title="Vybrať rok">${vy}<small>▼</small></button>`;
+    const sg = mode !== 'd' ? 'style="visibility:hidden"' : '';
+    box.innerHTML = `<div class="calOvl" data-close><div class="calBox"><div class="calTtl">${esc(ttl)}</div>
+      <div class="calHd"><button type="button" data-ny="-1" title="Rok späť">«</button><button type="button" data-nav="-1" ${sg} title="Mesiac späť">‹</button><div class="calMid">${mid}</div><button type="button" data-nav="1" ${sg} title="Mesiac dopredu">›</button><button type="button" data-ny="1" title="Rok dopredu">»</button></div>
+      ${grid}
       <div class="calFt"><button type="button" data-today>Dnes</button><button type="button" data-clear>Vymazať</button><button type="button" data-close>Zavrieť</button></div></div></div>`;
   };
   const place = () => {
@@ -2404,12 +2525,18 @@ function openCal(inp) {
       let top = r.bottom + 6; if (top + bh > innerHeight - 8) top = Math.max(8, r.top - bh - 6);
       place.pos = {left: Math.min(Math.max(8, r.left), Math.max(8, innerWidth - bw - 8)), top};
     }
-    cb.style.left = place.pos.left + 'px'; cb.style.top = place.pos.top + 'px';
+    const tp = Math.max(8, Math.min(place.pos.top, innerHeight - 8 - cb.offsetHeight));
+    cb.style.left = place.pos.left + 'px'; cb.style.top = tp + 'px';
   };
   const _draw = draw; draw = () => { _draw(); place(); };
   box.addEventListener('click', e => {
-    const t = e.target;
+    const t = e.target.closest ? (e.target.closest('button') || e.target) : e.target;
     if (t.dataset.nav) { vm += +t.dataset.nav; if (vm < 0) { vm = 11; vy--; } if (vm > 11) { vm = 0; vy++; } draw(); }
+    else if (t.dataset.ny) { if (mode === 'y') yb += 12 * +t.dataset.ny; else vy += +t.dataset.ny; draw(); }
+    else if ('yr' in t.dataset) { mode = mode === 'y' ? 'd' : 'y'; yb = vy - 4; draw(); }
+    else if ('mo' in t.dataset) { mode = mode === 'm' ? 'd' : 'm'; draw(); }
+    else if (t.dataset.m) { vm = +t.dataset.m; mode = 'd'; draw(); }
+    else if (t.dataset.y) { vy = +t.dataset.y; mode = 'd'; draw(); }
     else if (t.dataset.v) setV(t.dataset.v);
     else if ('today' in t.dataset) setV(today);
     else if ('clear' in t.dataset) setV('');
@@ -2781,6 +2908,8 @@ function setUndo(row, vals) {
 function syncUndo() {
   const can = !!(S.dirty || (S.undo && S.undo.row === S.sel));
   document.querySelectorAll('.undoTop').forEach(b => b.classList.toggle('can', can));
+  const gcan = !!(S.dirty || S._gu);
+  document.querySelectorAll('.ib.stepback').forEach(b => b.classList.toggle('can', gcan));
 }
 function undoAvailable() { return S.dirty || (S.undo && S.undo.row === S.sel); }
 const undoBtnHtml = () => '';
@@ -2800,8 +2929,22 @@ async function undoLast() {
     omB.forEach(it => { const x = omRowByNo(it.row); if (x) Object.assign(x, it.o); });
     if (j && j.calNote !== undefined && S.m.pozicia) applyNotes(r, {[S.m.pozicia]: j.calNote});
     applyLocal(r, vals); pushActivity(actFor(r, 'Späť (zrušenie úpravy)', '', vals)); persist();
-    renderChips(); renderListBody(); renderDetail(); saveMsg('Vrátené späť ✔');
+    if (S._gu === undo) S._gu = null;
+    syncUndo(); renderChips(); renderListBody(); renderDetail(); saveMsg('Vrátené späť ✔');
   } catch (e) { S.undo = undo; toast(e.message, true); if (e.conflict) load(true); }
+}
+/* Krok späť (hlavička): vráti poslednú uloženú zmenu, aj keď je už otvorený iný kontakt */
+async function stepBack() {
+  if (S.dirty && S.sel != null) { undoLast(); return; }   /* neuložené úpravy sa najprv zahodia – ako tlačidlo Späť pri Uložiť */
+  const u = S._gu;
+  if (!u) { toast('Nie je čo vrátiť – žiadna uložená zmena'); return; }
+  const r = rowBy(u.row);
+  if (!r) { S._gu = null; syncUndo(); toast('Kontakt už neexistuje', true); return; }
+  const b = document.querySelector('.ib.stepback'); if (b) b.classList.add('busy');
+  if (S.sel !== u.row) openSel(u.row, true);
+  S.undo = u;
+  try { await undoLast(); } finally { document.querySelectorAll('.ib.stepback').forEach(x => x.classList.remove('busy')); }
+  if (!S._gu) toast('↺ Vrátené späť: ' + (V(r, 'firma') || 'kontakt'));
 }
 function pushActivity(a) {
   const v = {[ACT_H.dt]: nowISO(), [ACT_H.firma]: a.firma || '', [ACT_H.kontakt]: a.kontakt || '', [ACT_H.typ]: a.typ || '', [ACT_H.stav]: a.stav || '',
@@ -2899,7 +3042,7 @@ function commitBg(r, o) {
     }
     for (const h in prevV) r.v[h] = prevV[h];
     delete r._s; r.n = prevN; rmAct(actRow); revertOm();
-    if (S.undo && S.undo.row === r.r) S.undo = null;
+    if (S.undo && S.undo.row === r.r) S.undo = null; if (S._gu && S._gu.row === r.r) { S._gu = null; syncUndo(); }
     persist(); renderChips(); renderListBody(); if (S.sel === r.r && !S.dirty) renderDetail();
     toast('Zmena „' + nm + '“ sa neuložila: ' + err.message, true); if (err.conflict) load(true);
   })();
@@ -2935,7 +3078,7 @@ async function saveStav(sel) {
     pendingSaves--; saveMsg('Stav uložený ✔'); if (!pendingSaves) toast('Stav uložený ✔');
   } catch (e) {
     pendingSaves--;
-    r.v[S.m.stav] = prev; delete r._s; rmAct(actRow); if (S.undo && S.undo.row === r.r) S.undo = null; persist(); renderChips(); renderListBody();
+    r.v[S.m.stav] = prev; delete r._s; rmAct(actRow); if (S.undo && S.undo.row === r.r) S.undo = null; if (S._gu && S._gu.row === r.r) { S._gu = null; syncUndo(); } persist(); renderChips(); renderListBody();
     if (S.sel === r.r) { sel.value = prev ?? ''; sel.setAttribute('style', palStyle(prev)); }
     toast(e.message, true); if (e.conflict) load(true);
   }
@@ -2957,7 +3100,7 @@ async function saveNote(btn) {
     await api('update', {sheet: 'contacts', row: r.r, values: vals, activity: act, check: S.m.firma && !r.fd ? {header: S.m.firma, value: V(r, 'firma')} : null});
     pushActivity(act); persist(); saveMsg('Poznámka uložená ✔');
   } catch (e) {
-    if (S.undo && S.undo.row === r.r) S.undo = null;
+    if (S.undo && S.undo.row === r.r) S.undo = null; if (S._gu && S._gu.row === r.r) { S._gu = null; syncUndo(); }
     r.v[S.m.pozn] = prevRaw; delete r._s;
     if (S.sel === r.r) { const nb2 = $('#notesBox'); if (nb2) nb2.innerHTML = notesHtml(r); const ta2 = $('#callNote'); if (ta2 && !ta2.value) ta2.value = note; }
     toast(e.message, true); if (e.conflict) load(true);
@@ -4083,6 +4226,7 @@ document.addEventListener('click', e => {
     else if (a === 'linkno') { const o = rowBy(+el.dataset.cand), r0 = rowBy(S.sel); if (o && r0) { const d = noLink(); d.add(nlKey(r0, o)); try { LS.setItem('crm.nolink', JSON.stringify([...d])); } catch (e) {} renderDetail(); } }
     else if (a === 'unlink') unlinkRow();
     else if (a === 'undo') undoLast();
+    else if (a === 'stepback') stepBack();
     else if (a === 'refresh') manualLoad();
     else if (a === 'reloadpage') hardReload();
     else if (a === 'savenote') saveNote(el);
