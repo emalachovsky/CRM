@@ -1675,18 +1675,18 @@ html body .dhead .nextCall:not(.urg)>span,html body .dhead .nextCall:not(.urg) .
 
 /* ===== rozbalený zoznam možností: tmavomodrá až čierna (bunka s výberom ostáva v pôvodnej farbe) ===== */
 html body select option,html body select optgroup{
-  background-color:#05070f;background-image:linear-gradient(180deg,#14234a,#05070f);color:#f0ece4}
+  background-color:#020308;background-image:linear-gradient(180deg,#0d1833,#020308);color:#f0ece4}
 /* ===== výber zo zoznamu (Funkcia, Dodávateľ, Čas…): tmavomodrá až čierna, šírka podľa najširšieho textu ===== */
-html:not([data-theme="light"]) .pkBox{--cg:#8fc3ff;--cg-tx:#06142e;background:linear-gradient(180deg,#0a1633 0%,#04060d 100%);border-color:#1b2c57}
-html:not([data-theme="light"]) .pkBox .pkOpt,html:not([data-theme="light"]) .pkBox .calFt button,html:not([data-theme="light"]) .pkBox .pkQ{background:#070f24;border-color:#15234a}
-html:not([data-theme="light"]) .pkBox .pkOpt:hover,html:not([data-theme="light"]) .pkBox .calFt button:hover{background:#0f2049;border-color:#27408a}
+html:not([data-theme="light"]) .pkBox{--cg:#8fc3ff;--cg-tx:#06142e;background:linear-gradient(180deg,#060e24 0%,#020308 100%);border-color:#14214a}
+html:not([data-theme="light"]) .pkBox .pkOpt,html:not([data-theme="light"]) .pkBox .calFt button,html:not([data-theme="light"]) .pkBox .pkQ{background:#050a1a;border-color:#0f1a3a}
+html:not([data-theme="light"]) .pkBox .pkOpt:hover,html:not([data-theme="light"]) .pkBox .calFt button:hover{background:#0a1535;border-color:#1f3270}
 html:not([data-theme="light"]) .pkBox .pkOpt.sel,html:not([data-theme="light"]) .pkBox .pkOpt.sel:hover{background:var(--cg);border-color:var(--cg);color:var(--cg-tx)}
 .pkBox{min-width:0}
 .pkBox .pkQ{width:0;min-width:100%}
 /* ===== kalendár (dátum): rovnaký modrý dizajn ako zoznam Čas ===== */
-html:not([data-theme="light"]) .calBox{--cg:#8fc3ff;--cg-tx:#06142e;background:linear-gradient(180deg,#0a1633 0%,#04060d 100%);border-color:#1b2c57}
-html:not([data-theme="light"]) .calBox .calGr .cd,html:not([data-theme="light"]) .calBox .calHd button,html:not([data-theme="light"]) .calBox .calFt button{background:#070f24;border-color:#15234a}
-html:not([data-theme="light"]) .calBox .calGr .cd:hover,html:not([data-theme="light"]) .calBox .calHd button:hover,html:not([data-theme="light"]) .calBox .calFt button:hover{background:#0f2049;border-color:#27408a}
+html:not([data-theme="light"]) .calBox{--cg:#8fc3ff;--cg-tx:#06142e;background:linear-gradient(180deg,#060e24 0%,#020308 100%);border-color:#14214a}
+html:not([data-theme="light"]) .calBox .calGr .cd,html:not([data-theme="light"]) .calBox .calHd button,html:not([data-theme="light"]) .calBox .calFt button{background:#050a1a;border-color:#0f1a3a}
+html:not([data-theme="light"]) .calBox .calGr .cd:hover,html:not([data-theme="light"]) .calBox .calHd button:hover,html:not([data-theme="light"]) .calBox .calFt button:hover{background:#0a1535;border-color:#1f3270}
 html:not([data-theme="light"]) .calBox .calGr .cd.sel,html:not([data-theme="light"]) .calBox .calGr .cd.sel:hover{background:var(--cg);border-color:var(--cg);color:var(--cg-tx)}
 /* ===== filtre v hlavičke zoznamu: veľké písmená ===== */
 .chips .chip,.chips select{text-transform:uppercase}
@@ -1698,12 +1698,12 @@ html body .chips .chip,html body .chips select,html body .chips .stbtn{font-weig
 html body .stsel,html body .dhead .stsel,html body select.pillSel[data-sty="st"],html body .badge:not(.actnote),html body .card .c-left .c-st .badge,html body .stpop .stitem,
 html body .saveTop,html body .undoTop,html body .dhead .saveTop,html body .dhead .undoTop,html body .stCol .saveTop{font-weight:500!important}
 /* ===== pravé okno (detail kontaktu): tmavomodrá až čierna, rovnaký dizajn ako zoznamy ===== */
-html:not([data-theme="light"]) #detailPane{--panel:#0a1633;--card:#070f24;--field:#060c1f;--raise:#0f2049;--line:#1b2c57;--ibd:#2a427f;
-  background:linear-gradient(180deg,#0a1633 0%,#04060d 100%);border-color:#1b2c57}
-html:not([data-theme="light"]) #detailPane .win{background:linear-gradient(180deg,#0c1a3d 0%,#060c1f 100%);border-color:#1b2c57}
-html:not([data-theme="light"]) #detailPane .tab{background:#060c1f;border-color:#15234a}
-html:not([data-theme="light"]) #detailPane .tab.on{background:#0a1633;border-color:#2a427f;border-top-color:var(--firma);border-bottom-color:#0a1633}
-html:not([data-theme="light"]) #detailPane .hist,html:not([data-theme="light"]) #detailPane .notePrev{background:#070f24;border-color:#15234a}
+html:not([data-theme="light"]) #detailPane{--panel:#060e24;--card:#050a1a;--field:#040815;--raise:#0a1535;--line:#14214a;--ibd:#1f3262;
+  background:linear-gradient(180deg,#060e24 0%,#020308 100%);border-color:#14214a}
+html:not([data-theme="light"]) #detailPane .win{background:linear-gradient(180deg,#08122b 0%,#040815 100%);border-color:#14214a}
+html:not([data-theme="light"]) #detailPane .tab{background:#040815;border-color:#0f1a3a}
+html:not([data-theme="light"]) #detailPane .tab.on{background:#060e24;border-color:#1f3262;border-top-color:var(--firma);border-bottom-color:#060e24}
+html:not([data-theme="light"]) #detailPane .hist,html:not([data-theme="light"]) #detailPane .notePrev{background:#050a1a;border-color:#0f1a3a}
 /* ===== Elektrina a Plyn: výraznejšia modrá a žltá na modrom pozadí ===== */
 html:not([data-theme="light"]) #detailPane .cg.el{background:linear-gradient(180deg,rgba(45,125,240,.46) 0%,rgba(28,78,170,.24) 100%);border:1.5px solid #4c9eff;box-shadow:0 0 14px rgba(76,158,255,.28)}
 html:not([data-theme="light"]) #detailPane .cg.el::before{background:linear-gradient(90deg,#7cc0ff,transparent);height:4px;opacity:1}
@@ -1713,12 +1713,12 @@ html:not([data-theme="light"]) #detailPane .cg.gas::before{background:linear-gra
 html:not([data-theme="light"]) #detailPane .cg.gas .gtitle{color:#ffe27a}
 .gtitle .gsub{font-size:.8em;font-weight:500;letter-spacing:.06em;opacity:.85}
 /* ===== ľavý panel (zoznam kontaktov): tmavomodrá až čierna ===== */
-html:not([data-theme="light"]) #listPane{--panel:#0c1a3d;--panel2:#0a1633;--bg:#0a1633;--bg2:#0a1633;--field:#060c1f;--line:#1b2c57;--ibd:#2a427f;
-  background:linear-gradient(180deg,#0a1633 0%,#04060d 100%);border-color:#1b2c57}
-html:not([data-theme="light"]) #listPane .lhead{background:#0a1633;border-bottom-color:#1b2c57}
+html:not([data-theme="light"]) #listPane{--panel:#08122b;--panel2:#060e24;--bg:#060e24;--bg2:#060e24;--field:#040815;--line:#14214a;--ibd:#1f3262;
+  background:linear-gradient(180deg,#060e24 0%,#020308 100%);border-color:#14214a}
+html:not([data-theme="light"]) #listPane .lhead{background:#060e24;border-bottom-color:#14214a}
 /* ===== karty: farebné (dnes, po termíne, aktivita, klient) ako pôvodne; ostatné tmavšia modrá ===== */
 html:not([data-theme="light"]) #listPane .card{--panel:#151b24;--raise:#1a212c}
-html:not([data-theme="light"]) #listPane .card:not(.today):not(.over):not(.act):not(.klient){--cg:#0e2152;--panel:#050b20;--raise:#091536}
+html:not([data-theme="light"]) #listPane .card:not(.today):not(.over):not(.act):not(.klient){--cg:#091738;--panel:#03060f;--raise:#060d24}
 </style>
 </head>
 <body>
